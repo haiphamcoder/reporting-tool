@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.domain.repository.UserRepository;
+import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,8 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
 public class UserRepositoryImpl implements UserRepository {
     private final UserJpaRepository userJpaRepository;
 
+    private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
+
     @Override
     public Optional<User> getUserByUsername(String username) {
         return userJpaRepository.findByUsername(username);
@@ -28,6 +31,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User saveUser(User user) {
+        user.setId(snowflakeIdGenerator.generateId());
         Optional<User> existingUser = userJpaRepository.findByUsername(user.getUsername());
         if (existingUser.isPresent()) {
             return userJpaRepository.save(existingUser.get());

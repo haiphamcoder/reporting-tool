@@ -17,6 +17,7 @@ import com.haiphamcoder.cdp.domain.model.RegisterRequest;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.domain.model.TokenType;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
+import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ public class AuthenticationService {
     private final TokenService tokenService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
 
     public AuthenticationResponse register(RegisterRequest request) {
         User user = User.builder()
@@ -44,6 +46,7 @@ public class AuthenticationService {
         String accessToken = jwtTokenProvider.generateToken(createdUser);
         String refreshToken = jwtTokenProvider.generateRefreshToken(createdUser);
         Token token = Token.builder()
+                .id(snowflakeIdGenerator.generateId())
                 .user(createdUser)
                 .tokenValue(accessToken)
                 .tokenType(TokenType.BEARER)
@@ -68,6 +71,7 @@ public class AuthenticationService {
             String accessToken = jwtTokenProvider.generateToken(user);
             String refreshToken = jwtTokenProvider.generateRefreshToken(user);
             Token token = Token.builder()
+                    .id(snowflakeIdGenerator.generateId())
                     .user(user)
                     .tokenValue(accessToken)
                     .tokenType(TokenType.BEARER)
@@ -101,6 +105,7 @@ public class AuthenticationService {
                 String accessToken = jwtTokenProvider.generateToken(user);
                 String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
                 Token token = Token.builder()
+                        .id(snowflakeIdGenerator.generateId())
                         .user(user)
                         .tokenValue(accessToken)
                         .tokenType(TokenType.BEARER)
