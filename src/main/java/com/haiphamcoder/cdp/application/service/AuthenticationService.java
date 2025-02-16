@@ -9,7 +9,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.haiphamcoder.cdp.domain.entity.Token;
+import com.haiphamcoder.cdp.domain.entity.AccessToken;
+import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.domain.model.AuthenticationRequest;
 import com.haiphamcoder.cdp.domain.model.AuthenticationResponse;
@@ -17,6 +18,7 @@ import com.haiphamcoder.cdp.domain.model.RegisterRequest;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.domain.model.TokenType;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
+import com.haiphamcoder.cdp.shared.DateTimeUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,39 +31,24 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthenticationService {
         private final UserService userService;
-        private final TokenService tokenService;
+        private final AccessTokenService accessTokenService;
+        private final RefreshTokenService refreshTokenService;
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManager authenticationManager;
         private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
 
-        public AuthenticationResponse register(RegisterRequest request) {
+        public boolean register(RegisterRequest request) {
                 User user = User.builder()
+                                .firstName(request.getFirstName())
+                                .lastName(request.getLastName())
                                 .username(request.getUsername())
                                 .password(request.getPassword())
                                 .email(request.getEmail())
                                 .role(request.getRole())
                                 .build();
                 User createdUser = userService.createUser(user);
-                revokeAllUserTokens(createdUser);
-                String accessToken = jwtTokenProvider.generateToken(createdUser);
-                String refreshToken = jwtTokenProvider.generateRefreshToken(createdUser);
-                Token token = Token.builder()
-                                .id(snowflakeIdGenerator.generateId())
-                                .user(createdUser)
-                                .tokenValue(accessToken)
-                                .tokenType(TokenType.BEARER)
-                                .expired(false)
-                                .revoked(false)
-                                .build();
-                Token savedToken = tokenService.saveUserToken(token);
-                if (savedToken != null) {
-
-                        return AuthenticationResponse.builder()
-                                        .accessToken(token.getTokenValue())
-                                        .refreshToken(refreshToken)
-                                        .build();
-                }
-                return null;
+                deleteAllUserTokens(createdUser);
+                return createdUser != null;
         }
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -69,34 +56,47 @@ public class AuthenticationService {
                                 new UsernamePasswordAuthenticationToken(
                                                 request.getUsername(),
                                                 request.getPassword()));
-                User user = userService.getUserByUsername(request.getUsername());
-                if (user != null) {
-                        revokeAllUserTokens(user);
-                        String accessToken = jwtTokenProvider.generateToken(user);
-                        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
-                        Token token = Token.builder()
+                User existedUser = userService.getUserByUsername(request.getUsername());
+                if (existedUser != null) {
+                        String refreshToken = jwtTokenProvider.generateRefreshToken(existedUser);
+                        RefreshToken refreshTokenEntity = RefreshToken.builder()
                                         .id(snowflakeIdGenerator.generateId())
-                                        .user(user)
+                                        .user(existedUser)
+                                        .tokenValue(refreshToken)
+                                        .tokenType(TokenType.BEARER)
+                                        .expiredAt(DateTimeUtils.convertToLocalDateTime(
+                                                        jwtTokenProvider.extractExpiration(refreshToken)))
+                                        .build();
+                        RefreshToken savedRefreshToken = refreshTokenService.saveUserToken(refreshTokenEntity);
+                        if (savedRefreshToken == null) {
+                                return null;
+                        }
+
+                        String accessToken = jwtTokenProvider.generateAccessToken(existedUser);
+                        AccessToken accessTokenEntity = AccessToken.builder()
+                                        .id(snowflakeIdGenerator.generateId())
+                                        .refreshToken(savedRefreshToken)
                                         .tokenValue(accessToken)
                                         .tokenType(TokenType.BEARER)
-                                        .expired(false)
-                                        .revoked(false)
+                                        .expiredAt(DateTimeUtils.convertToLocalDateTime(
+                                                        jwtTokenProvider.extractExpiration(accessToken)))
                                         .build();
-                        Token savedToken = tokenService.saveUserToken(token);
-                        if (savedToken != null) {
-                                return AuthenticationResponse.builder()
-                                                .accessToken(accessToken)
-                                                .refreshToken(refreshToken)
-                                                .build();
+                        AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
+                        if (savedAccessToken == null) {
+                                return null;
                         }
+
+                        return AuthenticationResponse.builder()
+                                        .accessToken(accessToken)
+                                        .refreshToken(refreshToken)
+                                        .build();
                 }
                 return null;
         }
 
-        private void revokeAllUserTokens(User user) {
-                List<Token> tokens = tokenService.getAllValidTokens(user.getId());
-                tokens.forEach(token -> token.setRevoked(true));
-                tokenService.saveAllUserTokens(tokens);
+        private void deleteAllUserTokens(User user) {
+                List<RefreshToken> refreshTokens = refreshTokenService.getAllValidTokens(user.getId());
+                refreshTokens.forEach(refreshToken -> refreshTokenService.deleteToken(refreshToken.getId()));
         }
 
         public void refreshToken(HttpServletRequest request, HttpServletResponse response)
@@ -105,24 +105,25 @@ public class AuthenticationService {
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String refreshToken = authHeader.substring(7);
                         String username = jwtTokenProvider.extractUsername(refreshToken);
-                        User user = userService.getUserByUsername(username);
-                        if (user != null) {
-                                revokeAllUserTokens(user);
-                                String accessToken = jwtTokenProvider.generateToken(user);
-                                String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
-                                Token token = Token.builder()
+                        User existedUser = userService.getUserByUsername(username);
+                        RefreshToken existedRefreshToken = refreshTokenService.getValidToken(existedUser.getId(),
+                                        refreshToken);
+                        if (existedUser != null && existedRefreshToken != null
+                                        && jwtTokenProvider.isTokenValid(refreshToken, existedUser)) {
+                                String accessToken = jwtTokenProvider.generateAccessToken(existedUser);
+                                AccessToken accessTokenEntity = AccessToken.builder()
                                                 .id(snowflakeIdGenerator.generateId())
-                                                .user(user)
+                                                .refreshToken(existedRefreshToken)
                                                 .tokenValue(accessToken)
                                                 .tokenType(TokenType.BEARER)
-                                                .expired(false)
-                                                .revoked(false)
+                                                .expiredAt(DateTimeUtils.convertToLocalDateTime(
+                                                                jwtTokenProvider.extractExpiration(accessToken)))
                                                 .build();
-                                Token savedToken = tokenService.saveUserToken(token);
-                                if (savedToken != null) {
+                                AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
+                                if (savedAccessToken != null) {
                                         AuthenticationResponse authResponse = AuthenticationResponse.builder()
                                                         .accessToken(accessToken)
-                                                        .refreshToken(newRefreshToken)
+                                                        .refreshToken(refreshToken)
                                                         .build();
                                         new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
                                 }
@@ -130,8 +131,10 @@ public class AuthenticationService {
                 }
         }
 
-        public AuthenticationResponse createAdminUser() {
+        public boolean createAdminUser() {
                 RegisterRequest request = RegisterRequest.builder()
+                                .firstName("Admin")
+                                .lastName("Admin")
                                 .username("admin")
                                 .password("admin")
                                 .email("admin@email.com")

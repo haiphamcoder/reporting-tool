@@ -20,19 +20,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public User getUserByUsername(String username) {
-        log.info("Getting user by username: {}", username);
         Optional<User> user = userRepository.getUserByUsername(username);
         if (user.isEmpty()) {
-            log.error("User with username {} not found", username);
             return null;
         }
-        log.info("User found: {}", user.get());
         return user.get();
     }
 
     @Transactional
     public User createUser(User user) {
-        log.info("Creating user: {}", user);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.saveUser(user);
     }

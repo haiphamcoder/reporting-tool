@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import com.haiphamcoder.cdp.application.service.AuthenticationService;
-import com.haiphamcoder.cdp.domain.model.AuthenticationResponse;
-
 import lombok.extern.slf4j.Slf4j;
 
 @SpringBootApplication
@@ -24,11 +22,10 @@ public class Application {
 	CommandLineRunner commandLineRunner(
 			AuthenticationService authenticationService) {
 		return args -> {
-			AuthenticationResponse response = authenticationService.createAdminUser();
-			if (response == null) {
-				log.info("Admin user already exists");
+			if (authenticationService.createAdminUser()) {
+				log.info("Admin user created successfully");
 			} else {
-				log.info("Admin token: {}", response.getAccessToken());
+				log.info("Admin user already exists");
 			}
 		};
 	}

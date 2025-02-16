@@ -13,4 +13,8 @@ public class ApiResponseFactory {
     public static <T> ApiResponse<T> createUnauthorizedResponse(String message) {
         return new ApiResponse<>(HttpStatus.UNAUTHORIZED.value(), message, null, null, null);
     }
+
+    public static <T> ApiResponse<T> createErrorResponse(String message) {
+        return new ApiResponse<>(HttpStatus.BAD_REQUEST.value(), message, null, null, null);
+    }
 }

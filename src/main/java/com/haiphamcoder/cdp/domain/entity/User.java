@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.shared.BaseEntity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -41,6 +42,12 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
@@ -54,12 +61,16 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private boolean enabled = true;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "user")
-    private transient List<Token> tokens;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private transient List<RefreshToken> refreshTokens;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

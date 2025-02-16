@@ -1,5 +1,7 @@
 package com.haiphamcoder.cdp.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haiphamcoder.cdp.domain.model.TokenType;
@@ -11,7 +13,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,10 +25,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tokens")
+@Table(name = "access_tokens")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Token {
+public class AccessToken {
 
     @Id
     private Long id;
@@ -36,26 +38,28 @@ public class Token {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @Column(name = "type", nullable = false)
     private TokenType tokenType = TokenType.BEARER;
 
-    @Column(name = "revoked", nullable = false)
-    private boolean revoked;
+    @Column(name = "expired_at", nullable = false)
+    private LocalDateTime expiredAt;
 
-    @Column(name = "expired", nullable = false)
-    public boolean expired;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refresh_token_id", nullable = false)
+    private RefreshToken refreshToken;
 
-    public Token clone() {
-        return Token.builder()
+    public AccessToken clone() {
+        return AccessToken.builder()
                 .id(id)
                 .tokenValue(tokenValue)
                 .tokenType(tokenType)
-                .revoked(revoked)
-                .expired(expired)
-                .user(user)
+                .expiredAt(expiredAt)
+                .createdAt(createdAt)
+                .refreshToken(refreshToken)
                 .build();
     }
 }

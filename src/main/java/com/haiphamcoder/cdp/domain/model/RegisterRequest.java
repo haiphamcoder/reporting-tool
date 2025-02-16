@@ -17,6 +17,12 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RegisterRequest {
 
+    @JsonProperty("firstName")
+    private String firstName;
+
+    @JsonProperty("lastName")
+    private String lastName;
+
     @JsonProperty("username")
     private String username;
 

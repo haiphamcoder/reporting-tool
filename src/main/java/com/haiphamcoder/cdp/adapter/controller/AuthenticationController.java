@@ -21,15 +21,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthenticationController{
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> register(@RequestBody RegisterRequest request) {
-        AuthenticationResponse response = authenticationService.register(request);
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(response));
+    public ResponseEntity<ApiResponse<Boolean>> register(@RequestBody RegisterRequest request) {
+        if (authenticationService.register(request)) {
+            return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(true));
+        }
+        return ResponseEntity.ok().body(ApiResponseFactory.createErrorResponse("Register failed"));
     }
 
     @PostMapping("/authenticate")
