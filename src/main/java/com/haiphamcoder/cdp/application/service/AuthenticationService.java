@@ -1,14 +1,12 @@
 package com.haiphamcoder.cdp.application.service;
 
-import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.haiphamcoder.cdp.domain.entity.AccessToken;
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 import com.haiphamcoder.cdp.domain.entity.User;
@@ -21,8 +19,6 @@ import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
 import com.haiphamcoder.cdp.shared.DateTimeUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -99,18 +95,14 @@ public class AuthenticationService {
                 refreshTokens.forEach(refreshToken -> refreshTokenService.deleteToken(refreshToken.getId()));
         }
 
-        public void refreshToken(HttpServletRequest request, HttpServletResponse response)
-                        throws IOException {
-                final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        public String refreshToken(String authHeader) {
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String refreshToken = authHeader.substring(7);
                         String username = jwtTokenProvider.extractUsername(refreshToken);
-                        User existedUser = userService.getUserByUsername(username);
-                        RefreshToken existedRefreshToken = refreshTokenService.getValidToken(existedUser.getId(),
-                                        refreshToken);
-                        if (existedUser != null && existedRefreshToken != null
-                                        && jwtTokenProvider.isTokenValid(refreshToken, existedUser)) {
-                                String accessToken = jwtTokenProvider.generateAccessToken(existedUser);
+                        RefreshToken existedRefreshToken = refreshTokenService.getTokenByValue(refreshToken);
+                        if (existedRefreshToken != null
+                                        && existedRefreshToken.getUser().getUsername().equals(username)) {
+                                String accessToken = jwtTokenProvider.generateAccessToken(existedRefreshToken.getUser());
                                 AccessToken accessTokenEntity = AccessToken.builder()
                                                 .id(snowflakeIdGenerator.generateId())
                                                 .refreshToken(existedRefreshToken)
@@ -121,14 +113,11 @@ public class AuthenticationService {
                                                 .build();
                                 AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
                                 if (savedAccessToken != null) {
-                                        AuthenticationResponse authResponse = AuthenticationResponse.builder()
-                                                        .accessToken(accessToken)
-                                                        .refreshToken(refreshToken)
-                                                        .build();
-                                        new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+                                        return savedAccessToken.getTokenValue();
                                 }
                         }
                 }
+                return null;
         }
 
         public boolean createAdminUser() {

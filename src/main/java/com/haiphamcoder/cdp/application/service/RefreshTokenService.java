@@ -1,14 +1,15 @@
 package com.haiphamcoder.cdp.application.service;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 import com.haiphamcoder.cdp.domain.repository.RefreshTokenRepository;
-import com.haiphamcoder.cdp.shared.HashUtils;
-
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,14 +22,23 @@ public class RefreshTokenService {
     }
 
     public RefreshToken getValidToken(Long userId, String tokenValue) {
-        String hashedTokenValue = HashUtils.hashSHA256(tokenValue);
-        return refreshTokenRepository.getValidTokenByUserIdAndTokenValue(userId, hashedTokenValue)
+        String tokenValueInBase64 = Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8));
+        return refreshTokenRepository.getValidTokenByUserIdAndTokenValue(userId, tokenValueInBase64)
                 .orElse(null);
+    }
+
+    public RefreshToken getTokenByValue(String tokenValue) {
+        Optional<RefreshToken> token = refreshTokenRepository.getTokenByTokenValue(Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8)));
+        if (token.isPresent()) {
+            token.get().setTokenValue(new String(Base64.getDecoder().decode(token.get().getTokenValue()), StandardCharsets.UTF_8));
+            return token.get();
+        }
+        return null;
     }
 
     public RefreshToken saveUserToken(RefreshToken token) {
         RefreshToken clonedToken = token.clone();
-        clonedToken.setTokenValue(HashUtils.hashSHA256(token.getTokenValue()));
+        clonedToken.setTokenValue(Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
         return refreshTokenRepository.saveToken(clonedToken);
     }
 
@@ -36,7 +46,7 @@ public class RefreshTokenService {
         List<RefreshToken> clonedTokens = tokens.stream()
                 .map(RefreshToken::clone)
                 .map(token -> {
-                    token.setTokenValue(HashUtils.hashSHA256(token.getTokenValue()));
+                    token.setTokenValue(Base64.getEncoder().encodeToString(token.getTokenValue().getBytes(StandardCharsets.UTF_8)));
                     return token;
                 })
                 .collect(Collectors.toList());

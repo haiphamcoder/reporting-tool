@@ -8,6 +8,7 @@ import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 public interface RefreshTokenRepository {
 
     List<RefreshToken> getAllTokensByUserId(Long userId);
+    
     Optional<RefreshToken> getTokenByTokenValue(String tokenValue);
 
     Optional<RefreshToken> getValidTokenByUserIdAndTokenValue(Long userId, String tokenValue);

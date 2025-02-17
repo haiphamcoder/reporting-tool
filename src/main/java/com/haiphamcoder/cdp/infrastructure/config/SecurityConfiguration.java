@@ -34,7 +34,7 @@ public class SecurityConfiguration {
                         "/swagger-ui/**",
         };
 
-        private static final String ADMIN_ENDPOINT = "/admin/**";
+        private static final String ADMIN_ENDPOINT = "/api/v1/admin/**";
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final UnauthorizedAuthenticationEntryPoint unauthorizedAuthenticationEntryPoint;
