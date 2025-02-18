@@ -40,7 +40,12 @@ public class RefreshTokenService {
         RefreshToken clonedToken = new RefreshToken(token);
         clonedToken.setTokenValue(
                 Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-        return refreshTokenRepository.saveToken(clonedToken).orElse(null);
+        RefreshToken savedToken = refreshTokenRepository.saveToken(clonedToken).orElse(null);
+        if (savedToken != null) {
+            savedToken.setTokenValue(
+                    new String(Base64.getDecoder().decode(savedToken.getTokenValue()), StandardCharsets.UTF_8));
+        }
+        return savedToken;
     }
 
     public void saveAllUserTokens(List<RefreshToken> tokens) {

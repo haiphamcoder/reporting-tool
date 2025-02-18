@@ -1,5 +1,7 @@
 package com.haiphamcoder.cdp.adapter.controller;
 
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,7 +48,8 @@ public class AuthenticationController {
         if (newAccessToken == null) {
             return ResponseEntity.badRequest().body(ApiResponseFactory.createErrorResponse("Invalid refresh token"));
         }
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(newAccessToken));
+        Map<String, String> body = Map.of("access_token", newAccessToken);
+        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(body));
     }
 
 }

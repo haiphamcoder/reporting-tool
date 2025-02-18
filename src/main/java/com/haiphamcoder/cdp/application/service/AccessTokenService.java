@@ -36,7 +36,12 @@ public class AccessTokenService {
         AccessToken clonedToken = new AccessToken(token);
         clonedToken.setTokenValue(
                 Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-        return accessTokenRepository.saveToken(clonedToken).orElse(null);
+        AccessToken savedToken = accessTokenRepository.saveToken(clonedToken).orElse(null);
+        if (savedToken != null) {
+            savedToken.setTokenValue(
+                    new String(Base64.getDecoder().decode(savedToken.getTokenValue()), StandardCharsets.UTF_8));
+        }
+        return savedToken;
     }
 
     public void saveAllUserTokens(List<AccessToken> tokens) {

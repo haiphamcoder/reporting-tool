@@ -23,6 +23,7 @@ public class LogoutService implements LogoutHandler {
 
     private final AccessTokenService accessTokenService;
     private final RefreshTokenService refreshTokenService;
+
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         final String authHeader = request.getHeader("Authorization");
