@@ -1,6 +1,5 @@
 package com.haiphamcoder.cdp.application.service;
 
-import java.util.Base64;
 import java.util.List;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -83,6 +82,7 @@ public class AuthenticationService {
                         }
 
                         return AuthenticationResponse.builder()
+                                        .userId(existedUser.getId())
                                         .accessToken(accessToken)
                                         .refreshToken(refreshToken)
                                         .build();
@@ -102,7 +102,8 @@ public class AuthenticationService {
                         RefreshToken existedRefreshToken = refreshTokenService.getTokenByValue(refreshToken);
                         if (existedRefreshToken != null
                                         && existedRefreshToken.getUser().getUsername().equals(username)) {
-                                String accessToken = jwtTokenProvider.generateAccessToken(existedRefreshToken.getUser());
+                                String accessToken = jwtTokenProvider
+                                                .generateAccessToken(existedRefreshToken.getUser());
                                 AccessToken accessTokenEntity = AccessToken.builder()
                                                 .id(snowflakeIdGenerator.generateId())
                                                 .refreshToken(existedRefreshToken)

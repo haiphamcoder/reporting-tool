@@ -10,7 +10,7 @@ public interface AccessTokenRepository {
 
     Optional<AccessToken> getValidTokenByRefreshTokenIdAndTokenValue(Long refreshTokenId, String tokenValue);
 
-    AccessToken saveToken(AccessToken token);
+    Optional<AccessToken> saveToken(AccessToken token);
 
     void saveAllTokens(List<AccessToken> tokens);
 }

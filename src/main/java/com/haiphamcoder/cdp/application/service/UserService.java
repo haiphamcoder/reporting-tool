@@ -19,6 +19,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public User getUserByUsername(String username) {
         Optional<User> user = userRepository.getUserByUsername(username);
         if (user.isEmpty()) {

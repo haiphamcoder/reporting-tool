@@ -16,6 +16,9 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AuthenticationResponse {
+    @JsonProperty("user_id")
+    private Long userId;
+
     @JsonProperty("access_token")
     private String accessToken;
 

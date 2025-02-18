@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import com.haiphamcoder.cdp.domain.entity.AccessToken;
 import com.haiphamcoder.cdp.domain.repository.AccessTokenRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -37,13 +36,11 @@ public class AccessTokenRepositoryImpl implements AccessTokenRepository {
                         && token.getExpiredAt().isAfter(now));
     }
 
-    @Transactional
     @Override
-    public AccessToken saveToken(AccessToken token) {
-        return accessTokenJpaRepository.save(token);
+    public Optional<AccessToken> saveToken(AccessToken token) {
+        return Optional.of(accessTokenJpaRepository.save(token));
     }
 
-    @Transactional
     @Override
     public void saveAllTokens(List<AccessToken> tokens) {
         accessTokenJpaRepository.saveAll(tokens);

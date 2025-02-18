@@ -4,8 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.cdp.domain.entity.AccessToken;
@@ -23,29 +21,32 @@ public class AccessTokenService {
                 .orElse(null);
     }
 
-    public Optional<AccessToken> getTokenByValue(String tokenValue) {
-        Optional<AccessToken> token = accessTokenRepository.getTokenByTokenValue(Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8)));
+    public AccessToken getTokenByValue(String tokenValue) {
+        Optional<AccessToken> token = accessTokenRepository
+                .getTokenByTokenValue(Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8)));
         if (token.isPresent()) {
-            token.get().setTokenValue(new String(Base64.getDecoder().decode(token.get().getTokenValue()), StandardCharsets.UTF_8));
-            return token;
+            token.get().setTokenValue(
+                    new String(Base64.getDecoder().decode(token.get().getTokenValue()), StandardCharsets.UTF_8));
+            return token.get();
         }
         return null;
     }
 
     public AccessToken saveUserToken(AccessToken token) {
-        AccessToken clonedToken = token.clone();
-        clonedToken.setTokenValue(Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-        return accessTokenRepository.saveToken(clonedToken);
+        AccessToken clonedToken = new AccessToken(token);
+        clonedToken.setTokenValue(
+                Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
+        return accessTokenRepository.saveToken(clonedToken).orElse(null);
     }
 
     public void saveAllUserTokens(List<AccessToken> tokens) {
         List<AccessToken> clonedTokens = tokens.stream()
-                .map(AccessToken::clone)
                 .map(token -> {
-                    token.setTokenValue(Base64.getEncoder().encodeToString(token.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-                    return token;
-                })
-                .collect(Collectors.toList());
+                    AccessToken clonedToken = new AccessToken(token);
+                    clonedToken.setTokenValue(Base64.getEncoder()
+                            .encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
+                    return clonedToken;
+                }).toList();
         accessTokenRepository.saveAllTokens(clonedTokens);
     }
 }

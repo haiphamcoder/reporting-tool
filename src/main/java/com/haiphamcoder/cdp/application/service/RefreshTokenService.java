@@ -4,8 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
@@ -28,28 +26,31 @@ public class RefreshTokenService {
     }
 
     public RefreshToken getTokenByValue(String tokenValue) {
-        Optional<RefreshToken> token = refreshTokenRepository.getTokenByTokenValue(Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8)));
+        Optional<RefreshToken> token = refreshTokenRepository
+                .getTokenByTokenValue(Base64.getEncoder().encodeToString(tokenValue.getBytes(StandardCharsets.UTF_8)));
         if (token.isPresent()) {
-            token.get().setTokenValue(new String(Base64.getDecoder().decode(token.get().getTokenValue()), StandardCharsets.UTF_8));
+            token.get().setTokenValue(
+                    new String(Base64.getDecoder().decode(token.get().getTokenValue()), StandardCharsets.UTF_8));
             return token.get();
         }
         return null;
     }
 
     public RefreshToken saveUserToken(RefreshToken token) {
-        RefreshToken clonedToken = token.clone();
-        clonedToken.setTokenValue(Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-        return refreshTokenRepository.saveToken(clonedToken);
+        RefreshToken clonedToken = new RefreshToken(token);
+        clonedToken.setTokenValue(
+                Base64.getEncoder().encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
+        return refreshTokenRepository.saveToken(clonedToken).orElse(null);
     }
 
     public void saveAllUserTokens(List<RefreshToken> tokens) {
         List<RefreshToken> clonedTokens = tokens.stream()
-                .map(RefreshToken::clone)
                 .map(token -> {
-                    token.setTokenValue(Base64.getEncoder().encodeToString(token.getTokenValue().getBytes(StandardCharsets.UTF_8)));
-                    return token;
-                })
-                .collect(Collectors.toList());
+                    RefreshToken clonedToken = new RefreshToken(token);
+                    clonedToken.setTokenValue(Base64.getEncoder()
+                            .encodeToString(clonedToken.getTokenValue().getBytes(StandardCharsets.UTF_8)));
+                    return clonedToken;
+                }).toList();
         refreshTokenRepository.saveAllTokens(clonedTokens);
     }
 

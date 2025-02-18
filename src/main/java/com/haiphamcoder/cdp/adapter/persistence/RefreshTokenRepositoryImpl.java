@@ -32,6 +32,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
         return refreshTokenJpaRepository.findAllByUserId(userId);
     }
 
+    @Transactional
     @Override
     public Optional<RefreshToken> getTokenByTokenValue(String tokenValue) {
         return refreshTokenJpaRepository.findTokenByTokenValue(tokenValue);
@@ -44,19 +45,16 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
                 .filter(token -> token.getUser().getId().equals(userId) && token.getExpiredAt().isAfter(now));
     }
 
-    @Transactional
     @Override
-    public RefreshToken saveToken(RefreshToken token) {
-        return refreshTokenJpaRepository.save(token);
+    public Optional<RefreshToken> saveToken(RefreshToken token) {
+        return Optional.of(refreshTokenJpaRepository.save(token));
     }
 
-    @Transactional
     @Override
     public void saveAllTokens(List<RefreshToken> tokens) {
         refreshTokenJpaRepository.saveAll(tokens);
     }
 
-    @Transactional
     @Override
     public void deleteTokenById(Long tokenId) {
         refreshTokenJpaRepository.deleteById(tokenId);

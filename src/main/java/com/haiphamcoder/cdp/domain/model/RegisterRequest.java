@@ -33,6 +33,7 @@ public class RegisterRequest {
     private String email;
 
     @JsonProperty("role")
-    private Role role;
+    @Builder.Default
+    private Role role = Role.USER;
 
 }

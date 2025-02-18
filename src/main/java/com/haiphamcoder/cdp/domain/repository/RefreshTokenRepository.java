@@ -13,7 +13,7 @@ public interface RefreshTokenRepository {
 
     Optional<RefreshToken> getValidTokenByUserIdAndTokenValue(Long userId, String tokenValue);
 
-    RefreshToken saveToken(RefreshToken token);
+    Optional<RefreshToken> saveToken(RefreshToken token);
 
     void saveAllTokens(List<RefreshToken> tokens);
 
