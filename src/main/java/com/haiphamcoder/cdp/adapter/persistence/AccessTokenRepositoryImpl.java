@@ -45,4 +45,9 @@ public class AccessTokenRepositoryImpl implements AccessTokenRepository {
     public void saveAllTokens(List<AccessToken> tokens) {
         accessTokenJpaRepository.saveAll(tokens);
     }
+
+    @Override
+    public void deleteTokenById(Long tokenId) {
+        accessTokenJpaRepository.deleteById(tokenId);
+    }
 }

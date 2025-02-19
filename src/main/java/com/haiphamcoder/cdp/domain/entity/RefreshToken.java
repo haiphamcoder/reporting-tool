@@ -54,16 +54,17 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(mappedBy = "refreshToken", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "refreshToken", cascade = CascadeType.ALL, orphanRemoval = true)
     private AccessToken accessToken;
 
-    public RefreshToken(RefreshToken other) {
-        this.id = other.id;
-        this.tokenValue = other.tokenValue;
-        this.tokenType = other.tokenType;
-        this.createdAt = other.createdAt;
-        this.expiredAt = other.expiredAt;
-        this.user = other.user;
-        this.accessToken = other.accessToken;
+    public static RefreshToken clone(RefreshToken token) {
+        return RefreshToken.builder()
+                .id(token.getId())
+                .tokenValue(token.getTokenValue())
+                .tokenType(token.getTokenType())
+                .expiredAt(token.getExpiredAt())
+                .user(token.getUser())
+                .accessToken(token.getAccessToken())
+                .build();
     }
 }

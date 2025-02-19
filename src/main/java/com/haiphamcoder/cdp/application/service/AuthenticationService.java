@@ -1,7 +1,5 @@
 package com.haiphamcoder.cdp.application.service;
 
-import java.util.List;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -42,7 +40,6 @@ public class AuthenticationService {
                                 .role(request.getRole())
                                 .build();
                 User createdUser = userService.createUser(user);
-                deleteAllUserTokens(createdUser);
                 return createdUser != null;
         }
 
@@ -83,25 +80,18 @@ public class AuthenticationService {
 
                         return AuthenticationResponse.builder()
                                         .userId(existedUser.getId())
-                                        .accessToken(accessToken)
-                                        .refreshToken(refreshToken)
+                                        .accessToken(savedAccessToken.getTokenValue())
+                                        .refreshToken(savedRefreshToken.getTokenValue())
                                         .build();
                 }
                 return null;
         }
 
-        private void deleteAllUserTokens(User user) {
-                List<RefreshToken> refreshTokens = refreshTokenService.getAllValidTokens(user.getId());
-                refreshTokens.forEach(refreshToken -> refreshTokenService.deleteToken(refreshToken.getId()));
-        }
-
         public String refreshToken(String authHeader) {
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String refreshToken = authHeader.substring(7);
-                        String username = jwtTokenProvider.extractUsername(refreshToken);
                         RefreshToken existedRefreshToken = refreshTokenService.getTokenByValue(refreshToken);
-                        if (existedRefreshToken != null
-                                        && existedRefreshToken.getUser().getUsername().equals(username)) {
+                        if (existedRefreshToken != null) {
                                 String accessToken = jwtTokenProvider
                                                 .generateAccessToken(existedRefreshToken.getUser());
                                 AccessToken accessTokenEntity = AccessToken.builder()
@@ -112,6 +102,7 @@ public class AuthenticationService {
                                                 .expiredAt(DateTimeUtils.convertToLocalDateTime(
                                                                 jwtTokenProvider.extractExpiration(accessToken)))
                                                 .build();
+                                accessTokenService.deleteTokenById(existedRefreshToken.getAccessToken().getId());
                                 AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
                                 if (savedAccessToken != null) {
                                         return savedAccessToken.getTokenValue();

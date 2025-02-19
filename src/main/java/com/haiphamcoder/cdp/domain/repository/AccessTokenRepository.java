@@ -13,4 +13,6 @@ public interface AccessTokenRepository {
     Optional<AccessToken> saveToken(AccessToken token);
 
     void saveAllTokens(List<AccessToken> tokens);
+
+    void deleteTokenById(Long tokenId);
 }

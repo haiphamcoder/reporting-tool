@@ -52,12 +52,14 @@ public class AccessToken {
     @JoinColumn(name = "refresh_token_id", nullable = false)
     private RefreshToken refreshToken;
 
-    public AccessToken(AccessToken other){
-        this.id = other.id;
-        this.tokenValue = other.tokenValue;
-        this.tokenType = other.tokenType;
-        this.expiredAt = other.expiredAt;
-        this.createdAt = other.createdAt;
-        this.refreshToken = other.refreshToken;
+    public static AccessToken clone(AccessToken token) {
+        return AccessToken.builder()
+                .id(token.getId())
+                .tokenValue(token.getTokenValue())
+                .tokenType(token.getTokenType())
+                .expiredAt(token.getExpiredAt())
+                .createdAt(token.getCreatedAt())
+                .refreshToken(token.getRefreshToken())
+                .build();
     }
 }
