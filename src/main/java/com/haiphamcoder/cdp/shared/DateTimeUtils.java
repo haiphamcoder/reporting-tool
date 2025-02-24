@@ -16,4 +16,12 @@ public class DateTimeUtils {
     public static Date convertToDate(LocalDateTime localDateTime) {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
+
+    public static long convertLocalDateTimeToEpoch(LocalDateTime localDateTime, ZoneId zoneId) {
+        return localDateTime.atZone(zoneId).toEpochSecond();
+    }
+
+    public static long convertLocalDateTimeToUtcEpoch(LocalDateTime localDateTime) {
+        return convertLocalDateTimeToEpoch(localDateTime, ZoneId.of("UTC"));
+    }
 }
