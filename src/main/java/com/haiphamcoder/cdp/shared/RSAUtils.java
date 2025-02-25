@@ -6,6 +6,8 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -15,6 +17,30 @@ import java.util.Base64;
 @UtilityClass
 @Slf4j
 public class RSAUtils {
+
+    /**
+     * Generate RSA key pair with given key size
+     * 
+     * @param keySize key size
+     * @return RSA key pair with public and private key
+     */
+    public static RSAKeyPair generateKeyPair(int keySize) {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(keySize);
+            KeyPair keyPair = keyPairGenerator.generateKeyPair();
+            PublicKey publicKey = keyPair.getPublic();
+            PrivateKey privateKey = keyPair.getPrivate();
+            return RSAKeyPair.builder()
+                    .publicKey(Base64.getEncoder().encodeToString(publicKey.getEncoded()))
+                    .privateKey(Base64.getEncoder().encodeToString(privateKey.getEncoded()))
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to generate RSA key pair", e);
+        }
+        return null;
+    }
+
     /**
      * Get public key from base64 string
      * 
