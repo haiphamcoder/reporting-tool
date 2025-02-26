@@ -1,4 +1,4 @@
-package com.haiphamcoder.cdp.shared;
+package com.haiphamcoder.cdp.shared.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

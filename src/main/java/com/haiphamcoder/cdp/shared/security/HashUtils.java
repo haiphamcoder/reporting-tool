@@ -1,10 +1,12 @@
-package com.haiphamcoder.cdp.shared;
+package com.haiphamcoder.cdp.shared.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.zip.CRC32;
+
+import com.haiphamcoder.cdp.shared.security.exception.HashingException;
 
 import lombok.experimental.UtilityClass;
 
@@ -29,7 +31,7 @@ public class HashUtils {
      * @param input data to hash
      * @return hashed data
      */
-    public static String hashSHA256(String input) {
+    public static String hashSHA256(String input) throws HashingException {
         return hash(input, "SHA-256");
     }
 
@@ -39,7 +41,7 @@ public class HashUtils {
      * @param input data to hash
      * @return hashed data
      */
-    public static String hashSHA512(String input) {
+    public static String hashSHA512(String input) throws HashingException {
         return hash(input, "SHA-512");
     }
 
@@ -50,13 +52,13 @@ public class HashUtils {
      * @param algorithm algorithm to use
      * @return hashed data
      */
-    private static String hash(String input, String algorithm) {
+    private static String hash(String input, String algorithm) throws HashingException {
         try {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
             byte[] hashedBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hashedBytes);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing data with algorithm: " + algorithm, e);
+            throw new HashingException("No such algorithm", e);
         }
     }
 
@@ -68,7 +70,7 @@ public class HashUtils {
      * @param algorithm algorithm to use
      * @return true if the hash is valid, false otherwise
      */
-    public static boolean verifyHash(String input, String hashed, String algorithm) {
+    public static boolean verifyHash(String input, String hashed, String algorithm) throws HashingException {
         return hash(input, algorithm).equals(hashed);
     }
 
@@ -90,7 +92,7 @@ public class HashUtils {
      * @param hashed hashed data
      * @return true if the hash is valid, false otherwise
      */
-    public static boolean verifySHA256(String input, String hashed) {
+    public static boolean verifySHA256(String input, String hashed) throws HashingException{
         return verifyHash(input, hashed, "SHA-256");
     }
 
@@ -101,7 +103,7 @@ public class HashUtils {
      * @param hashed hashed data
      * @return true if the hash is valid, false otherwise
      */
-    public static boolean verifySHA512(String input, String hashed) {
+    public static boolean verifySHA512(String input, String hashed) throws HashingException {
         return verifyHash(input, hashed, "SHA-512");
     }
 
