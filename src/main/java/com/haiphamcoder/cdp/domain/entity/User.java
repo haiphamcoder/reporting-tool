@@ -2,13 +2,16 @@ package com.haiphamcoder.cdp.domain.entity;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haiphamcoder.cdp.domain.model.Role;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2Provider;
 import com.haiphamcoder.cdp.shared.BaseEntity;
 
 import jakarta.persistence.CascadeType;
@@ -36,7 +39,7 @@ import lombok.Setter;
 @Table(name = "users")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User extends BaseEntity implements UserDetails {
+public class User extends BaseEntity implements OAuth2User, UserDetails {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -45,7 +48,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false)
+    @Column(name = "last_name")
     private String lastName;
 
     @Column(name = "username", nullable = false, unique = true)
@@ -57,6 +60,21 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    @Column(name = "provider", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private OAuth2Provider provider = OAuth2Provider.LOCAL;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "avatar_url")
+    private transient String avatarUrl;
+
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     private boolean enabled = true;
@@ -67,7 +85,10 @@ public class User extends BaseEntity implements UserDetails {
 
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.USER;
+
+    private transient Map<String, Object> attributes;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private transient List<RefreshToken> refreshTokens;
@@ -105,6 +126,16 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String getName() {
+        return firstName + " " + lastName;
     }
 
 }

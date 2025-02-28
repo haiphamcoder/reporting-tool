@@ -25,7 +25,15 @@ public class UserService {
         return user.get();
     }
 
-    public User createUser(User user) {
+    public User getUserByEmail(String email) {
+        Optional<User> user = userRepository.getUserByEmail(email);
+        if (user.isEmpty()) {
+            return null;
+        }
+        return user.get();
+    }
+
+    public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.saveUser(user);
     }

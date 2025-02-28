@@ -12,9 +12,12 @@ import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 
+
 @Repository
 interface UserJpaRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+
+    Optional<User> findByEmail(String email);
 }
 
 @Component
@@ -27,6 +30,11 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> getUserByUsername(String username) {
         return userJpaRepository.findByUsername(username);
+    }
+
+    @Override
+    public Optional<User> getUserByEmail(String email) {
+        return userJpaRepository.findByEmail(email);
     }
 
     @Override

@@ -7,5 +7,7 @@ import com.haiphamcoder.cdp.domain.entity.User;
 public interface UserRepository {
     Optional<User> getUserByUsername(String username);
 
+    Optional<User> getUserByEmail(String email);
+
     User saveUser(User user);
 }

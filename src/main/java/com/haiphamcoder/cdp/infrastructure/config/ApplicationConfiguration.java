@@ -8,6 +8,10 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 
 import com.haiphamcoder.cdp.domain.repository.UserRepository;
 import com.haiphamcoder.cdp.infrastructure.security.auditing.ApplicationAuditAware;
@@ -20,25 +24,30 @@ public class ApplicationConfiguration {
     private final UserRepository userRepository;
 
     @Bean
-    public UserDetailsService userDetailsService() {
+    UserDetailsService userDetailsService() {
         return username -> userRepository.getUserByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean(name = "auditorAware")
-    public AuditorAware<Long> auditorAware() {
+    AuditorAware<Long> auditorAware() {
         return new ApplicationAuditAware();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
     }
 
 }

@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -15,6 +16,9 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 import com.haiphamcoder.cdp.domain.model.Permission;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtAuthenticationFilter;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.CustomOAuth2UserService;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2AuthenticationFailureHandler;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.haiphamcoder.cdp.shared.UnauthorizedAuthenticationEntryPoint;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,7 @@ public class SecurityConfiguration {
                         "/",
                         "/api/v1/auth/register",
                         "/api/v1/auth/authenticate",
+                        "/api/v1/oauth2/**",
                         "/api/docs/**",
                         "/swagger-ui/**",
         };
@@ -39,9 +44,13 @@ public class SecurityConfiguration {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final UnauthorizedAuthenticationEntryPoint unauthorizedAuthenticationEntryPoint;
         private final LogoutHandler logoutHandler;
+        private final HttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+        private final OAuth2AuthenticationFailureHandler oAuth2AuthorizationFailureHandler;
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
                                 .cors(cors -> cors.disable())
@@ -61,6 +70,17 @@ public class SecurityConfiguration {
                                                 .hasAnyAuthority(Permission.ADMIN_DELETE.name())
                                                 .anyRequest()
                                                 .authenticated())
+                                .oauth2Login(login -> login
+                                                .authorizationEndpoint(authorization -> authorization
+                                                                .baseUri("/api/v1/oauth2/authorize")
+                                                                .authorizationRequestRepository(authorizationRequestRepository))
+                                                .redirectionEndpoint(redirection -> redirection
+                                                                .baseUri("/api/v1/oauth2/callback"))
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService))
+                                                .successHandler(oAuth2AuthenticationSuccessHandler)
+                                                .failureHandler(oAuth2AuthorizationFailureHandler)
+                                                )
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

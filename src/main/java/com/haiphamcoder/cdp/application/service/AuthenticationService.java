@@ -38,7 +38,7 @@ public class AuthenticationService {
                                 .email(request.getEmail())
                                 .role(request.getRole())
                                 .build();
-                User createdUser = userService.createUser(user);
+                User createdUser = userService.saveUser(user);
                 return createdUser != null;
         }
 
