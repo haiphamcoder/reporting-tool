@@ -4,7 +4,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.cdp.domain.entity.AccessToken;
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.domain.model.AuthenticationRequest;
@@ -15,6 +14,7 @@ import com.haiphamcoder.cdp.domain.model.TokenType;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
 import com.haiphamcoder.cdp.shared.DateTimeUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
+import com.haiphamcoder.cdp.shared.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthenticationService {
         private final UserService userService;
-        private final AccessTokenService accessTokenService;
         private final RefreshTokenService refreshTokenService;
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManager authenticationManager;
@@ -63,24 +62,10 @@ public class AuthenticationService {
                         if (savedRefreshToken == null) {
                                 return null;
                         }
-
-                        String accessToken = jwtTokenProvider.generateAccessToken(existedUser);
-                        AccessToken accessTokenEntity = AccessToken.builder()
-                                        .id(snowflakeIdGenerator.generateId())
-                                        .refreshToken(savedRefreshToken)
-                                        .tokenValue(accessToken)
-                                        .tokenType(TokenType.BEARER)
-                                        .expiredAt(DateTimeUtils.convertToLocalDateTime(
-                                                        jwtTokenProvider.extractExpiration(accessToken)))
-                                        .build();
-                        AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
-                        if (savedAccessToken == null) {
-                                return null;
-                        }
-
+                        String accessTokenValue = jwtTokenProvider.generateAccessToken(existedUser);
                         return AuthenticationResponse.builder()
                                         .userId(existedUser.getId())
-                                        .accessToken(savedAccessToken.getTokenValue())
+                                        .accessToken(accessTokenValue)
                                         .refreshToken(savedRefreshToken.getTokenValue())
                                         .build();
                 }
@@ -94,18 +79,8 @@ public class AuthenticationService {
                         if (existedRefreshToken != null) {
                                 String accessToken = jwtTokenProvider
                                                 .generateAccessToken(existedRefreshToken.getUser());
-                                AccessToken accessTokenEntity = AccessToken.builder()
-                                                .id(snowflakeIdGenerator.generateId())
-                                                .refreshToken(existedRefreshToken)
-                                                .tokenValue(accessToken)
-                                                .tokenType(TokenType.BEARER)
-                                                .expiredAt(DateTimeUtils.convertToLocalDateTime(
-                                                                jwtTokenProvider.extractExpiration(accessToken)))
-                                                .build();
-                                accessTokenService.deleteTokenById(existedRefreshToken.getAccessToken().getId());
-                                AccessToken savedAccessToken = accessTokenService.saveUserToken(accessTokenEntity);
-                                if (savedAccessToken != null) {
-                                        return savedAccessToken.getTokenValue();
+                                if (!StringUtils.isNullOrEmpty(accessToken)) {
+                                        return accessToken;
                                 }
                         }
                 }

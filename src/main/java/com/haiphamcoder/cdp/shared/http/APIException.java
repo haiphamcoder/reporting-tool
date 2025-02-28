@@ -1,7 +1,7 @@
 package com.haiphamcoder.cdp.shared.http;
 
 public class APIException extends Exception {
-    private int statusCode;
+    private final int statusCode;
 
     public APIException(String message, int statusCode) {
         super(message);

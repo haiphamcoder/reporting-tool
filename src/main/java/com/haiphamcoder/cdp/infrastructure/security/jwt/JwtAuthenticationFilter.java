@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        long userId = Long.valueOf(userIdHeader);
+        long userId = Long.parseLong(userIdHeader);
         final String token = authHeader.substring(7);
         final String username = jwtTokenProvider.extractUsername(token);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haiphamcoder.cdp.domain.model.TokenType;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,7 +14,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,9 +52,6 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(mappedBy = "refreshToken", cascade = CascadeType.ALL, orphanRemoval = true)
-    private AccessToken accessToken;
-
     public static RefreshToken clone(RefreshToken token) {
         return RefreshToken.builder()
                 .id(token.getId())
@@ -64,7 +59,6 @@ public class RefreshToken {
                 .tokenType(token.getTokenType())
                 .expiredAt(token.getExpiredAt())
                 .user(token.getUser())
-                .accessToken(token.getAccessToken())
                 .build();
     }
 }

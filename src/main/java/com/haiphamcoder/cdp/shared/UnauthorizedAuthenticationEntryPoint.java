@@ -8,6 +8,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +23,8 @@ public class UnauthorizedAuthenticationEntryPoint implements AuthenticationEntry
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        ApiResponse<String> apiResponse = ApiResponseFactory.createUnauthorizedResponse("You are not authorized to access this resource");
+        RestAPIResponse<String> apiResponse = RestAPIResponse.ResponseFactory.createUnauthorizedResponse(
+                "You are not authorized to access this resource");
         new ObjectMapper().writeValue(response.getOutputStream(), apiResponse);
     }
     

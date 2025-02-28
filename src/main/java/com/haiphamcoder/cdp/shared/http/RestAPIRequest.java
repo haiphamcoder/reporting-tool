@@ -41,29 +41,4 @@ public class RestAPIRequest {
     @Builder.Default
     private int maxRetries = 3;
 
-
-    // public APIRequest(String endpoint, String method, Map<String, String> headers,
-    //         Map<String, String> queryParams, String body, int timeoutMs, int maxRetries) {
-    //     this.requestId = UUID.randomUUID().toString();
-    //     this.endpoint = endpoint;
-    //     this.method = method.toUpperCase();
-    //     this.body = body;
-    //     this.headers = headers;
-    //     this.queryParams = queryParams;
-    //     this.timeoutMs = timeoutMs;
-    //     this.maxRetries = maxRetries;
-    // }
-
-    // public APIRequest(String endpoint, String method, Map<String, String> headers,
-    //         Map<String, String> queryParams, String body) {
-    //     this(endpoint, method, headers, queryParams, body, 5000, 3);
-    // }
-
-    // public APIResponse execute() {
-    //     return executeWithRetry(maxRetries);
-    // }
-
-    // public CompletableFuture<APIResponse> executeAsync() {
-    //     return CompletableFuture.supplyAsync(this::execute);
-    // }
 }

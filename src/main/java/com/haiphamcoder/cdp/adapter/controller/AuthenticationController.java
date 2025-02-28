@@ -13,8 +13,7 @@ import com.haiphamcoder.cdp.application.service.AuthenticationService;
 import com.haiphamcoder.cdp.domain.model.AuthenticationRequest;
 import com.haiphamcoder.cdp.domain.model.AuthenticationResponse;
 import com.haiphamcoder.cdp.domain.model.RegisterRequest;
-import com.haiphamcoder.cdp.shared.ApiResponse;
-import com.haiphamcoder.cdp.shared.ApiResponseFactory;
+import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,30 +25,30 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Boolean>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<RestAPIResponse<Boolean>> register(@RequestBody RegisterRequest request) {
         if (authenticationService.register(request)) {
-            return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(true));
+            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(true));
         }
-        return ResponseEntity.ok().body(ApiResponseFactory.createErrorResponse("Register failed"));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createErrorResponse("Register failed"));
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(
+    public ResponseEntity<RestAPIResponse<AuthenticationResponse>> authenticate(
             @RequestBody AuthenticationRequest request) {
         AuthenticationResponse response = authenticationService.authenticate(request);
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(response));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(response));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<Object>> refreshToken(
+    public ResponseEntity<RestAPIResponse<Object>> refreshToken(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken,
             @RequestHeader("user-id") String userId) {
         String newAccessToken = authenticationService.refreshToken(refreshToken);
         if (newAccessToken == null) {
-            return ResponseEntity.badRequest().body(ApiResponseFactory.createErrorResponse("Invalid refresh token"));
+            return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createUnauthorizedResponse("Invalid refresh token"));
         }
         Map<String, String> body = Map.of("access_token", newAccessToken);
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse(body));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(body));
     }
 
 }

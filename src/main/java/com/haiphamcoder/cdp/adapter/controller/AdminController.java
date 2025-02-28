@@ -4,8 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.haiphamcoder.cdp.shared.ApiResponse;
-import com.haiphamcoder.cdp.shared.ApiResponseFactory;
+import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -21,23 +20,25 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public class AdminController {
 
     @GetMapping
-    public ResponseEntity<ApiResponse<String>> get(@RequestHeader("user-id") String userId) {
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse("GET::admin controller"));
+    public ResponseEntity<RestAPIResponse<String>> get(@RequestHeader("user-id") String userId) {
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("GET::admin controller"));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<String>> post(@RequestHeader("user-id") String userId) {
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse("POST::admin controller"));
+    public ResponseEntity<RestAPIResponse<String>> post(@RequestHeader("user-id") String userId) {
+        return ResponseEntity.ok()
+                .body(RestAPIResponse.ResponseFactory.createSuccessResponse("POST::admin controller"));
     }
 
     @PutMapping
-    public ResponseEntity<ApiResponse<String>> put(@RequestHeader("user-id") String userId) {
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse("PUT::admin controller"));
+    public ResponseEntity<RestAPIResponse<String>> put(@RequestHeader("user-id") String userId) {
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("PUT::admin controller"));
     }
 
     @DeleteMapping
-    public ResponseEntity<ApiResponse<String>> delete(@RequestHeader("user-id") String userId) {
-        return ResponseEntity.ok().body(ApiResponseFactory.createSuccessResponse("DELETE::admin controller"));
+    public ResponseEntity<RestAPIResponse<String>> delete(@RequestHeader("user-id") String userId) {
+        return ResponseEntity.ok()
+                .body(RestAPIResponse.ResponseFactory.createSuccessResponse("DELETE::admin controller"));
     }
 
 }

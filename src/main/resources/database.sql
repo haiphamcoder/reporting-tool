@@ -25,17 +25,6 @@ CREATE TABLE
     ) COMMENT = 'Bảng lưu refresh token để xác thực user khi access token hết hạn';
 
 CREATE TABLE
-    access_tokens (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của access token',
-        refresh_token_id BIGINT NOT NULL COMMENT 'Liên kết với refresh token tương ứng',
-        token VARCHAR(512) NOT NULL UNIQUE COMMENT 'JWT của access_token',
-        type ENUM ('BEARER', 'MAC', 'OTHER') NOT NULL DEFAULT 'BEARER' COMMENT 'Loại access token',
-        expired_at DATETIME NOT NULL COMMENT 'Thời gian hết hạn của access token',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo access token',
-        CONSTRAINT fk_access_tokens_refresh FOREIGN KEY (refresh_token_id) REFERENCES refresh_tokens (id) ON DELETE CASCADE
-    ) COMMENT = 'Bảng lưu access token để xác thực user khi gọi API';
-
-CREATE TABLE
     otp (
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của OTP',
         user_id BIGINT NOT NULL COMMENT 'ID của user nhận OTP',
@@ -47,7 +36,5 @@ CREATE TABLE
     ) COMMENT = 'Bảng lưu mã OTP dùng để xác thực user';
 
 CREATE INDEX idx_user_id ON refresh_tokens (user_id);
-
-CREATE INDEX idx_refresh_token_id ON access_tokens (refresh_token_id);
 
 CREATE INDEX idx_otp_user ON otp (user_id);

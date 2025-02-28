@@ -12,44 +12,53 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
 public class HttpCaller {
+    private static final String FAILED_TO_SEND_HTTP_REQUEST = "Failed to send HTTP request";
+
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    public static RestAPIResponse execute(RestAPIRequest request) {
+    public static RestAPIResponse<Object> execute(RestAPIRequest request) {
         HttpRequest httpRequest = buildRequest(request);
         int remainingRetries = request.getMaxRetries();
         while (remainingRetries > 0) {
             try {
                 HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() < 500) {
-                    return new RestAPIResponse(request.getRequestId(), response.statusCode(), response.body(),
+                    return new RestAPIResponse<>(request.getRequestId(), response.statusCode(), "Success",
+                            response.body(),
                             response.headers().map());
                 }
-            } catch (IOException | InterruptedException e) {
-                log.error("Failed to send HTTP request", e);
+            } catch (IOException e) {
+                log.error(FAILED_TO_SEND_HTTP_REQUEST, e);
+            } catch (InterruptedException e) {
+                log.error(FAILED_TO_SEND_HTTP_REQUEST, e);
+                Thread.currentThread().interrupt();
             }
             remainingRetries--;
         }
-        return new RestAPIResponse(request.getRequestId(), 500, null, null);
+        return new RestAPIResponse<>(request.getRequestId(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                FAILED_TO_SEND_HTTP_REQUEST, null, null);
     }
 
-    public static CompletableFuture<RestAPIResponse> executeAsync(RestAPIRequest request) {
+    public static CompletableFuture<RestAPIResponse<String>> executeAsync(RestAPIRequest request) {
         HttpRequest httpRequest = buildRequest(request);
         return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenApply(
-                        response -> new RestAPIResponse(request.getRequestId(), response.statusCode(), response.body(),
-                                response.headers().map()))
+                .thenApply(response -> new RestAPIResponse<>(request.getRequestId(), response.statusCode(), "Success",
+                        response.body(), response.headers().map()))
                 .exceptionally(e -> {
-                    log.error("Failed to send HTTP request", e);
-                    return new RestAPIResponse(request.getRequestId(), 500, null, null);
+                    log.error(FAILED_TO_SEND_HTTP_REQUEST, e);
+                    return new RestAPIResponse<>(request.getRequestId(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            FAILED_TO_SEND_HTTP_REQUEST, null, null);
                 });
     }
 
