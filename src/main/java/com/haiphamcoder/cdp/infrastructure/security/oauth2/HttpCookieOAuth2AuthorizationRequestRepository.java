@@ -10,12 +10,14 @@ import com.haiphamcoder.cdp.shared.StringUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class HttpCookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-
-    private final static int cookieExpirationSec = 600;
 
     private final HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
 
@@ -33,17 +35,16 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             HttpServletResponse response) {
         httpSessionOAuth2AuthorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, request,
                 response);
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.REGISTRATION_REDIRECT_URL);
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.SUCCESS_REDIRECT_URL);
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.FAILURE_REDIRECT_URL);
+        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.SUCCESS_REDIRECT_URI.getValue());
+        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.FAILURE_REDIRECT_URI.getValue());
     }
 
     private void saveParamInCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         String value = request.getParameter(name);
         if (!StringUtils.isNullOrEmpty(value)) {
-            CookieUtils.addCookie(response, name, value, cookieExpirationSec);
+            CookieUtils.addCookie(response, name, value);
         } else {
-            throw new IllegalArgumentException("Request param " + name + " is required and cannot be empty");
+            log.error("Request param " + name + " is required and cannot be empty");
         }
     }
 

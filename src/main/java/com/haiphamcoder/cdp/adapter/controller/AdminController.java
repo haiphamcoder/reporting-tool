@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.adapter.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,23 +20,23 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @Tag(name = "admin", description = "Admin controller")
 public class AdminController {
 
-    @GetMapping
+    @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> get(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("GET::admin controller"));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> post(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("POST::admin controller"));
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> put(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("PUT::admin controller"));
     }
 
-    @DeleteMapping
+    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> delete(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("DELETE::admin controller"));

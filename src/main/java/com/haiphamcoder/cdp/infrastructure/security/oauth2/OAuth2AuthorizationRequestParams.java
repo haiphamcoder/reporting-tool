@@ -1,9 +1,15 @@
 package com.haiphamcoder.cdp.infrastructure.security.oauth2;
 
-public class OAuth2AuthorizationRequestParams {
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-    public final static String REGISTRATION_REDIRECT_URL = "registration-redirect-url";
-    public final static String SUCCESS_REDIRECT_URL = "success-redirect-url";
-    public final static String FAILURE_REDIRECT_URL = "failure-redirect-url";
+@RequiredArgsConstructor
+public enum OAuth2AuthorizationRequestParams {
+
+    SUCCESS_REDIRECT_URI("success-redirect-uri"),
+    FAILURE_REDIRECT_URI("failure-redirect-uri");
+
+    @Getter
+    private final String value;
 
 }

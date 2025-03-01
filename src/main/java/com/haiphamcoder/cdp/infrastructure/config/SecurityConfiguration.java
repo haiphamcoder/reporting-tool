@@ -84,7 +84,8 @@ public class SecurityConfiguration {
                                                 .failureHandler(oAuth2AuthorizationFailureHandler))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordBodyAuthenticationFilter.class)
+                                .addFilterBefore(jwtAuthenticationFilter,
+                                                UsernamePasswordBodyAuthenticationFilter.class)
                                 .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
                                                 .addLogoutHandler(logoutHandler)
                                                 .logoutSuccessHandler((request, response,

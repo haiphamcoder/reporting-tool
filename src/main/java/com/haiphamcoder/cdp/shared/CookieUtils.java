@@ -16,14 +16,14 @@ public class CookieUtils {
         if (cookies == null) {
             return Optional.empty();
         }
-        return Arrays.stream(cookies).filter(c -> c.getName().equals(name)).findAny();
+        return Arrays.stream(cookies).filter(cookie -> cookie
+                .getName()
+                .equals(name))
+                .findAny();
     }
 
-    public void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+    public void addCookie(HttpServletResponse response, String name, String value) {
         Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
     }
 
@@ -32,9 +32,7 @@ public class CookieUtils {
         if (cookies != null) {
             Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(name)).findAny()
                     .ifPresent(cookie -> {
-                        cookie.setValue("");
-                        cookie.setPath("/");
-                        cookie.setMaxAge(0);
+                        cookie.setValue(null);
                         response.addCookie(cookie);
                     });
         }

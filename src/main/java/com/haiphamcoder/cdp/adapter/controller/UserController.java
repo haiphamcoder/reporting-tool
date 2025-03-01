@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.adapter.controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,23 +18,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/v1/user")
 @Tag(name = "user", description = "User controller")
 public class UserController {
-    @GetMapping
+    @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> get(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("GET::user controller"));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> post(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("POST::user controller"));
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> put(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("PUT::user controller"));
     }
 
-    @DeleteMapping
+    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> delete(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("DELETE::user controller"));
