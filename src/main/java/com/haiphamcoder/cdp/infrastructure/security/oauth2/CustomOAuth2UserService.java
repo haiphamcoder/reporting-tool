@@ -7,8 +7,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.cdp.application.service.UserService;
 import com.haiphamcoder.cdp.domain.entity.User;
+import com.haiphamcoder.cdp.domain.repository.UserRepository;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.exception.OAuth2AuthenticationProcessingException;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.user.OAuth2UserInfo;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.user.OAuth2UserInfoFactory;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
@@ -37,10 +37,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new IllegalArgumentException("Email not found from OAuth2 provider");
         }
 
-        User user = userService.getUserByEmail(oAuth2UserInfo.getEmail());
+        User user = userRepository.getUserByEmail(oAuth2UserInfo.getEmail()).orElse(null);
         if (user != null) {
             if (!user.getProvider().equals(OAuth2Provider.valueOf(userRequest.getClientRegistration().getRegistrationId().toUpperCase()))){
-                throw new OAuth2AuthenticationProcessingException("Looks like you're signed up with " + user.getProvider() + " account. Please use your " + user.getProvider() + " account to login.");
+                throw new OAuth2AuthenticationProcessingException("error","Looks like you're signed up with " + user.getProvider() + " account. Please use your " + user.getProvider() + " account to login.");
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
@@ -52,7 +52,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
         existingUser.setFirstName(oAuth2UserInfo.getName());
         existingUser.setAvatarUrl(oAuth2UserInfo.getImageUrl());
-        return userService.saveUser(existingUser);
+        return userRepository.saveUser(existingUser);
         
     }
 
@@ -67,7 +67,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .emailVerified(true)
                         .password(UUID.randomUUID().toString())
                         .build();
-        return userService.saveUser(user);
+        return userRepository.saveUser(user);
     }
     
 }

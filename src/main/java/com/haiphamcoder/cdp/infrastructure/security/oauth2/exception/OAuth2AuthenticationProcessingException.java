@@ -1,12 +1,16 @@
 package com.haiphamcoder.cdp.infrastructure.security.oauth2.exception;
 
-public class OAuth2AuthenticationProcessingException extends RuntimeException {
-    public OAuth2AuthenticationProcessingException(String message) {
+import org.springframework.security.core.AuthenticationException;
+
+public class OAuth2AuthenticationProcessingException extends AuthenticationException {
+    private final String errorCode;
+
+    public OAuth2AuthenticationProcessingException(String errorCode, String message) {
         super(message);
+        this.errorCode = errorCode;
     }
 
-    public OAuth2AuthenticationProcessingException(String message, Throwable cause) {
-        super(message, cause);
+    public String getErrorCode() {
+        return errorCode;
     }
-
 }
