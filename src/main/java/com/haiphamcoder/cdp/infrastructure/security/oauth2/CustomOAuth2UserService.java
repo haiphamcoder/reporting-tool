@@ -26,6 +26,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
+        log.info("OAuth2 user request: {}", userRequest);
         OAuth2User oAuth2User = super.loadUser(userRequest);
         log.info("OAuth2 user: {}", oAuth2User);
         return processOAuth2User(userRequest, oAuth2User);

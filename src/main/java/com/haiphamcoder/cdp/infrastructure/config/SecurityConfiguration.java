@@ -31,11 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityConfiguration {
         private static final String[] AUTH_WHITELIST = {
                         "/",
+                        "/error/**",
+                        "/favicon.ico",
                         "/api/v1/auth/register",
                         "/api/v1/auth/authenticate",
-                        "/api/v1/oauth2/**",
-                        "/api/v1/oauth2/authorize/**",
-                        "/api/v1/oauth2/callback/**",
+                        "/oauth2/authorization/**",
+                        "/oauth2/callback/**",
                         "/api/docs/**",
                         "/swagger-ui/**",
         };
@@ -47,13 +48,12 @@ public class SecurityConfiguration {
         private final LogoutHandler logoutHandler;
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-        private final OAuth2AuthenticationFailureHandler oAuth2AuthorizationFailureHandler;
-        private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+        private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+        private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(csrf -> csrf.disable())
+                http.csrf(csrf -> csrf.disable())
                                 .cors(cors -> cors.disable())
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(unauthorizedAuthenticationEntryPoint))
@@ -71,22 +71,23 @@ public class SecurityConfiguration {
                                                 .hasAnyAuthority(Permission.ADMIN_DELETE.name())
                                                 .anyRequest()
                                                 .authenticated())
-                                .oauth2Login(login -> login
+                                .oauth2Login(oauth2 -> oauth2
                                                 .authorizationEndpoint(authorization -> authorization
-                                                                .baseUri("/api/v1/oauth2/authorize")
+                                                                .baseUri("/oauth2/authorization")
                                                                 .authorizationRequestRepository(
-                                                                                authorizationRequestRepository))
+                                                                                httpCookieOAuth2AuthorizationRequestRepository))
                                                 .redirectionEndpoint(redirection -> redirection
-                                                                .baseUri("/api/v1/oauth2/callback"))
+                                                                .baseUri("/oauth2/callback/*"))
                                                 .userInfoEndpoint(userInfo -> userInfo
                                                                 .userService(customOAuth2UserService))
                                                 .successHandler(oAuth2AuthenticationSuccessHandler)
-                                                .failureHandler(oAuth2AuthorizationFailureHandler))
+                                                .failureHandler(oAuth2AuthenticationFailureHandler))
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .addFilterBefore(jwtAuthenticationFilter,
                                                 UsernamePasswordBodyAuthenticationFilter.class)
-                                .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
+                                .logout(logout -> logout
+                                                .logoutUrl("/api/v1/auth/logout")
                                                 .addLogoutHandler(logoutHandler)
                                                 .logoutSuccessHandler((request, response,
                                                                 authentication) -> SecurityContextHolder

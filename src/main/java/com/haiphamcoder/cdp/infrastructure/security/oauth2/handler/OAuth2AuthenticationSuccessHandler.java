@@ -8,8 +8,11 @@ import java.util.Optional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import com.haiphamcoder.cdp.infrastructure.config.OAuth2AuthorizedRedirectUriConfiguration;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2AuthorizationRequestParams;
 import com.haiphamcoder.cdp.shared.CookieUtils;
 import jakarta.servlet.ServletException;
@@ -25,13 +28,15 @@ import lombok.extern.slf4j.Slf4j;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuth2AuthorizedRedirectUriConfiguration redirectUriConfiguration;
-
-    private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+   
+    private static final String ACCESS_TOKEN = "access_token";
+    private static final String REFRESH_TOKEN = "refresh_token";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
+        log.info("OAuth2AuthenticationSuccessHandler onAuthenticationSuccess");
         String targetUrl = determineTargetUrl(request, response, authentication);
         log.info("Redirecting to: " + targetUrl);
 
@@ -40,28 +45,26 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             return;
         }
 
-        Map<String, String> jwtTokens = jwtTokenProvider.generateTokens(authentication);
-        String accessToken = jwtTokens.get(ACCESS_TOKEN_COOKIE_NAME);
-        String refreshToken = jwtTokens.get(REFRESH_TOKEN_COOKIE_NAME);
-        CookieUtils.addCookie(response, ACCESS_TOKEN_COOKIE_NAME, accessToken);
-        CookieUtils.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-
         clearAuthenticationAttributes(request, response);
-        clearAuthorizationRequestCookies(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
     @Override
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) {
-        Optional<String> successRedirectUri = CookieUtils
-                .getCookie(request, OAuth2AuthorizationRequestParams.SUCCESS_REDIRECT_URI.getValue())
+        Optional<String> redirectUri = CookieUtils
+                .getCookie(request, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue())
                 .map(Cookie::getValue);
-        if (successRedirectUri.isPresent() && !isAuthorizedRedirectUri(successRedirectUri.get())) {
-            throw new IllegalArgumentException("Unauthorized redirect URI: " + successRedirectUri.get());
+        if (redirectUri.isPresent() && !isAuthorizedRedirectUri(redirectUri.get())) {
+            throw new IllegalArgumentException("Unauthorized redirect URI: " + redirectUri.get());
         }
 
-        return successRedirectUri.orElseGet(() -> getDefaultTargetUrl());
+        String targetUrl = redirectUri.orElseGet(() -> getDefaultTargetUrl());
+        Map<String, String> tokens = jwtTokenProvider.generateTokens(authentication);
+        String accessToken = tokens.get(ACCESS_TOKEN);
+        String refreshToken = tokens.get(REFRESH_TOKEN);
+        return UriComponentsBuilder.fromUriString(targetUrl).queryParam(ACCESS_TOKEN, accessToken)
+                .queryParam(REFRESH_TOKEN, refreshToken).build().toUriString();
     }
 
     private boolean isAuthorizedRedirectUri(String uri) {
@@ -71,15 +74,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                     URI authorizedURI = URI.create(authorizedRedirectUri);
                     return clientRedirectUri.equals(authorizedURI);
                 });
-
     }
 
     protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
         super.clearAuthenticationAttributes(request);
-    }
-
-    private void clearAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
-        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.SUCCESS_REDIRECT_URI.getValue());
-        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.FAILURE_REDIRECT_URI.getValue());
+        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
     }
 }

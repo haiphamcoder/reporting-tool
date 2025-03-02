@@ -21,10 +21,6 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
     private final HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
 
-    public HttpCookieOAuth2AuthorizationRequestRepository() {
-        httpSessionOAuth2AuthorizationRequestRepository = new HttpSessionOAuth2AuthorizationRequestRepository();
-    }
-
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         return httpSessionOAuth2AuthorizationRequestRepository.loadAuthorizationRequest(request);
@@ -35,12 +31,13 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             HttpServletResponse response) {
         httpSessionOAuth2AuthorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, request,
                 response);
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.SUCCESS_REDIRECT_URI.getValue());
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.FAILURE_REDIRECT_URI.getValue());
+
+        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
     }
 
     private void saveParamInCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         String value = request.getParameter(name);
+        log.info("Request param " + name + " is " + value);
         if (!StringUtils.isNullOrEmpty(value)) {
             CookieUtils.addCookie(response, name, value);
         } else {
@@ -52,6 +49,10 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
             HttpServletResponse response) {
         return httpSessionOAuth2AuthorizationRequestRepository.removeAuthorizationRequest(request, response);
+    }
+
+    public void removeAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
     }
 
 }
