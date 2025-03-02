@@ -6,10 +6,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum OAuth2AuthorizationRequestParams {
 
-    OAUTH2_AUTH_REQUEST("oauth2-auth-request"),
     REDIRECT_URI("redirect-uri"),
-    SUCCESS_REDIRECT_URI("success-redirect-uri"),
-    FAILURE_REDIRECT_URI("failure-redirect-uri");
+    ACCESS_TOKEN("access-token"),
+    REFRESH_TOKEN("refresh-token");
 
     @Getter
     private final String value;

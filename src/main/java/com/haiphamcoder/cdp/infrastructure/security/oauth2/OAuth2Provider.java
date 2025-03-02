@@ -6,9 +6,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum OAuth2Provider {
     LOCAL("local"),
-    GOOGLE("google"),
-    FACEBOOK("facebook");
-
+    GOOGLE("google");
+    
     @Getter
     private final String value;
 }

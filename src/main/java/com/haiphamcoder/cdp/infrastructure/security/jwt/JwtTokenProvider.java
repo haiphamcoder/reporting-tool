@@ -12,12 +12,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.haiphamcoder.cdp.domain.entity.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private final String jwtSecret;
@@ -69,23 +73,27 @@ public class JwtTokenProvider {
     }
 
     public Map<String, String> generateTokens(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String accessToken = generateAccessToken(userDetails);
-        String refreshToken = generateRefreshToken(userDetails);
+        User user = (User) authentication.getPrincipal();
+        String accessToken = buildToken(new HashMap<>(), user.getUsername(), jwtExpiration);
+        String refreshToken = buildToken(new HashMap<>(), user.getUsername(), jwtRefreshExpiration);
         Map<String, String> tokens = new HashMap<>();
-        tokens.put("access_token", accessToken);
-        tokens.put("refresh_token", refreshToken);
+        tokens.put("access-token", accessToken);
+        tokens.put("refresh-token", refreshToken);
         return tokens;
     }
 
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+    private String buildToken(Map<String, Object> extraClaims, String username, long expiration) {
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey())
-                .compact();
+                .compact(); 
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+        return buildToken(extraClaims, userDetails.getUsername(), expiration);
     }
 
     private boolean isTokenExpired(String token) {

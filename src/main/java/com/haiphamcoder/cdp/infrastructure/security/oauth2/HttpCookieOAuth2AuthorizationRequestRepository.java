@@ -31,17 +31,16 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             HttpServletResponse response) {
         httpSessionOAuth2AuthorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, request,
                 response);
-
         saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
     }
 
     private void saveParamInCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         String value = request.getParameter(name);
         log.info("Request param " + name + " is " + value);
-        if (!StringUtils.isNullOrEmpty(value)) {
+        if (StringUtils.isNotBlank(value)) {
             CookieUtils.addCookie(response, name, value);
         } else {
-            log.error("Request param " + name + " is required and cannot be empty");
+            throw new IllegalArgumentException("Request param " + name + " is required and cannot be empty");
         }
     }
 
@@ -49,10 +48,6 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
             HttpServletResponse response) {
         return httpSessionOAuth2AuthorizationRequestRepository.removeAuthorizationRequest(request, response);
-    }
-
-    public void removeAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
-        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
     }
 
 }

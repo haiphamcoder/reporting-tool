@@ -7,21 +7,17 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.haiphamcoder.cdp.infrastructure.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2AuthorizationRequestParams;
 import com.haiphamcoder.cdp.shared.CookieUtils;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
-    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
@@ -36,12 +32,14 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
                 .orElseThrow(() -> new IllegalArgumentException("Request param "
                         + OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue() + " is required and cannot be empty"))
                 .getValue();
-        log.info("Redirecting to: " + targetUrl);
         String errorCode = "error.unknownError";
         return UriComponentsBuilder.fromUriString(targetUrl).queryParam("error", errorCode).build().toUriString();
     }
 
     private void clearAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
-        authorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
+        CookieUtils.deleteCookie(request, response, "user-id");
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue());
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue());
     }
 }

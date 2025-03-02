@@ -73,7 +73,7 @@ public class User extends BaseEntity implements OAuth2User, UserDetails {
     private String providerId;
 
     @Column(name = "avatar_url")
-    private transient String avatarUrl;
+    private String avatarUrl;
 
     @Column(name = "enabled", nullable = false)
     @Builder.Default

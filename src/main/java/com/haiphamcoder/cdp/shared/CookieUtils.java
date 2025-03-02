@@ -6,14 +6,17 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Optional;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @UtilityClass
 public class CookieUtils {
+
+    public static final int DEFAULT_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+    public static final String DEFAULT_PATH = "/";
+    public static final String DEFAULT_DOMAIN = null;
+    public static final boolean DEFAULT_SECURE = false;
+    public static final boolean DEFAULT_HTTP_ONLY = true;
 
     public Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
@@ -26,9 +29,18 @@ public class CookieUtils {
                 .findAny();
     }
 
-    public void addCookie(HttpServletResponse response, String name, String value) {
+    public void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean secure, boolean httpOnly, String domain, String path) {
         Cookie cookie = new Cookie(name, value);
+        cookie.setPath(path);
+        cookie.setMaxAge(maxAge);
+        cookie.setSecure(secure);
+        cookie.setHttpOnly(httpOnly);
+        cookie.setDomain(domain);
         response.addCookie(cookie);
+    }
+
+    public void addCookie(HttpServletResponse response, String name, String value) {
+        addCookie(response, name, value, DEFAULT_MAX_AGE, DEFAULT_SECURE, DEFAULT_HTTP_ONLY, DEFAULT_DOMAIN, DEFAULT_PATH);
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
@@ -37,25 +49,9 @@ public class CookieUtils {
             Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(name)).findAny()
                     .ifPresent(cookie -> {
                         cookie.setValue(null);
+                        cookie.setMaxAge(0);
                         response.addCookie(cookie);
                     });
-        }
-    }
-
-    public static String serialize(Object object) {
-        try {
-            return Base64.getUrlEncoder().encodeToString(new ObjectMapper().writeValueAsBytes(object));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static <T> T deserialize(Cookie cookie, Class<T> cls) {
-        byte[] bytes = Base64.getUrlDecoder().decode(cookie.getValue());
-        try {
-            return new ObjectMapper().readValue(bytes, cls);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

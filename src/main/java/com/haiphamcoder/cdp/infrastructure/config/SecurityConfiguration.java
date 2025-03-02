@@ -7,9 +7,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
+
+import com.haiphamcoder.cdp.application.service.LogoutService;
 import com.haiphamcoder.cdp.domain.model.Permission;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.infrastructure.security.UsernamePasswordBodyAuthenticationFilter;
@@ -45,7 +47,7 @@ public class SecurityConfiguration {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final UnauthorizedAuthenticationEntryPoint unauthorizedAuthenticationEntryPoint;
-        private final LogoutHandler logoutHandler;
+        private final LogoutService logoutHandler;
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
@@ -89,9 +91,15 @@ public class SecurityConfiguration {
                                 .logout(logout -> logout
                                                 .logoutUrl("/api/v1/auth/logout")
                                                 .addLogoutHandler(logoutHandler)
-                                                .logoutSuccessHandler((request, response,
-                                                                authentication) -> SecurityContextHolder
-                                                                                .clearContext()));
+                                                .logoutSuccessHandler(logoutSuccessHandler()));
                 return http.build();
+        }
+
+        @Bean
+        LogoutSuccessHandler logoutSuccessHandler() {
+                SimpleUrlLogoutSuccessHandler handler = new SimpleUrlLogoutSuccessHandler();
+                handler.setAlwaysUseDefaultTargetUrl(true);
+                handler.setDefaultTargetUrl("/");
+                return handler;
         }
 }

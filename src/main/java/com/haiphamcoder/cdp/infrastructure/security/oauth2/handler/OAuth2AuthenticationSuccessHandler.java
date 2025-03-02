@@ -6,13 +6,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.WebUtils;
 
+import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.infrastructure.config.OAuth2AuthorizedRedirectUriConfiguration;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
-import com.haiphamcoder.cdp.infrastructure.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2AuthorizationRequestParams;
 import com.haiphamcoder.cdp.shared.CookieUtils;
 import jakarta.servlet.ServletException;
@@ -28,24 +29,29 @@ import lombok.extern.slf4j.Slf4j;
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuth2AuthorizedRedirectUriConfiguration redirectUriConfiguration;
-    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-   
-    private static final String ACCESS_TOKEN = "access_token";
-    private static final String REFRESH_TOKEN = "refresh_token";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
-        log.info("OAuth2AuthenticationSuccessHandler onAuthenticationSuccess");
         String targetUrl = determineTargetUrl(request, response, authentication);
-        log.info("Redirecting to: " + targetUrl);
 
         if (response.isCommitted()) {
             log.error("Response has already been committed. Unable to redirect to " + targetUrl);
             return;
         }
 
+        User user = (User) authentication.getPrincipal();
+
+        Map<String, String> tokens = jwtTokenProvider.generateTokens(authentication);
+        String accessToken = tokens.get(OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue());
+        String refreshToken = tokens.get(OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue());
+        
+        CookieUtils.addCookie(response, "user-id", user.getId().toString());
+        CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue(), accessToken);
+        CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue(), refreshToken);
+
         clearAuthenticationAttributes(request, response);
+        clearAuthorizationRequestCookies(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
@@ -59,13 +65,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             throw new IllegalArgumentException("Unauthorized redirect URI: " + redirectUri.get());
         }
 
-        String targetUrl = redirectUri.orElseGet(() -> getDefaultTargetUrl());
-        Map<String, String> tokens = jwtTokenProvider.generateTokens(authentication);
-        String accessToken = tokens.get(ACCESS_TOKEN);
-        String refreshToken = tokens.get(REFRESH_TOKEN);
-        return UriComponentsBuilder.fromUriString(targetUrl).queryParam(ACCESS_TOKEN, accessToken)
-                .queryParam(REFRESH_TOKEN, refreshToken).build().toUriString();
-    }
+        return redirectUri.orElseGet(() -> getDefaultTargetUrl());
+    }      
 
     private boolean isAuthorizedRedirectUri(String uri) {
         URI clientRedirectUri = URI.create(uri);
@@ -78,6 +79,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
         super.clearAuthenticationAttributes(request);
-        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+    }
+
+    private void clearAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
+        CookieUtils.deleteCookie(request, response, "user-id");
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue());
+        CookieUtils.deleteCookie(request, response, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue());
     }
 }
