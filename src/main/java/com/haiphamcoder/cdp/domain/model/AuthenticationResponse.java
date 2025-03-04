@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,6 +17,12 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AuthenticationResponse {
+    @JsonIgnore
+    private int status;
+
+    @JsonProperty("error_message")
+    private String errorMessage;
+
     @JsonProperty("user_id")
     private Long userId;
 

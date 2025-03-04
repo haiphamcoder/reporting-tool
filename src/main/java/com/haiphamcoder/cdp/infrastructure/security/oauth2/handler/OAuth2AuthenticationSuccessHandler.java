@@ -6,11 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.WebUtils;
-
 import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.infrastructure.config.OAuth2AuthorizedRedirectUriConfiguration;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
@@ -50,7 +47,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue(), accessToken);
         CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue(), refreshToken);
 
-        clearAuthenticationAttributes(request, response);
         clearAuthorizationRequestCookies(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
@@ -75,10 +71,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                     URI authorizedURI = URI.create(authorizedRedirectUri);
                     return clientRedirectUri.equals(authorizedURI);
                 });
-    }
-
-    protected void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
-        super.clearAuthenticationAttributes(request);
     }
 
     private void clearAuthorizationRequestCookies(HttpServletRequest request, HttpServletResponse response) {

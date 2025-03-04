@@ -65,8 +65,16 @@ public class JwtTokenProvider {
         return buildToken(new HashMap<>(), userDetails, jwtExpiration);
     }
 
+    public String generateAccessToken(String username) {
+        return buildToken(new HashMap<>(), username, jwtExpiration);
+    }
+
     public String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails, jwtRefreshExpiration);
+    }
+
+    public String generateRefreshToken(String username) {
+        return buildToken(new HashMap<>(), username, jwtRefreshExpiration);
     }
 
     public String generateToken(UserDetails userDetails) {

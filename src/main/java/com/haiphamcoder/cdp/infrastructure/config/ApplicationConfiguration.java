@@ -55,8 +55,7 @@ public class ApplicationConfiguration {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
-        ProviderManager providerManager = new ProviderManager(Arrays.asList(provider));
-        return providerManager;
+        return new ProviderManager(provider);
     }
 
     @Bean

@@ -12,12 +12,6 @@ import java.util.Optional;
 @UtilityClass
 public class CookieUtils {
 
-    public static final int DEFAULT_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
-    public static final String DEFAULT_PATH = "/";
-    public static final String DEFAULT_DOMAIN = null;
-    public static final boolean DEFAULT_SECURE = false;
-    public static final boolean DEFAULT_HTTP_ONLY = true;
-
     public Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null || cookies.length == 0) {
@@ -29,18 +23,22 @@ public class CookieUtils {
                 .findAny();
     }
 
-    public void addCookie(HttpServletResponse response, String name, String value, int maxAge, boolean secure, boolean httpOnly, String domain, String path) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath(path);
-        cookie.setMaxAge(maxAge);
-        cookie.setSecure(secure);
-        cookie.setHttpOnly(httpOnly);
-        cookie.setDomain(domain);
+    public void addCookie(HttpServletResponse response, CookieProperties cookieProperties) {
+        Cookie cookie = new Cookie(cookieProperties.getName(), cookieProperties.getValue());
+        cookie.setPath(cookieProperties.getPath());
+        cookie.setMaxAge(cookieProperties.getMaxAge());
+        cookie.setSecure(cookieProperties.isSecure());
+        cookie.setHttpOnly(cookieProperties.isHttpOnly());
+        cookie.setDomain(cookieProperties.getDomain());
         response.addCookie(cookie);
     }
 
     public void addCookie(HttpServletResponse response, String name, String value) {
-        addCookie(response, name, value, DEFAULT_MAX_AGE, DEFAULT_SECURE, DEFAULT_HTTP_ONLY, DEFAULT_DOMAIN, DEFAULT_PATH);
+        CookieProperties cookieProperties = CookieProperties.builder()
+                .name(name)
+                .value(value)
+                .build();
+        addCookie(response, cookieProperties);
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
@@ -53,6 +51,13 @@ public class CookieUtils {
                         response.addCookie(cookie);
                     });
         }
+    }
+
+    public static void deleteCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 
 }

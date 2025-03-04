@@ -2,6 +2,8 @@ package com.haiphamcoder.cdp.application.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
@@ -11,6 +13,7 @@ import com.haiphamcoder.cdp.domain.model.AuthenticationResponse;
 import com.haiphamcoder.cdp.domain.model.RegisterRequest;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.domain.model.TokenType;
+import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
 import com.haiphamcoder.cdp.shared.DateTimeUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
@@ -29,7 +32,7 @@ public class AuthenticationService {
         private final AuthenticationManager authenticationManager;
         private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
 
-        public boolean register(RegisterRequest request) {
+        public User register(RegisterRequest request) {
                 User user = User.builder()
                                 .firstName(request.getFirstName())
                                 .lastName(request.getLastName())
@@ -38,21 +41,28 @@ public class AuthenticationService {
                                 .email(request.getEmail())
                                 .role(request.getRole())
                                 .build();
-                User createdUser = userService.saveUser(user);
-                return createdUser != null;
+                return userService.saveUser(user);
+        }
+
+        public boolean checkUsernameExisted(String username) {
+                return userService.getUserByUsername(username) != null;
+        }
+
+        public boolean checkEmailExisted(String email) {
+                return userService.getUserByEmail(email) != null;
         }
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
-                authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.getUsername(),
-                                                request.getPassword()));
-                User existedUser = userService.getUserByUsername(request.getUsername());
-                if (existedUser != null) {
-                        String refreshToken = jwtTokenProvider.generateRefreshToken(existedUser);
+                try {
+                        Authentication authentication = authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(
+                                                        request.getUsername(),
+                                                        request.getPassword()));
+                        User authenticatedUser = (User) authentication.getPrincipal();
+                        String refreshToken = jwtTokenProvider.generateRefreshToken(authenticatedUser.getUsername());
                         RefreshToken refreshTokenEntity = RefreshToken.builder()
                                         .id(snowflakeIdGenerator.generateId())
-                                        .user(existedUser)
+                                        .user(authenticatedUser)
                                         .tokenValue(refreshToken)
                                         .tokenType(TokenType.BEARER)
                                         .expiredAt(DateTimeUtils.convertToLocalDateTime(
@@ -60,16 +70,25 @@ public class AuthenticationService {
                                         .build();
                         RefreshToken savedRefreshToken = refreshTokenService.saveUserToken(refreshTokenEntity);
                         if (savedRefreshToken == null) {
-                                return null;
+                                return AuthenticationResponse.builder()
+                                                .errorMessage("Failed to generate refresh token")
+                                                .status(CommonConstants.AUTHEN_FAILED)
+                                                .build();
                         }
-                        String accessTokenValue = jwtTokenProvider.generateAccessToken(existedUser);
+                        String accessTokenValue = jwtTokenProvider.generateAccessToken(authenticatedUser.getUsername());
                         return AuthenticationResponse.builder()
-                                        .userId(existedUser.getId())
+                                        .userId(authenticatedUser.getId())
                                         .accessToken(accessTokenValue)
                                         .refreshToken(savedRefreshToken.getTokenValue())
+                                        .status(CommonConstants.AUTHEN_SUCCESS)
+                                        .build();
+
+                } catch (AuthenticationException e) {
+                        return AuthenticationResponse.builder()
+                                        .errorMessage("Invalid username or password")
+                                        .status(CommonConstants.AUTHEN_FAILED)
                                         .build();
                 }
-                return null;
         }
 
         public String refreshToken(String authHeader) {
@@ -96,6 +115,6 @@ public class AuthenticationService {
                                 .email("admin@email.com")
                                 .role(Role.ADMIN)
                                 .build();
-                return register(request);
+                return register(request) != null;
         }
 }

@@ -20,23 +20,23 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @Tag(name = "admin", description = "Admin controller")
 public class AdminController {
 
-    @GetMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> get(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("GET::admin controller"));
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> post(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("POST::admin controller"));
     }
 
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> put(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("PUT::admin controller"));
     }
 
-    @DeleteMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> delete(@RequestHeader("user-id") String userId) {
         return ResponseEntity.ok()
                 .body(RestAPIResponse.ResponseFactory.createSuccessResponse("DELETE::admin controller"));

@@ -22,12 +22,12 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException, ServletException {
-        String targetUrl = determineTargetUrl(request, exception);
+        String targetUrl = determineTargetUrl(request);
         clearAuthorizationRequestCookies(request, response);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
-    protected String determineTargetUrl(HttpServletRequest request, AuthenticationException exception) {
+    protected String determineTargetUrl(HttpServletRequest request) {
         String targetUrl = CookieUtils.getCookie(request, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue())
                 .orElseThrow(() -> new IllegalArgumentException("Request param "
                         + OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue() + " is required and cannot be empty"))
