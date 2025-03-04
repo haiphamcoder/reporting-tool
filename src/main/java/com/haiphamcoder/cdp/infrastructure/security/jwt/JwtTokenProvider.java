@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import com.haiphamcoder.cdp.domain.entity.User;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -50,10 +51,14 @@ public class JwtTokenProvider {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().verifyWith(getSignInKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser().verifyWith(getSignInKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        }
     }
 
     public String generateAccessToken(UserDetails userDetails) {

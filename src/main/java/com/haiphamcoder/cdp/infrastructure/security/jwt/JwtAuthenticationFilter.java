@@ -41,13 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final Optional<String> userIdInCookie = CookieUtils
                 .getCookie(request, USER_ID_HEADER).map(Cookie::getValue);
-        log.info("User ID in cookie: {}", userIdInCookie);
         final Optional<String> accessTokenInCookie = CookieUtils
                 .getCookie(request, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue()).map(Cookie::getValue);
-        log.info("Access token in cookie: {}", accessTokenInCookie);
         final Optional<String> refreshTokenInCookie = CookieUtils
                 .getCookie(request, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue()).map(Cookie::getValue);
-        log.info("Refresh token in cookie: {}", refreshTokenInCookie);
 
         if (!userIdInCookie.isPresent() || !accessTokenInCookie.isPresent() || !refreshTokenInCookie.isPresent()) {
             filterChain.doFilter(request, response);
@@ -56,20 +53,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String userId = userIdInCookie.get();
         final String accessToken = accessTokenInCookie.get();
-
-        log.info("User ID: {}", userId);
-        log.info("Access token: {}", accessToken);
+        final String refreshToken = refreshTokenInCookie.get();
 
         final String username = jwtTokenProvider.extractUsername(accessToken);
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtTokenProvider.isTokenValid(accessToken, userDetails) && ((User) userDetails).getId() == Long.parseLong(userId)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                        null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (((User) userDetails).getId() == Long.parseLong(userId)) {
+                if (!jwtTokenProvider.isTokenValid(accessToken, userDetails)){
+                    if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    } else {
+                        String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
+                        CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue(), newAccessToken);
+                    }
+                }
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
+
         filterChain.doFilter(request, response);
     }
 
