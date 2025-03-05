@@ -109,10 +109,10 @@ public class AuthenticationService {
         public boolean createAdminUser() {
                 RegisterRequest request = RegisterRequest.builder()
                                 .firstName("Admin")
-                                .lastName("Admin")
+                                .lastName("")
                                 .username("admin")
                                 .password("admin")
-                                .email("admin@email.com")
+                                .email("admin@example.com")
                                 .role(Role.ADMIN)
                                 .build();
                 return register(request) != null;

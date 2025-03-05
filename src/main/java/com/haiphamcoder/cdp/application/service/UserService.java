@@ -33,6 +33,14 @@ public class UserService {
         return user.get();
     }
 
+    public User getUserById(Long id) {
+        Optional<User> user = userRepository.getUserById(id);
+        if (user.isEmpty()) {
+            return null;
+        }
+        return user.get();
+    }
+
     public User saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.saveUser(user);

@@ -37,6 +37,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
+    private static final String COOKIE_USER_ID = "user-id";
+    private static final String COOKIE_ACCESS_TOKEN = "access-token";
+    private static final String COOKIE_REFRESH_TOKEN = "refresh-token";
+
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<Object>> register(@RequestBody RegisterRequest request) {
         User registeredUser = authenticationService.register(request);
@@ -51,29 +55,14 @@ public class AuthenticationController {
             @RequestBody AuthenticationRequest request) {
         AuthenticationResponse authenResponse = authenticationService.authenticate(request);
         if (authenResponse.getStatus() == CommonConstants.AUTHEN_SUCCESS) {
-            CookieUtils.addCookie(response, "user-id", String.valueOf(authenResponse.getUserId()));
-            CookieUtils.addCookie(response, "access-token", authenResponse.getAccessToken());
-            CookieUtils.addCookie(response, "refresh-token", authenResponse.getRefreshToken());
+            CookieUtils.addCookie(response, COOKIE_USER_ID, String.valueOf(authenResponse.getUserId()));
+            CookieUtils.addCookie(response, COOKIE_ACCESS_TOKEN, authenResponse.getAccessToken());
+            CookieUtils.addCookie(response, COOKIE_REFRESH_TOKEN, authenResponse.getRefreshToken());
             return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(authenResponse));
         } else {
-            CookieUtils.deleteCookie(response, "user-id");
-            CookieUtils.deleteCookie(response, "access-token");
-            CookieUtils.deleteCookie(response, "refresh-token");
+            deleteCookies(response);
         }
-        return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createErrorResponse("Authentication failed"));
-    }
-
-    @PostMapping(path = "/refresh-token", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<Object>> refreshToken(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String refreshToken,
-            @RequestHeader("user-id") String userId) {
-        String newAccessToken = authenticationService.refreshToken(refreshToken);
-        if (newAccessToken == null) {
-            return ResponseEntity.badRequest()
-                    .body(RestAPIResponse.ResponseFactory.createUnauthorizedResponse("Invalid refresh token"));
-        }
-        Map<String, String> body = Map.of("access_token", newAccessToken);
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(body));
+        return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createErrorResponse(authenResponse.getErrorMessage()));
     }
 
     @GetMapping(path = "/me")
@@ -83,6 +72,12 @@ public class AuthenticationController {
                     .body("User is not authenticated. Please login to get user info");
         }
         return ResponseEntity.ok(Map.of("user_id", userId));
+    }
+
+    private void deleteCookies(HttpServletResponse response) {
+        CookieUtils.deleteCookie(response, COOKIE_USER_ID);
+        CookieUtils.deleteCookie(response, COOKIE_ACCESS_TOKEN);
+        CookieUtils.deleteCookie(response, COOKIE_REFRESH_TOKEN);
     }
 
 }

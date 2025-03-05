@@ -38,6 +38,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> getUserById(Long id) {
+        return userJpaRepository.findById(id);
+    }
+
+    @Override
     public User saveUser(User user) {
         user.setId(snowflakeIdGenerator.generateId());
         Optional<User> existingUser = userJpaRepository.findByUsername(user.getUsername());

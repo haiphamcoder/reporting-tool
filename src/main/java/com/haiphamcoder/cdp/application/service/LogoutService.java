@@ -45,8 +45,6 @@ public class LogoutService implements LogoutHandler {
         } catch (Exception e) {
             log.error("Error writing response: {}", e.getMessage());
         }
-
-        log.info("Logout successful");
     }
 
 }
