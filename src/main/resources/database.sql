@@ -39,6 +39,19 @@ CREATE TABLE
         CONSTRAINT fk_otp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     ) COMMENT = 'Bảng lưu mã OTP dùng để xác thực user';
 
+CREATE TABLE 
+    folder (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của thư mục',
+        name VARCHAR(255) NOT NULL COMMENT 'Tên thư mục',
+        description TEXT COMMENT 'Mô tả thư mục',
+        parent_id BIGINT COMMENT 'ID thư mục cha',
+        user_id BIGINT NOT NULL COMMENT 'ID của user sở hữu thư mục',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo thư mục',
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+        CONSTRAINT fk_folder_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        CONSTRAINT fk_folder_parent FOREIGN KEY (parent_id) REFERENCES folder (id) ON DELETE CASCADE
+    ) COMMENT = 'Bảng lưu thông tin thư mục';
+
 CREATE INDEX idx_user_id ON refresh_tokens (user_id);
 
 CREATE INDEX idx_otp_user ON otp (user_id);
