@@ -1,0 +1,31 @@
+# Usecase Diagram
+
+A PlantUML editor is available at https://www.plantuml.com/plantuml/uml/
+
+## General Usecase
+
+![General Usecase](https://www.plantuml.com/plantuml/svg/VP7BQiCm44Nt-eeXgtHHGVqA56DIiiWctQJa0mPvS4rjAKZoglJVet7KoYLDGOl3FMYup6oTH-kdSH2elB7mqewzZdnoP8Kue_h0Zc2r9qqM1uuLEbh1fm1O7wdhdIVx0EZWj7lYx62wNiSWYu6PV4noJjxCP1N1A-emUoJzBOlhpBEn_bQMB7Vl-9Uhs77ZMxK9Ahm08ALikDGpr7MlrJ2rr3Ipo-6kog2MahlTKUpAVrprstq9CVTydDVrWrd2F66Hi4nO2J4VAdvCd2-uM72vu6h16x4btORpNm00)
+
+## Usecase: Register
+
+![Register](https://www.plantuml.com/plantuml/svg/RO-n2i9038RtFCLF9nqws54S2YBkGcS9rtWzlFRaBjAX-kwUI8k2a27_bo-Gr4avwhttvEMYq83eRATeNHIZBWn4R3H4D4aYqOtDbQsWoD5maYrEObrIYGKc0bPpN8CJcltccs5qsk7Gi_Fp-Fn7E8PWlIn6bOrSkSNkKPRBrW-ew4dqFX4VGBKCRVxg1G00)
+
+## Usecase: Login
+
+![Login](https://www.plantuml.com/plantuml/svg/PP112u9048Nl-oiUdUgWa4SHCQAwTEZYEHRTrYLrOdV2eFhlhPO61GCpyxvv0pEPOsdvsjIYLYS64wpH5QCqLXLig1L25amMkLFsKwxAndZz8ekpr0epZmhfL8mzQTFES1V0VAWNa0xvUZa9w0nNs3JIr2Cx_j8TaQxLXACURybgOXoaSntPykiTt3vyW-GH1C6qSiX8md0SZ94awiQgBTFqpn69fn3zZNWBOZXoR39lyZzw0G00)
+
+## Usecase: Source Management
+
+![Source Management](https://www.plantuml.com/plantuml/svg/VP51Qm8n48Nl-HKFJ_MWKFKaYrZijIVnB6DswYxk9cKoGalhVpU9bLe3GWwPzxt9l33Be2Hwx3lJyRj2FQJTDugw5RRQUcSCMVM2JM3vlRxKVHlr3x87sZC64LaAFCVQ7yKotiX5lMUd0tmRuAdGXw20pUevmPKmAIDapnLiCrepYMtkqIIXL-wux9hcheQa8BDY57PVnT1jcIZPh7UEqzTld2b5FBb0zJCQtRnGY7zcLEFnHPoZglXJsTMBnHsRF63J1spsZvsCIKl39ON9MxiMosY9Ipy3)
+
+## Usecase: Report Management
+
+![Report Management](https://www.plantuml.com/plantuml/svg/VT312i8m30RWUvyYUDA30zrECiPaNdTHTfRGHJVSLicY2EAxsrOdw43e8SttbxP9Uq6MIzkeXWu2Oe3hOoLGranQQjCfXLeCGz4JlyjrsTQsVqPzmYF1n9B6dbQmfRDXWHmxss-famdS5S1qr9y1zb1a2uSP4me1-ym0Uq-vkGxWNdOmJKdyYInTP4CDZK-7ZdOLyaWYAtRP4k8WU5srWZYccr1N9icFBVzO-CUYBtievSO7yxd_j9_Vi4bjn8x_2G00)
+
+## Usecase: Chart Management
+
+![Chart Management](https://www.plantuml.com/plantuml/svg/VP0z2uCm48Rt_8h3gHqKgauYejYrKt4k8Rcgr2_Y5Ggb_xrdhD1Q439SdkVD9Rbq96detZQYmIi1zM3giYBGjK55TTy98HNr1eeHpQVCT5ip7wIwoHB1OQNaY17a5VU2a-mOjzYH0qy1i5lZFSWHYlnWdK5926gABFnYJQRrZEsZSEY_0luKE6A3VqU3oPmPhKN8WXUN47lUV4q4SOmFmaudoShv6oxOSE6FUmanpGrSr_xN3cxPf1pXkRy1)
+
+## Usecase: User Management
+
+![User Management](https://www.plantuml.com/plantuml/svg/PO-z2i9048JxUuh1Iei4J1b2IB2s4LBBSLcJ8pydTniHnNTt4minmXQpymtBJX5OUvw6NlLqOR23jqtBgAqdmzQDIcd3pgEi1olBLPjEDuHD5SZeG2b4U1prAEv08s_mLC1svUwW0wh3VaRbnAtpzg7dyoYDSTCtS5uY9xgvZlvO8an69B8u_iHJP1dTcSOwprSi-M4lfPOEYABbaq9iwVq6)
