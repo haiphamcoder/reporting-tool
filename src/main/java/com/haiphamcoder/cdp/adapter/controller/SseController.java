@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.haiphamcoder.cdp.application.service.EmitterService;
+import com.haiphamcoder.cdp.application.service.SseNotificationService;
+import com.haiphamcoder.cdp.domain.model.SseEvent;
 import com.haiphamcoder.cdp.shared.StringUtils;
-import com.haiphamcoder.cdp.shared.sse.model.SseEvent;
-import com.haiphamcoder.cdp.shared.sse.service.EmitterService;
-import com.haiphamcoder.cdp.shared.sse.service.SseNotificationService;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;

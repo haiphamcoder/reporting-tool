@@ -1,4 +1,4 @@
-package com.haiphamcoder.cdp.shared.sse.service;
+package com.haiphamcoder.cdp.application.service;
 
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -6,9 +6,9 @@ import java.util.concurrent.CompletionException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.haiphamcoder.cdp.domain.model.SseEvent;
+import com.haiphamcoder.cdp.domain.repository.InMemoryEmitterRepository;
 import com.haiphamcoder.cdp.shared.StringUtils;
-import com.haiphamcoder.cdp.shared.sse.model.SseEvent;
-import com.haiphamcoder.cdp.shared.sse.repository.InMemoryEmitterRepository;
 
 import lombok.extern.slf4j.Slf4j;
 

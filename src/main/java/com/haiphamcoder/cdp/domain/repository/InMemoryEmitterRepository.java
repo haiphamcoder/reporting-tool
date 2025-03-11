@@ -1,4 +1,4 @@
-package com.haiphamcoder.cdp.shared.sse.repository;
+package com.haiphamcoder.cdp.domain.repository;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.haiphamcoder.cdp.shared.sse.service;
+package com.haiphamcoder.cdp.application.service;
 
 import java.io.IOException;
 import java.util.List;
@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.haiphamcoder.cdp.shared.sse.model.SseEvent;
-import com.haiphamcoder.cdp.shared.sse.repository.InMemoryEmitterRepository;
+import com.haiphamcoder.cdp.domain.model.SseEvent;
+import com.haiphamcoder.cdp.domain.repository.InMemoryEmitterRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
