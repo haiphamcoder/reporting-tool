@@ -37,6 +37,8 @@ public class SecurityConfiguration {
                         "/favicon.ico",
                         "/api/v1/auth/register",
                         "/api/v1/auth/authenticate",
+                        "/api/v1/sse/subscribe/**",
+                        "/api/v1/sse/publish/**",
                         "/oauth2/authorization/**",
                         "/oauth2/callback/**",
                         "/api/docs/**",
