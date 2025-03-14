@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.infrastructure.security.jwt;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.springframework.lang.NonNull;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.haiphamcoder.cdp.domain.entity.User;
+import com.haiphamcoder.cdp.infrastructure.config.SecurityConfiguration;
 import com.haiphamcoder.cdp.infrastructure.security.CustomUserDetailsService;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2AuthorizationRequestParams;
 import com.haiphamcoder.cdp.shared.CookieUtils;
@@ -38,6 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
+        
+        String requestURI = request.getRequestURI();
+        if (Arrays.stream(SecurityConfiguration.AUTH_WHITELIST).anyMatch(uri -> requestURI.startsWith(uri))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         final Optional<String> userIdInCookie = CookieUtils
                 .getCookie(request, USER_ID_HEADER).map(Cookie::getValue);

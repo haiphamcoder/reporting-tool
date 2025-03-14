@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfiguration {
-        private static final String[] AUTH_WHITELIST = {
+        public static final String[] AUTH_WHITELIST = {
                         "/",
                         "/error/**",
                         "/favicon.ico",

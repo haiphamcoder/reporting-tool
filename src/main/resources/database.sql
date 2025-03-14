@@ -46,6 +46,7 @@ CREATE TABLE
         description TEXT COMMENT 'Mô tả thư mục',
         parent_id BIGINT COMMENT 'ID thư mục cha',
         user_id BIGINT NOT NULL COMMENT 'ID của user sở hữu thư mục',
+        type ENUM ('SOURCE', 'REPORT', 'CHART') NOT NULL COMMENT 'Loại thư mục',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo thư mục',
         modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
         CONSTRAINT fk_folder_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,

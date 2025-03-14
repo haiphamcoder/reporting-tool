@@ -4,10 +4,13 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.haiphamcoder.cdp.domain.model.FolderType;
 import com.haiphamcoder.cdp.shared.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -62,5 +65,10 @@ public class Folder extends BaseEntity {
     @Column(name = "is_starred", nullable = false)
     @Builder.Default
     private Boolean isStarred = false;
+
+    @Column(name = "type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private FolderType type = FolderType.SOURCE;
 
 }
