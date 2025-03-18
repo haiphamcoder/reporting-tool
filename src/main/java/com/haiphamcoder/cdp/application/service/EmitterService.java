@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class EmitterService {
     private final InMemoryEmitterRepository inMemoryEmitterRepository;
     private final long heartbeatInterval;
     private final long eventTimeout;
+    private final AtomicBoolean logNotFoundActiveEmitter = new AtomicBoolean(true);
 
     public EmitterService(InMemoryEmitterRepository inMemoryEmitterRepository,
             @Value("${sse.heartbeat.interval:30000}") long heartbeatInterval,
@@ -62,18 +64,22 @@ public class EmitterService {
         scheduler.scheduleAtFixedRate(() -> {
             Set<Entry<String, List<SseEmitter>>> entries = inMemoryEmitterRepository.getEmitterMap().entrySet();
             if (entries.isEmpty()) {
-                log.info("No active emitters found");
+                if (logNotFoundActiveEmitter.compareAndSet(true, false)) {
+                    log.info("No active emitters found");
+                }
                 return;
-            }
-            log.info("Sending heartbeat to all active emitters");
-            for (Entry<String, List<SseEmitter>> entry : entries) {
-                String id = entry.getKey();
-                for (SseEmitter emitter : entry.getValue()) {
-                    try {
-                        emitter.send(SseEmitter.event().name(SseEvent.Type.HEARTBEAT.getValue()).data("ping..."));
-                    } catch (IOException e) {
-                        log.warn("Removing closed emitter for id {}", id);
-                        inMemoryEmitterRepository.removeEmitter(id, emitter);
+            } else {
+                logNotFoundActiveEmitter.set(true);
+                log.info("Sending heartbeat to all active emitters");
+                for (Entry<String, List<SseEmitter>> entry : entries) {
+                    String id = entry.getKey();
+                    for (SseEmitter emitter : entry.getValue()) {
+                        try {
+                            emitter.send(SseEmitter.event().name(SseEvent.Type.HEARTBEAT.getValue()).data("ping..."));
+                        } catch (IOException e) {
+                            log.warn("Removing closed emitter for id {}", id);
+                            inMemoryEmitterRepository.removeEmitter(id, emitter);
+                        }
                     }
                 }
             }
