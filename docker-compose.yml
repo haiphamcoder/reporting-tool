@@ -10,3 +10,20 @@ services:
       - .:/app
     working_dir: /app
     command: sh bin/run.sh
+
+  mysql-server:
+    image: mysql:8.2
+    container_name: mysql-server
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+    command: mysqld --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./docker/mysql-server/data:/var/lib/mysql
+      - ./docker/mysql-server/init:/docker-entrypoint-initdb.d
+      - ./docker/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
+    restart: always
+    
