@@ -1,6 +1,6 @@
 # Usecase Diagram
 
-A PlantUML editor is available at https://www.plantuml.com/plantuml/uml/
+A PlantUML editor is available at <https://www.plantuml.com/plantuml/uml/>
 
 ## General Usecase
 
