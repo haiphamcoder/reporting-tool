@@ -5,9 +5,7 @@ import java.sql.Timestamp;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.cdp.shared.BaseEntity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -56,7 +54,7 @@ public class Source extends BaseEntity{
     private SourceType type;
 
     @Column(name = "config", nullable = false)
-    private JsonNode config;
+    private String config;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)

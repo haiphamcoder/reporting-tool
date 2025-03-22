@@ -1,3 +1,9 @@
+CREATE DATABASE IF NOT EXISTS `reporting_tool`;
+
+USE `reporting_tool`;
+
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE
     users (
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất cho mỗi user',
@@ -17,6 +23,8 @@ CREATE TABLE
         modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất'
     ) COMMENT = 'Bảng lưu thông tin người dùng trong hệ thống';
 
+DROP TABLE IF EXISTS refresh_tokens;
+
 CREATE TABLE
     refresh_tokens (
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của refresh token',
@@ -28,6 +36,8 @@ CREATE TABLE
         CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     ) COMMENT = 'Bảng lưu refresh token để xác thực user khi access token hết hạn';
 
+DROP TABLE IF EXISTS otp;
+
 CREATE TABLE
     otp (
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất của OTP',
@@ -38,6 +48,8 @@ CREATE TABLE
         verified BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái OTP: TRUE = Đã xác nhận, FALSE = Chưa xác nhận',
         CONSTRAINT fk_otp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     ) COMMENT = 'Bảng lưu mã OTP dùng để xác thực user';
+
+DROP TABLE IF EXISTS folder;
 
 CREATE TABLE 
     folder (

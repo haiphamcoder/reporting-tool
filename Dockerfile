@@ -1,6 +1,7 @@
 FROM maven:3.9.8-eclipse-temurin-17
 
 ENV TZ=Asia/Ho_Chi_Minh
+
 RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
 
 WORKDIR /app
