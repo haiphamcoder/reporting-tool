@@ -42,10 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String requestURI = request.getRequestURI();
-        if (Arrays.stream(SecurityConfiguration.AUTH_WHITELIST).anyMatch(uri -> requestURI.startsWith(uri))) {
+        if (Arrays.stream(SecurityConfiguration.AUTH_WHITELIST).anyMatch(uri -> requestURI.equals(uri))) {
             filterChain.doFilter(request, response);
             return;
         }
+
+        log.info("Request URI: {}", requestURI);
 
         final Optional<String> userIdInCookie = CookieUtils
                 .getCookie(request, USER_ID_HEADER).map(Cookie::getValue);

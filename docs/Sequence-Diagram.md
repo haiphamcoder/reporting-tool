@@ -1,0 +1,5 @@
+# Sequence Diagram
+
+## User Login
+
+![User Login](https://www.plantuml.com/plantuml/png/VP1BJiCm48RtFeMNZI0NO56LnmgnQXkn7ZdJOk6CevangBV7HX4qRjgbFT__qByH1TOq10DE8zjEaCq8hDxv4KZjMpnwUewa74EeRez9Fv3o4zH7sY5_UOSpejXjSOpYDV9fTdfzttVgWp65iUswJh8FDfIVLSftWW7lxGWYtv7xnbHiaI-MoIRm_u-BNil2TbsLprO7J_tJgPiy_imQKv7jZJe5VK457-HwyhHDnez8oA2uZvz8gpDnOoRePbfcxA_qMjRYxdDsYvA2Nau-BNJ1srro3aKEATYximORf3uDuGS0)
