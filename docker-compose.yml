@@ -22,6 +22,42 @@ services:
     networks:
       - cdp-network
 
+  hdfs-namenode:
+    image: apache/hadoop:3.4.1
+    container_name: hdfs-namenode
+    hostname: hdfs-namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+      - HADOOP_HEAPSIZE=2048
+    volumes:
+      - ./docker/hadoop/dfs/namenode:/hadoop/dfs/namenode
+      - ./docker/hadoop/config:/etc/hadoop
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "if [ ! -d /hadoop/dfs/namenode/current ]; then
+         hdfs namenode -format -nonInteractive;
+       fi;
+       hdfs namenode"
+
+  hdfs-datanode:
+    image: apache/hadoop:3.4.1
+    container_name: hdfs-datanode
+    hostname: hdfs-datanode
+    ports:
+      - "9864:9864"
+    depends_on:
+      - hdfs-namenode
+    environment:
+      - HADOOP_CONF_DIR=/etc/hadoop
+      - HADOOP_HEAPSIZE=2048
+    volumes:
+      - ./docker/hadoop/dfs/datanode:/hadoop/dfs/datanode
+      - ./docker/hadoop/config:/etc/hadoop
+    command: ["hdfs", "datanode"]
+
   app:
     build:
       context: .

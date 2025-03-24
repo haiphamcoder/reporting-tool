@@ -34,3 +34,5 @@ build/
 config/application.properties
 
 docker/mysql-server/data/
+docker/hadoop/dfs/namenode/
+docker/hadoop/dfs/datanode/
