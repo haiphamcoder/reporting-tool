@@ -13,6 +13,11 @@ services:
       - ./docker/mysql-server/data:/var/lib/mysql
       - ./docker/mysql-server/init:/docker-entrypoint-initdb.d
       - ./docker/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: always
     networks:
       - cdp-network
@@ -24,12 +29,11 @@ services:
     container_name: cdp-for-service
     ports:
       - "8080:8080"
-    volumes:
-      - .:/app
     working_dir: /app
     command: sh bin/run.sh
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
     networks:
       - cdp-network
 
