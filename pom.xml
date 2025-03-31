@@ -19,6 +19,8 @@
 		<java.version>17</java.version>
 		<telegram.bot.version>8.2.0</telegram.bot.version>
 		<hadoop.version>3.4.1</hadoop.version>
+		<jackson.version>2.18.3</jackson.version>
+		<poi.version>5.4.0</poi.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -112,6 +114,26 @@
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-common</artifactId>
 			<version>${hadoop.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-csv</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${poi.version}</version>
 		</dependency>
 	</dependencies>
 

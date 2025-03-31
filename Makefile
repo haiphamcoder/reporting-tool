@@ -12,6 +12,7 @@ clean:
 	@echo "Cleaning up..."
 	@sudo rm -rf docker/hadoop/dfs
 	@sudo rm -rf docker/mysql-server/data
+	@docker image rm cdp-for-service-app
 	@echo "Cleaned up successfully!"
 
 # Docker compose commands

@@ -9,7 +9,7 @@ import org.apache.hadoop.fs.Path;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HdfsReader {
+public class HdfsReader implements AutoCloseable {
     private String fileUri;
     private Configuration configuration;
     private FileSystem fileSystem;
@@ -40,6 +40,7 @@ public class HdfsReader {
         }
     }
 
+    @Override
     public void close() {
         try {
             fileSystem.close();
