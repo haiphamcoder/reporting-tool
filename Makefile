@@ -1,48 +1,50 @@
-.PHONY: up down clean clean-all logs ps
+# Define required directories
+REQUIRED_DIRS := docker/hadoop/dfs/namenode docker/hadoop/dfs/datanode docker/mysql-server/data
 
-# Default target
-all: up
+# Create directories
+init:
+	@echo "Creating required directories..."
+	@mkdir -p $(REQUIRED_DIRS)
+	@echo "Directories created successfully!"
 
-# Start the containers
+# Clean up
+clean:
+	@echo "Cleaning up..."
+	@sudo rm -rf docker/hadoop/dfs
+	@sudo rm -rf docker/mysql-server/data
+	@echo "Cleaned up successfully!"
+
+# Docker compose commands
 up:
-	docker compose up
+	@echo "Starting containers..."
+	docker compose up -d
 
-# Stop the containers
 down:
+	@echo "Stopping and removing containers..."
 	docker compose down
-	sudo rm -r docker/mysql-server/data
-	docker image rm cdp-for-service-app:latest
 
-# View logs
+restart:
+	@echo "Restarting containers..."
+	docker compose restart
+
 logs:
+	@echo "Viewing logs of containers..."
 	docker compose logs -f
 
-# List containers
 ps:
+	@echo "Listing running containers..."
 	docker compose ps
 
-# Clean up unnecessary files and folders
-clean:
-	
-
-# Clean everything including Docker resources
-clean-all: clean down-v
-	docker system prune -f
-	docker volume prune -f
-
-# Rebuild and restart containers
-rebuild:
-	docker compose down
-	docker compose build --no-cache
-	docker compose up
-
-# Show help
+# Display help
 help:
 	@echo "Available commands:"
-	@echo "  make up        - Start containers"
-	@echo "  make down      - Stop containers"
-	@echo "  make logs      - View container logs"
-	@echo "  make ps        - List containers"
-	@echo "  make clean     - Clean up unnecessary files and folders"
-	@echo "  make clean-all - Clean everything including Docker resources"
-	@echo "  make rebuild   - Rebuild and restart containers"
+	@echo "  make init     : Create required directories"
+	@echo "  make clean   : Clean up logs and tmp directories"
+	@echo "  make up      : Start docker containers"
+	@echo "  make down    : Stop docker containers"
+	@echo "  make restart : Restart docker containers"
+	@echo "  make logs    : View logs of containers"
+	@echo "  make ps      : List running containers"
+	@echo "  make help    : Display this help"
+
+.PHONY: init clean up down restart logs ps help
