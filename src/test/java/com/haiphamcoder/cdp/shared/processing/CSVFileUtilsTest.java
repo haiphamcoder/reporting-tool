@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class CSVFileUtilsTest {
+public class CSVFileUtilsTest {
 
     @Test
     public void testGetHeader() {
@@ -27,4 +27,12 @@ class CSVFileUtilsTest {
         });
     }
 
+    @Test
+    public void testGetRecordsWithSkipAndLimit() {
+        InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
+        Stream<List<?>> records = CSVFileUtils.getRecords(inputStream, 1, 2);
+        records.forEach(record -> {
+            log.info("Record: {}", record);
+        });
+    }
 } 

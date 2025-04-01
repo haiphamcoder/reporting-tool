@@ -2,6 +2,8 @@ package com.haiphamcoder.cdp.shared.processing;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -20,12 +22,19 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 @Slf4j
 public class CSVFileUtils {
     private static final char DEFAULT_COLUMN_SEPARATOR = ',';
-    private static final CsvMapper csvMapper = new CsvMapper().enable(CsvParser.Feature.WRAP_AS_ARRAY).enable(CsvParser.Feature.TRIM_SPACES);
+    private static final CsvMapper csvMapper = new CsvMapper().enable(CsvParser.Feature.WRAP_AS_ARRAY)
+            .enable(CsvParser.Feature.TRIM_SPACES);
     private static final CsvSchema csvSchema = CsvSchema.emptySchema().withColumnSeparator(DEFAULT_COLUMN_SEPARATOR);
 
-    public static List<String> getHeader(InputStream inputStream){
+    public static List<String> getHeader(InputStream inputStream) {
+        return getHeader(inputStream, Charset.defaultCharset());
+    }
+
+    public static List<String> getHeader(InputStream inputStream, Charset charset) {
         try {
-            MappingIterator<List<String>> iterator = csvMapper.readerFor(List.class).with(csvSchema).readValues(inputStream);
+            MappingIterator<List<String>> iterator = csvMapper.readerFor(List.class)
+                    .with(csvSchema)
+                    .readValues(new InputStreamReader(inputStream, charset));
             List<String> header = iterator.next();
             return header.stream().collect(toImmutableList());
         } catch (IOException e) {
@@ -35,14 +44,34 @@ public class CSVFileUtils {
     }
 
     public static Stream<List<?>> getRecords(InputStream inputStream) {
+        return getRecords(inputStream, Charset.defaultCharset());
+    }
+
+    public static Stream<List<?>> getRecords(InputStream inputStream, Charset charset) {
         try {
-            MappingIterator<List<?>> iterator = csvMapper.readerFor(List.class).with(csvSchema).readValues(inputStream);
+            MappingIterator<List<?>> iterator = csvMapper.readerFor(List.class)
+                    .with(csvSchema)
+                    .readValues(new InputStreamReader(inputStream, charset));
             return Streams.stream(iterator).skip(1);
         } catch (IOException e) {
             log.error("Failed to read CSV records", e);
             throw new RuntimeException("Failed to read CSV records", e);
         }
     }
-    
-}                       
-    
+
+    public static Stream<List<?>> getRecords(InputStream inputStream, int skip, int limit) {
+        return getRecords(inputStream, skip, limit, Charset.defaultCharset());
+    }
+
+    public static Stream<List<?>> getRecords(InputStream inputStream, int skip, int limit, Charset charset) {
+        try {
+            MappingIterator<List<?>> iterator = csvMapper.readerFor(List.class)
+                    .with(csvSchema)
+                    .readValues(new InputStreamReader(inputStream, charset));
+            return Streams.stream(iterator).skip(skip + 1).limit(limit);
+        } catch (IOException e) {
+            log.error("Failed to read CSV records", e);
+            throw new RuntimeException("Failed to read CSV records", e);
+        }
+    }
+}

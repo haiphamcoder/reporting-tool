@@ -21,6 +21,7 @@
 		<hadoop.version>3.3.6</hadoop.version>
 		<jackson.version>2.18.3</jackson.version>
 		<poi.version>5.4.0</poi.version>
+		<commons-compress.version>1.27.1</commons-compress.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -138,6 +139,16 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>${poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>${commons-compress.version}</version>
 		</dependency>
 	</dependencies>
 

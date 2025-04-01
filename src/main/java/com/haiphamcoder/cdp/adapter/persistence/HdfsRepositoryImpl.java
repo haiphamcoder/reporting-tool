@@ -29,8 +29,8 @@ public class HdfsRepositoryImpl implements HdfsRepository {
     private final FileSystem fileSystem;
 
     public HdfsRepositoryImpl(@Qualifier("hdfsProperties") HdfsProperties hdfsProperties,
-                       @Qualifier("hdfsSiteInputStream") InputStream hdfsSiteInputStream,
-                       @Qualifier("coreSiteInputStream") InputStream coreSiteInputStream) {
+            @Qualifier("hdfsSiteInputStream") InputStream hdfsSiteInputStream,
+            @Qualifier("coreSiteInputStream") InputStream coreSiteInputStream) {
         this.hdfsProperties = hdfsProperties;
         if (!StringUtils.isNullOrEmpty(hdfsProperties.getUser())) {
             System.setProperty("HADOOP_USER_NAME", hdfsProperties.getUser());
@@ -53,7 +53,7 @@ public class HdfsRepositoryImpl implements HdfsRepository {
     }
 
     @Override
-    public String uploadFile(String userId,InputStream inputStream, String fileName) {
+    public String uploadFile(String userId, InputStream inputStream, String fileName) {
         String hdfsFolder = this.defaultFS + hdfsProperties.getRootFolder();
         String fileUpload = hdfsFolder + "/" + userId + "/" + fileName;
         log.info("Uploading file to hdfs: {}", fileUpload);
@@ -82,7 +82,9 @@ public class HdfsRepositoryImpl implements HdfsRepository {
     }
 
     @Override
-    public InputStream streamFile(String filePath) {
+    public InputStream streamFile(String userId, String fileName) {
+        String hdfsFolder = this.defaultFS + hdfsProperties.getRootFolder();
+        String filePath = hdfsFolder + "/" + userId + "/" + fileName;
         try {
             FSDataInputStream dataInputStream = this.fileSystem.open(new Path(filePath));
             return dataInputStream;

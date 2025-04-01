@@ -8,5 +8,5 @@ public interface HdfsRepository {
 
     Object downloadFile(String filePath);
 
-    InputStream streamFile(String filePath);
+    InputStream streamFile(String userId, String fileName);
 }
