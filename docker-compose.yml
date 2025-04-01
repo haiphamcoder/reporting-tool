@@ -18,32 +18,32 @@ services:
       - cdp-network
 
   hdfs-namenode:
-    image: apache/hadoop:3.4.1
+    image: apache/hadoop:3.3.6
     container_name: hdfs-namenode
     hostname: hdfs-namenode
     ports:
       - "9870:9870"
       - "9000:9000"
     environment:
-      - HADOOP_CONF_DIR=/etc/hadoop
+      - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
     volumes:
       - ./docker/hadoop/dfs/namenode:/hadoop/dfs/namenode
-      - ./docker/hadoop/config:/etc/hadoop
+      - ./docker/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./docker/hadoop/script/start-namenode.sh:/start-namenode.sh
     healthcheck:
       test: ["CMD", "curl", "-f", "http://hdfs-namenode:9870/"]
       interval: 30s
       timeout: 5s
       retries: 3
-    entrypoint: ["/bin/bash", "-c"]
-    command: >
-      "if [ ! -d /hadoop/dfs/namenode/current ]; then
-         hdfs namenode -format -nonInteractive;
-       fi;
-       hdfs namenode"
+    command: ["/bin/bash", "-c", "/start-namenode.sh"]
+    restart: always
+    networks:
+      - cdp-network
 
   hdfs-datanode:
-    image: apache/hadoop:3.4.1
+    image: apache/hadoop:3.3.6
     container_name: hdfs-datanode
     hostname: hdfs-datanode
     ports:
@@ -52,12 +52,17 @@ services:
       hdfs-namenode:
         condition: service_healthy
     environment:
-      - HADOOP_CONF_DIR=/etc/hadoop
+      - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
     volumes:
       - ./docker/hadoop/dfs/datanode:/hadoop/dfs/datanode
-      - ./docker/hadoop/config:/etc/hadoop
-    command: ["hdfs", "datanode"]
+      - ./docker/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./docker/hadoop/script/start-datanode.sh:/start-datanode.sh
+    command: ["/bin/bash", "-c", "/start-datanode.sh"]
+    restart: always
+    networks:
+      - cdp-network
 
   app:
     build:

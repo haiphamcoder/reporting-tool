@@ -10,76 +10,68 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Strings;
 import com.haiphamcoder.cdp.domain.repository.HdfsRepository;
-import com.haiphamcoder.cdp.infrastructure.config.HdfsConfiguration;
+import com.haiphamcoder.cdp.infrastructure.config.properties.HdfsProperties;
+import com.haiphamcoder.cdp.shared.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
 public class HdfsRepositoryImpl implements HdfsRepository {
-    private String defaultFs;
-    private Configuration configuration;
-    private FileSystem fileSystem;
 
-    private final String ROOT_FOLDER;
+    private final Configuration configuration;
+    private final String defaultFS;
+    private final HdfsProperties hdfsProperties;
+    private final FileSystem fileSystem;
 
-    public HdfsRepositoryImpl(@Value("${hdfs.remote.user}") String remoteUser,
-            @Value("${hdfs.folder.root}") String rootFolder, HdfsConfiguration hdfsConfiguration) {
-        ROOT_FOLDER = rootFolder;
-        if (!Strings.isNullOrEmpty(remoteUser)) {
-            System.setProperty("HADOOP_USER_NAME", remoteUser);
+    public HdfsRepositoryImpl(@Qualifier("hdfsProperties") HdfsProperties hdfsProperties,
+                       @Qualifier("hdfsSiteInputStream") InputStream hdfsSiteInputStream,
+                       @Qualifier("coreSiteInputStream") InputStream coreSiteInputStream) {
+        this.hdfsProperties = hdfsProperties;
+        if (!StringUtils.isNullOrEmpty(hdfsProperties.getUser())) {
+            System.setProperty("HADOOP_USER_NAME", hdfsProperties.getUser());
         }
-
         this.configuration = new Configuration();
-        this.configuration.addResource(hdfsConfiguration.hdfsSiteConfiguration());
-        this.configuration.addResource(hdfsConfiguration.coreSiteConfiguration());
-        this.defaultFs = this.configuration.get("fs.defaultFS");
-
-        // init file system
-        try {
-            log.info("HDFS file system initializing...");
-            this.fileSystem = FileSystem.get(configuration);
-            log.info("HDFS file system initialized");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.configuration.addResource(hdfsSiteInputStream);
+        this.configuration.addResource(coreSiteInputStream);
+        this.defaultFS = this.configuration.get("fs.defaultFS");
+        this.fileSystem = getFileSystem();
     }
 
-    @Override
-    public FileSystem getFileSystem() {
+    private FileSystem getFileSystem() {
+        FileSystem fileSystem = null;
+        try {
+            fileSystem = FileSystem.get(this.configuration);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
         return fileSystem;
     }
 
     @Override
-    public String getNameNode() {
-        return defaultFs;
-    }
-
-    @Override
-    public String uploadFile(InputStream inputStream, String fileName) {
-        String hdfsFolder = getNameNode() + ROOT_FOLDER;
-        String fileUpload = hdfsFolder + "/" + fileName;
+    public String uploadFile(String userId,InputStream inputStream, String fileName) {
+        String hdfsFolder = this.defaultFS + hdfsProperties.getRootFolder();
+        String fileUpload = hdfsFolder + "/" + userId + "/" + fileName;
         log.info("Uploading file to hdfs: {}", fileUpload);
         try {
-            FSDataOutputStream dataOutputStream = fileSystem.create(new Path(fileUpload));
+            FSDataOutputStream dataOutputStream = this.fileSystem.create(new Path(fileUpload));
             IOUtils.copyBytes(inputStream, dataOutputStream, 4096, true);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return ROOT_FOLDER + "/" + fileName;
+        return hdfsProperties.getRootFolder() + "/" + fileName;
     }
 
     @Override
     public Object downloadFile(String filePath) {
 
         try {
-            FSDataInputStream dataInputStream = fileSystem.open(new Path(filePath));
+            FSDataInputStream dataInputStream = getFileSystem().open(new Path(filePath));
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             IOUtils.copyBytes(dataInputStream, stream, 4096);
             return stream.toByteArray();
@@ -92,12 +84,11 @@ public class HdfsRepositoryImpl implements HdfsRepository {
     @Override
     public InputStream streamFile(String filePath) {
         try {
-            FSDataInputStream dataInputStream = fileSystem.open(new Path(filePath));
+            FSDataInputStream dataInputStream = this.fileSystem.open(new Path(filePath));
             return dataInputStream;
         } catch (IOException e) {
             log.error("Error stream file from hdfs", e);
         }
         return null;
     }
-
 }
