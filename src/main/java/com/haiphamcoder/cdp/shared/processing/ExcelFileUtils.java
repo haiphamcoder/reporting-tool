@@ -3,6 +3,7 @@ package com.haiphamcoder.cdp.shared.processing;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,18 +19,46 @@ import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.util.IOUtils;
-import org.apache.poi.openxml4j.util.ZipSecureFile;
-
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class ExcelFileUtils {
     private static final DataFormatter DATA_FORMATTER = new DataFormatter();
-    
-    static {
-        // Set the maximum record size to 1GB (same as our multipart config)
-        IOUtils.setByteArrayMaxOverride(1024 * 1024 * 1024);
+
+    public enum ExcelFileFormat {
+        XLSX,
+        XLS
+    }
+
+    private static String getCellValueAsString(Cell cell) {
+        return DATA_FORMATTER.formatCellValue(cell);
+    }
+
+    private static Workbook createWorkbook(InputStream inputStream, ExcelFileFormat fileFormat) throws IOException {
+        switch (fileFormat) {
+            case XLSX:
+                return new XSSFWorkbook(inputStream);
+            case XLS:
+                return new HSSFWorkbook(inputStream);
+            default:
+                throw new IllegalArgumentException("Unsupported file format: " + fileFormat);
+        }
+    }
+
+    public static List<String> getFieldNames(InputStream inputStream, ExcelFileFormat fileFormat, int sheetIndex, int headerRowIndex) {
+        try (Workbook workbook = createWorkbook(inputStream, fileFormat)) {
+            Sheet sheet = workbook.getSheetAt(sheetIndex);
+            Row headerRow = sheet.getRow(headerRowIndex);
+            if (headerRow == null) {
+                return Collections.emptyList();
+            }
+            return splitToList(headerRow);
+        } catch (IOException e) {
+            log.error("Failed to get field names from Excel file", e);
+            throw new UncheckedIOException(e);
+        }
     }
 
     public static List<String> getHeader(InputStream inputStream, String fileName) {
@@ -58,8 +87,7 @@ public class ExcelFileUtils {
     private static List<String> splitToList(Row row) {
         List<String> values = new LinkedList<>();
         for (Cell cell : row) {
-            String cellValue = DATA_FORMATTER.formatCellValue(cell);
-            values.add(cellValue);
+            values.add(getCellValueAsString(cell));
         }
         return values;
     }

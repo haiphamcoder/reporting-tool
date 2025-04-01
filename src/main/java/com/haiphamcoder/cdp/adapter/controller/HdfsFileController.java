@@ -56,7 +56,7 @@ public class HdfsFileController {
         @CookieValue(name = "user-id", required = true) String userId,
         @RequestParam(name = "file-name", required = true) String fileName
     ) {
-        List<String> schema = excelProcessingService.getSchema(userId, fileName);
+        List<String> schema = csvProcessingService.getSchema(userId, fileName);
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(schema));
     }
 

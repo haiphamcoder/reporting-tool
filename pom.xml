@@ -22,6 +22,7 @@
 		<jackson.version>2.18.3</jackson.version>
 		<poi.version>5.4.0</poi.version>
 		<commons-compress.version>1.27.1</commons-compress.version>
+		<opencsv.version>5.10</opencsv.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -149,6 +150,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
 			<version>${commons-compress.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>${opencsv.version}</version>
 		</dependency>
 	</dependencies>
 

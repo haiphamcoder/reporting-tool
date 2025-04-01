@@ -18,7 +18,7 @@ public class CSVProcessingService implements HdfsFileProcessingService {
 
     @Override
     public List<String> getSchema(String userId, String fileName) {
-        return CSVFileUtils.getHeader(hdfsFileService.streamFile(userId, fileName));
+        return CSVFileUtils.getFieldNames(hdfsFileService.streamFile(userId, fileName));
     }
 
     @Override
