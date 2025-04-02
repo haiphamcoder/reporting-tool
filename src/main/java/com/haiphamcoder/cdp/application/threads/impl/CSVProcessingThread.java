@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
 import com.opencsv.CSVReader;
@@ -72,6 +71,11 @@ public class CSVProcessingThread extends AbstractProcessingThread {
                     }
                     records.add(record);
                 }
+
+                if (records.size() > 0) {
+                    executorService.submit(() -> processChunk(records, header));
+                }
+
                 log.info("Total records: {}", recordCount);
             } catch (CsvValidationException e) {
                 throw new RuntimeException(e);

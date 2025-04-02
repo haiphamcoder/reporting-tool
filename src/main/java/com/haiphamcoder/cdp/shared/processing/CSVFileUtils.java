@@ -49,6 +49,7 @@ public class CSVFileUtils {
                     .withCSVParser(new CSVParserBuilder().withSeparator(columnSeparator).build())
                     .build();
             String[] fieldNames = reader.readNext();
+            fieldNames = HeaderNormalizer.normalizeArray(fieldNames);
             reader.close();
             return fieldNames != null ? Arrays.asList(fieldNames) : Collections.emptyList();
         } catch (IOException | CsvValidationException e) {
