@@ -44,6 +44,18 @@ public class CSVFileUtils {
         return getRecords(inputStream, skip, limit, Charset.defaultCharset(), DEFAULT_COLUMN_SEPARATOR);
     }
 
+    public static List<String[]> getAllRecords(InputStream inputStream) {
+        return getAllRecords(inputStream, Charset.defaultCharset(), DEFAULT_COLUMN_SEPARATOR);
+    }
+
+    public static List<String[]> getAllRecords(InputStream inputStream, Charset charset) {
+        return getAllRecords(inputStream, charset, DEFAULT_COLUMN_SEPARATOR);
+    }
+
+    public static List<String[]> getAllRecords(InputStream inputStream, Charset charset, char columnSeparator) {
+        return getRecords(inputStream, 0, Integer.MAX_VALUE, charset, columnSeparator);
+    }
+
     public static List<String[]> getRecords(InputStream inputStream, int skip, int limit, Charset charset,
             char columnSeparator) {
         List<String[]> records = new LinkedList<>();

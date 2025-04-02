@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 
 import com.opencsv.CSVReader;
@@ -22,25 +20,25 @@ public class CSVFileUtilsTest {
     @Test
     public void testGetHeader() {
         InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
-        List<String> header = CSVFileUtils.getHeader(inputStream);
+        List<String> header = CSVFileUtils.getFieldNames(inputStream);
         log.info("Header: {}", header);
     }
 
     @Test
     public void testGetRecords() {
         InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
-        Stream<List<?>> records = CSVFileUtils.getRecords(inputStream);
+        List<String[]> records = CSVFileUtils.getAllRecords(inputStream);
         records.forEach(record -> {
-            log.info("Record: {}", record);
+            log.info("Record: {}", Arrays.toString(record));
         });
     }
 
     @Test
     public void testGetRecordsWithSkipAndLimit() {
         InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
-        Stream<List<?>> records = CSVFileUtils.getRecords(inputStream, 1, 2);
+        List<String[]> records = CSVFileUtils.getRecords(inputStream, 1, 2);
         records.forEach(record -> {
-            log.info("Record: {}", record);
+            log.info("Record: {}", Arrays.toString(record));
         });
     }
 
