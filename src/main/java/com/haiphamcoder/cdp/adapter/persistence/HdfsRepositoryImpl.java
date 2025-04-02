@@ -64,14 +64,14 @@ public class HdfsRepositoryImpl implements HdfsRepository {
             throw new RuntimeException(e);
         }
 
-        return hdfsProperties.getRootFolder() + "/" + fileName;
+        return fileUpload;
     }
 
     @Override
-    public Object downloadFile(String filePath) {
+    public Object downloadFile(String fileUrl) {
 
         try {
-            FSDataInputStream dataInputStream = getFileSystem().open(new Path(filePath));
+            FSDataInputStream dataInputStream = getFileSystem().open(new Path(fileUrl));
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             IOUtils.copyBytes(dataInputStream, stream, 4096);
             return stream.toByteArray();
@@ -82,11 +82,9 @@ public class HdfsRepositoryImpl implements HdfsRepository {
     }
 
     @Override
-    public InputStream streamFile(String userId, String fileName) {
-        String hdfsFolder = this.defaultFS + hdfsProperties.getRootFolder();
-        String filePath = hdfsFolder + "/" + userId + "/" + fileName;
+    public InputStream streamFile(String fileUrl) {
         try {
-            FSDataInputStream dataInputStream = this.fileSystem.open(new Path(filePath));
+            FSDataInputStream dataInputStream = this.fileSystem.open(new Path(fileUrl));
             return dataInputStream;
         } catch (IOException e) {
             log.error("Error stream file from hdfs", e);

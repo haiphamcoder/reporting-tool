@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvValidationException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +54,26 @@ public class CSVFileUtilsTest {
             });
         } catch (IOException | CsvException e) {
             log.error("Error reading CSV file", e);
+        }
+    }
+
+    @Test
+    void test(){
+        try (InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv")) {
+            CSVReader csvReader = new CSVReader(new InputStreamReader(inputStream, Charset.defaultCharset()));
+            String[] header = csvReader.readNext();
+            log.info("Header: {}", Arrays.toString(header));
+            csvReader.close();
+//            inputStream.reset();
+            csvReader = new CSVReaderBuilder(new InputStreamReader(inputStream, Charset.defaultCharset()))
+                    .withSkipLines(10)
+                    .build();
+            String[] record;
+            while ((record = csvReader.readNext()) != null) {
+                log.info("Record: {}", Arrays.toString(record));
+            }
+        } catch (IOException | CsvValidationException e) {
+            e.printStackTrace();
         }
     }
 }

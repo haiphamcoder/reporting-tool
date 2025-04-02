@@ -27,12 +27,29 @@ public class CSVFileUtils {
         return getFieldNames(inputStream, Charset.defaultCharset(), DEFAULT_COLUMN_SEPARATOR);
     }
 
-    public static List<String> getFieldNames(InputStream inputStream, Charset charset, char columnSeparator) {
-        try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(inputStream, charset))
-                .withSkipLines(1)
+    public static CSVReader createCSVReader(InputStream inputStream) {
+        return createCSVReader(inputStream, Charset.defaultCharset(), DEFAULT_COLUMN_SEPARATOR, 0);
+    }
+
+    public static CSVReader createCSVReader(InputStream inputStream, Charset charset) {
+        return createCSVReader(inputStream, charset, DEFAULT_COLUMN_SEPARATOR, 0);
+    }
+
+    public static CSVReader createCSVReader(InputStream inputStream, Charset charset, char columnSeparator, int skipLines) {
+        return new CSVReaderBuilder(new InputStreamReader(inputStream, charset))
+                .withSkipLines(skipLines)
                 .withCSVParser(new CSVParserBuilder().withSeparator(columnSeparator).build())
-                .build()) {
+                .build();
+    }
+
+    public static List<String> getFieldNames(InputStream inputStream, Charset charset, char columnSeparator) {
+        try {
+            CSVReader reader = new CSVReaderBuilder(new InputStreamReader(inputStream, charset))
+                    .withSkipLines(0)
+                    .withCSVParser(new CSVParserBuilder().withSeparator(columnSeparator).build())
+                    .build();
             String[] fieldNames = reader.readNext();
+            reader.close();
             return fieldNames != null ? Arrays.asList(fieldNames) : Collections.emptyList();
         } catch (IOException | CsvValidationException e) {
             log.error("Failed to read CSV field names", e);

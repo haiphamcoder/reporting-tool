@@ -6,7 +6,7 @@ public interface HdfsRepository {
 
     String uploadFile(String userId, InputStream inputStream, String fileName);
 
-    Object downloadFile(String filePath);
+    Object downloadFile(String fileUrl);
 
-    InputStream streamFile(String userId, String fileName);
+    InputStream streamFile(String fileUrl);
 }

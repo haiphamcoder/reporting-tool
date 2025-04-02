@@ -19,8 +19,8 @@ public class HdfsFileService {
         return hdfsRepository.uploadFile(userId, inputStream, fileName);
     }
 
-    public InputStream streamFile(String userId, String fileName) {
-        return hdfsRepository.streamFile(userId, fileName);
+    public InputStream streamFile(String userId, String fileUrl) {
+        return hdfsRepository.streamFile(fileUrl);
     }
-    
+
 }

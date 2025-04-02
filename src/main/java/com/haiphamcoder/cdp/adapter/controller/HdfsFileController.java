@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.ExcelProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
+import com.haiphamcoder.cdp.application.threads.ImportDataSourceManager;
 import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -31,6 +32,7 @@ public class HdfsFileController {
     private final HdfsFileService hdfsFileService;
     private final CSVProcessingService csvProcessingService;
     private final ExcelProcessingService excelProcessingService;
+    private final ImportDataSourceManager importDataSourceManager;
     
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<RestAPIResponse<String>> uploadFile(
@@ -54,9 +56,10 @@ public class HdfsFileController {
     @GetMapping(path = "/schema")
     public ResponseEntity<RestAPIResponse<List<String>>> getSchema(
         @CookieValue(name = "user-id", required = true) String userId,
-        @RequestParam(name = "file-name", required = true) String fileName
+        @RequestParam(name = "file-url", required = true) String fileUrl
     ) {
-        List<String> schema = csvProcessingService.getSchema(userId, fileName);
+        List<String> schema = csvProcessingService.getSchema(userId, fileUrl);
+        importDataSourceManager.submit(fileUrl, true);
         return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(schema));
     }
 
