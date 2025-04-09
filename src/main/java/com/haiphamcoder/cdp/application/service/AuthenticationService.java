@@ -9,16 +9,18 @@ import org.springframework.stereotype.Service;
 import com.haiphamcoder.cdp.domain.entity.RefreshToken;
 import com.haiphamcoder.cdp.domain.entity.User;
 import com.haiphamcoder.cdp.domain.model.AuthenticationRequest;
-import com.haiphamcoder.cdp.domain.model.AuthenticationResponse;
 import com.haiphamcoder.cdp.domain.model.RegisterRequest;
 import com.haiphamcoder.cdp.domain.model.Role;
 import com.haiphamcoder.cdp.domain.model.TokenType;
-import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtTokenProvider;
+import com.haiphamcoder.cdp.shared.CookieUtils;
 import com.haiphamcoder.cdp.shared.DateTimeUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.cdp.shared.StringUtils;
+import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
+import com.haiphamcoder.cdp.shared.security.exception.UsernameOrPasswordIncorrectException;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +33,10 @@ public class AuthenticationService {
         private final JwtTokenProvider jwtTokenProvider;
         private final AuthenticationManager authenticationManager;
         private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
+
+        private static final String COOKIE_USER_ID = "user-id";
+        private static final String COOKIE_ACCESS_TOKEN = "access-token";
+        private static final String COOKIE_REFRESH_TOKEN = "refresh-token";
 
         public User register(RegisterRequest request) {
                 User user = User.builder()
@@ -52,7 +58,7 @@ public class AuthenticationService {
                 return userService.getUserByEmail(email) != null;
         }
 
-        public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        public RestAPIResponse<String> authenticate(AuthenticationRequest request, HttpServletResponse response) {
                 try {
                         Authentication authentication = authenticationManager.authenticate(
                                         new UsernamePasswordAuthenticationToken(
@@ -70,24 +76,18 @@ public class AuthenticationService {
                                         .build();
                         RefreshToken savedRefreshToken = refreshTokenService.saveUserToken(refreshTokenEntity);
                         if (savedRefreshToken == null) {
-                                return AuthenticationResponse.builder()
-                                                .errorMessage("Failed to generate refresh token")
-                                                .status(CommonConstants.AUTHEN_FAILED)
-                                                .build();
+                                throw new RuntimeException("Failed to save refresh token");
                         }
                         String accessTokenValue = jwtTokenProvider.generateAccessToken(authenticatedUser.getUsername());
-                        return AuthenticationResponse.builder()
-                                        .userId(authenticatedUser.getId())
-                                        .accessToken(accessTokenValue)
-                                        .refreshToken(savedRefreshToken.getTokenValue())
-                                        .status(CommonConstants.AUTHEN_SUCCESS)
-                                        .build();
+
+                        CookieUtils.addCookie(response, COOKIE_USER_ID, String.valueOf(authenticatedUser.getId()));
+                        CookieUtils.addCookie(response, COOKIE_ACCESS_TOKEN, accessTokenValue);
+                        CookieUtils.addCookie(response, COOKIE_REFRESH_TOKEN, savedRefreshToken.getTokenValue());
+
+                        return RestAPIResponse.ResponseFactory.createResponse("Authentication successful");
 
                 } catch (AuthenticationException e) {
-                        return AuthenticationResponse.builder()
-                                        .errorMessage("Invalid username or password")
-                                        .status(CommonConstants.AUTHEN_FAILED)
-                                        .build();
+                        throw new UsernameOrPasswordIncorrectException();
                 }
         }
 

@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +32,7 @@ public class HttpCaller {
             try {
                 HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() < 500) {
-                    return new RestAPIResponse<>(request.getRequestId(), response.statusCode(), "Success",
+                    return new RestAPIResponse<>(request.getRequestId(), "Success",
                             response.body(),
                             response.headers().map());
                 }
@@ -46,18 +44,18 @@ public class HttpCaller {
             }
             remainingRetries--;
         }
-        return new RestAPIResponse<>(request.getRequestId(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
+        return new RestAPIResponse<>(request.getRequestId(),
                 FAILED_TO_SEND_HTTP_REQUEST, null, null);
     }
 
     public static CompletableFuture<RestAPIResponse<String>> executeAsync(RestAPIRequest request) {
         HttpRequest httpRequest = buildRequest(request);
         return httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> new RestAPIResponse<>(request.getRequestId(), response.statusCode(), "Success",
+                .thenApply(response -> new RestAPIResponse<>(request.getRequestId(), "Success",
                         response.body(), response.headers().map()))
                 .exceptionally(e -> {
                     log.error(FAILED_TO_SEND_HTTP_REQUEST, e);
-                    return new RestAPIResponse<>(request.getRequestId(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    return new RestAPIResponse<>(request.getRequestId(),
                             FAILED_TO_SEND_HTTP_REQUEST, null, null);
                 });
     }

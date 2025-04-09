@@ -39,7 +39,7 @@ public class LogoutService implements LogoutHandler {
 
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        RestAPIResponse<String> apiResponse = RestAPIResponse.ResponseFactory.createSuccessResponse("Logout successful");
+        RestAPIResponse<String> apiResponse = RestAPIResponse.ResponseFactory.createResponse("Logout successful");
         try {
             new ObjectMapper().writeValue(response.getOutputStream(), apiResponse);
         } catch (Exception e) {

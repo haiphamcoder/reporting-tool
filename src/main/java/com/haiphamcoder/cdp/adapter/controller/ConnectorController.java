@@ -24,6 +24,6 @@ public class ConnectorController {
     @GetMapping
     public ResponseEntity<RestAPIResponse<List<Connector>>> getAllEnabledConnectors() {
         List<Connector> connectors = connectorService.getAllEnabledConnectors();
-        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createSuccessResponse(connectors));
+        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(connectors));
     }
 }

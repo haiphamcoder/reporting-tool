@@ -74,8 +74,6 @@ services:
     working_dir: /app
     command: sh bin/run.sh
     depends_on:
-      mysql-server:
-        condition: service_started
       hdfs-namenode:
         condition: service_healthy
     networks:

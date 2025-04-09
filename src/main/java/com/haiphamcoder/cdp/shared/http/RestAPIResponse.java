@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.haiphamcoder.cdp.shared.exception.BaseException;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,9 +24,6 @@ public class RestAPIResponse<T> {
     @JsonProperty("request_id")
     private String requestId;
 
-    @JsonProperty("status_code")
-    private int statusCode;
-
     @JsonProperty("message")
     private String message;
 
@@ -37,16 +35,21 @@ public class RestAPIResponse<T> {
 
     @UtilityClass
     public static class ResponseFactory {
-        public static <T> RestAPIResponse<T> createSuccessResponse(T data) {
-            return new RestAPIResponse<>(null, 200, "Success", data, null);
+        public static <T> RestAPIResponse<T> createResponse(T data) {
+            return new RestAPIResponse<>(null, null, data, null);
         }
 
-        public static <T> RestAPIResponse<T> createUnauthorizedResponse(String message) {
-            return new RestAPIResponse<>(null, 401, message, null, null);
+        public static <T> RestAPIResponse<T> createResponse(String message) {
+            return new RestAPIResponse<>(null, message, null, null);
         }
 
-        public static <T> RestAPIResponse<T> createErrorResponse(String message) {
-            return new RestAPIResponse<>(null, 500, message, null, null);
+        public static <T> RestAPIResponse<T> createResponse(String message, T data) {
+            return new RestAPIResponse<>(null, message, data, null);
         }
+
+        public static <T> RestAPIResponse<T> createResponse(BaseException exception) {
+            return new RestAPIResponse<>(null, exception.getErrorCode().getMessage(), null, null);
+        }
+
     }
 }

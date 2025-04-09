@@ -11,6 +11,6 @@ import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 public class IndexController {
     @GetMapping(path = "/", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<String>> greeting() {
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse("Hello, world!"));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse("Hello, world!"));
     }
 }

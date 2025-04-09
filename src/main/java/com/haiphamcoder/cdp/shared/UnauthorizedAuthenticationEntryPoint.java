@@ -23,7 +23,7 @@ public class UnauthorizedAuthenticationEntryPoint implements AuthenticationEntry
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        RestAPIResponse<String> apiResponse = RestAPIResponse.ResponseFactory.createUnauthorizedResponse(
+        RestAPIResponse<String> apiResponse = RestAPIResponse.ResponseFactory.createResponse(
                 "You are not authorized to access this resource");
         new ObjectMapper().writeValue(response.getOutputStream(), apiResponse);
     }

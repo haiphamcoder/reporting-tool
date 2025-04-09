@@ -41,16 +41,16 @@ public class HdfsFileController {
         String fileName = file.getOriginalFilename();
         if (fileName == null) {
             return ResponseEntity.badRequest()
-                    .body(RestAPIResponse.ResponseFactory.createErrorResponse("File name is required"));
+                    .body(RestAPIResponse.ResponseFactory.createResponse("File name is required"));
         }
         String filePath;
         try {
             filePath = hdfsFileService.uploadFile(userId, file.getInputStream(), fileName.trim().replaceAll("\\s+", "_"));
         } catch (IOException e) {
             return ResponseEntity.badRequest()
-                    .body(RestAPIResponse.ResponseFactory.createErrorResponse("Upload file failed"));
+                    .body(RestAPIResponse.ResponseFactory.createResponse("Upload file failed"));
         }
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(filePath));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(filePath));
     }
 
     @GetMapping(path = "/schema")
@@ -60,7 +60,7 @@ public class HdfsFileController {
     ) {
         List<String> schema = csvProcessingService.getSchema(userId, fileUrl);
         importDataSourceManager.submit(fileUrl, true);
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(schema));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(schema));
     }
 
 }

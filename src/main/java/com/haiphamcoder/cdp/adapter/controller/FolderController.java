@@ -27,12 +27,12 @@ public class FolderController {
     private final FolderService folderService;
 
     @GetMapping(name = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)    
-    public ResponseEntity<RestAPIResponse<FolderDto>> getFolderById(@CookieValue(name = "user-id", required = true) String userId, @PathVariable("id") String folderId) {
+    public ResponseEntity<RestAPIResponse<FolderDto>> getFolderById(@CookieValue(name = "user-id") String userId, @PathVariable("id") String folderId) {
         Folder folder = folderService.getFolderByIdAndUserId(Long.parseLong(folderId), Long.parseLong(userId));
         if (folder == null) {
-            return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createErrorResponse("Folder not found"));
+            return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createResponse("Folder not found"));
         }
         FolderDto folderDto = FolderMapper.getInstance().toDto(folder);
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createSuccessResponse(folderDto));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(folderDto));
     }
 }
