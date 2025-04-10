@@ -1,9 +1,11 @@
 services:
   mysql-server:
-    image: mysql:8.2
+    image: mysql:${MYSQL_VERSION}
     container_name: mysql-server
     ports:
       - "3306:3306"
+    env_file:
+      - .env
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: sandbox
@@ -18,12 +20,14 @@ services:
       - cdp-network
 
   hdfs-namenode:
-    image: apache/hadoop:3.3.6
+    image: apache/hadoop:${HADOOP_VERSION}
     container_name: hdfs-namenode
     hostname: hdfs-namenode
     ports:
       - "9870:9870"
       - "9000:9000"
+    env_file:
+      - .env
     environment:
       - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
@@ -43,7 +47,7 @@ services:
       - cdp-network
 
   hdfs-datanode:
-    image: apache/hadoop:3.3.6
+    image: apache/hadoop:${HADOOP_VERSION}
     container_name: hdfs-datanode
     hostname: hdfs-datanode
     ports:
@@ -51,6 +55,8 @@ services:
     depends_on:
       hdfs-namenode:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
@@ -60,6 +66,21 @@ services:
       - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
       - ./docker/hadoop/script/start-datanode.sh:/start-datanode.sh
     command: ["/bin/bash", "-c", "/start-datanode.sh"]
+    restart: always
+    networks:
+      - cdp-network
+
+  tidb-server:
+    image: pingcap/tidb:${TIDB_VERSION}
+    container_name: tidb-server
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    command: 
+      - --config=/tidb.toml
+    volumes:
+      - ./docker/tidb/tidb.toml:/tidb.toml:ro
     restart: always
     networks:
       - cdp-network
