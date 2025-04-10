@@ -51,5 +51,9 @@ public class RestAPIResponse<T> {
             return new RestAPIResponse<>(null, exception.getErrorCode().getMessage(), null, null);
         }
 
+        public static RestAPIResponse<String> internalServerErrorResponse(){
+            return new RestAPIResponse<>(null, "Internal server error", null, null);
+        }
+
     }
 }
