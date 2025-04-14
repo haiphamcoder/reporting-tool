@@ -15,7 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Repository
 interface SourceJpaRepository extends JpaRepository<Source, Long> {
+    List<Source> findAllByUserIdAndFolderId(Long userId, Long folderId);
 
+    List<Source> findAllByUserIdAndFolderIdAndKeywordContain(Long userId, Long folderId, String keyword);
+
+    List<Source> findAllByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId, Integer connectorType);
 }
 
 @Component
@@ -27,28 +31,23 @@ public class SourceRepositoryImpl implements SourceRepository {
 
     @Override
     public Optional<Source> getSourceById(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getSourceById'");
+        return sourceJpaRepository.findById(id);
     }
 
     @Override
     public List<Source> getAllSourcesByUserIdAndFolderId(Long userId, Long folderId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllSourcesByUserIdAndFolderId'");
+        return sourceJpaRepository.findAllByUserIdAndFolderId(userId, folderId);
     }
 
     @Override
     public List<Source> getAllSourcesByUserIdAndFolderIdAndKeyword(Long userId, Long folderId, String keyword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndKeyword'");
+        return sourceJpaRepository.findAllByUserIdAndFolderIdAndKeywordContain(userId, folderId, keyword);
     }
 
     @Override
     public List<Source> getAllSourcesByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId,
             Integer connectorType) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException(
-                "Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndConnectorType'");
+        return sourceJpaRepository.findAllByUserIdAndFolderIdAndConnectorType(userId, folderId, connectorType);
     }
 
     @Override
