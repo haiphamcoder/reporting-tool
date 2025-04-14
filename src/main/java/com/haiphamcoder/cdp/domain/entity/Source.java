@@ -48,18 +48,14 @@ public class Source extends BaseEntity{
     @JsonProperty("description")
     private String description;
 
-    @Column(name = "type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    @JsonProperty("type")
-    private SourceType type;
+    @Column(name = "type_connector", nullable = false)
+    private Integer typeConnector;
 
     @Column(name = "config", nullable = false)
     private String config;
 
     @Column(name = "status", nullable = false)
-    @Enumerated(EnumType.STRING)
-    @JsonProperty("status")
-    private SourceStatus status;
+    private Integer status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -85,21 +81,4 @@ public class Source extends BaseEntity{
     @JsonProperty("last_sync_time")
     private Timestamp lastSyncTime;
 
-    @RequiredArgsConstructor
-    public enum SourceType {
-        FILE("file"),
-        DATABASE("database");
-
-        @Getter
-        private final String value;
-    }
-
-    @RequiredArgsConstructor
-    public enum SourceStatus {
-        ACTIVE("active"),
-        INACTIVE("inactive");
-
-        @Getter
-        private final String value;
-    }
 }

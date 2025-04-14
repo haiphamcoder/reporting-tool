@@ -41,9 +41,6 @@ public class Connector extends BaseEntity {
     @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "logo", nullable = false)
-    private String logo;
-
     @Column(name = "type", nullable = false)
     private String type;
 

@@ -8,9 +8,9 @@ CREATE TABLE source (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất cho mỗi source',
     name VARCHAR(255) NOT NULL COMMENT 'Tên của source',
     description VARCHAR(255) COMMENT 'Mô tả của source',
-    type ENUM ('FILE', 'DATABASE') NOT NULL COMMENT 'Loại của source',
+    type_connector INT NOT NULL COMMENT 'Loại connector của source',
     config TEXT NOT NULL COMMENT 'Cấu hình của source',
-    status ENUM ('ACTIVE', 'INACTIVE') NOT NULL COMMENT 'Trạng thái của source',
+    status INT NOT NULL COMMENT 'Trạng thái của source',
     user_id BIGINT NOT NULL COMMENT 'ID của user',
     folder_id BIGINT NOT NULL COMMENT 'ID của folder',
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái xóa của source',
@@ -28,7 +28,7 @@ CREATE INDEX idx_source_user_id ON source (user_id);
 
 CREATE INDEX idx_source_folder_id ON source (folder_id);
 
-CREATE INDEX idx_source_type ON source (type);
+CREATE INDEX idx_source_type_connector ON source (type_connector);
 
 CREATE INDEX idx_source_status ON source (status);
 

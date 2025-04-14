@@ -9,7 +9,6 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -23,18 +22,16 @@ import jakarta.persistence.EntityManager;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackages = {
-        "com.haiphamcoder.cdp.adapter.persistence" }, entityManagerFactoryRef = "tidbEntityManagerFactory", transactionManagerRef = "tidbTransactionManager")
+        "com.haiphamcoder.cdp.adapter.persistence.raw" }, entityManagerFactoryRef = "tidbEntityManagerFactory", transactionManagerRef = "tidbTransactionManager")
 public class TiDBDataSourceConfiguration {
     @Bean(name = "tidbJpaProperties")
     @ConfigurationProperties(prefix = "jpa.tidb")
-    @Primary
     JpaProperties tidbJpaProperties() {
         return new JpaProperties();
     }
 
     @Bean(name = "tidbDataSource")
-    @ConfigurationProperties(prefix = "datasource.primary")
-    @Primary
+    @ConfigurationProperties(prefix = "datasource.tidb")
     DataSource tidbDataSource() {
         return DataSourceBuilder.create().type(HikariDataSource.class).build();
     }
@@ -46,23 +43,21 @@ public class TiDBDataSourceConfiguration {
     }
 
     @Bean(name = "tidbEntityManagerFactory")
-    @Primary
     LocalContainerEntityManagerFactoryBean tidbEntityManagerFactory(
             EntityManagerFactoryBuilder entityManagerFactoryBuilder,
-            @Qualifier("tidbJpaProperties") JpaProperties mainJpaProperties,
-            @Qualifier("tidbDataSource") DataSource mainDataSource) {
+            @Qualifier("tidbJpaProperties") JpaProperties tidbJpaProperties,
+            @Qualifier("tidbDataSource") DataSource tidbDataSource) {
         return DataSourceUtils.createEntityManagerFactoryBean(
                 entityManagerFactoryBuilder,
-                mainDataSource,
-                mainJpaProperties,
+                tidbDataSource,
+                tidbJpaProperties,
                 "tidb",
-                "com.haiphamcoder.cdp.domain.entity");
+                "com.haiphamcoder.cdp.domain.entity.raw");
     }
 
     @Bean(name = "tidbTransactionManager")
-    @Primary
     PlatformTransactionManager tidbTransactionManager(
-            @Qualifier("tidbEntityManagerFactory") LocalContainerEntityManagerFactoryBean mainEntityManagerFactory) {
-        return DataSourceUtils.createTransactionManager(mainEntityManagerFactory.getObject());
+            @Qualifier("tidbEntityManagerFactory") LocalContainerEntityManagerFactoryBean tidbEntityManagerFactory) {
+        return DataSourceUtils.createTransactionManager(tidbEntityManagerFactory.getObject());
     }
 }
