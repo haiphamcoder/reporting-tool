@@ -15,11 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Repository
 interface SourceJpaRepository extends JpaRepository<Source, Long> {
+    List<Source> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+
+    Optional<Source> findByIdAndUserIdAndFolderId(Long id, Long userId, Long folderId);
+
     List<Source> findAllByUserIdAndFolderId(Long userId, Long folderId);
 
-    List<Source> findAllByUserIdAndFolderIdAndKeywordContain(Long userId, Long folderId, String keyword);
-
-    List<Source> findAllByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId, Integer connectorType);
+    List<Source> findAllByUserIdAndFolderIdAndTypeConnector(Long userId, Long folderId, Integer typeConnector);
 }
 
 @Component
@@ -35,49 +37,24 @@ public class SourceRepositoryImpl implements SourceRepository {
     }
 
     @Override
-    public List<Source> getAllSourcesByUserIdAndFolderId(Long userId, Long folderId) {
-        return sourceJpaRepository.findAllByUserIdAndFolderId(userId, folderId);
+    public List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted) {
+        return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted);
     }
 
     @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndKeyword(Long userId, Long folderId, String keyword) {
-        return sourceJpaRepository.findAllByUserIdAndFolderIdAndKeywordContain(userId, folderId, keyword);
+    public Optional<Source> deleteSourceById(Long id) {
+        Optional<Source> source = sourceJpaRepository.findById(id);
+        if (source.isPresent()) {
+            source.get().setIsDeleted(true);
+            sourceJpaRepository.save(source.get());
+        }
+        return source;
     }
 
     @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId,
-            Integer connectorType) {
-        return sourceJpaRepository.findAllByUserIdAndFolderIdAndConnectorType(userId, folderId, connectorType);
-    }
-
-    @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndStatus(Long userId, Long folderId, Integer status) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndStatus'");
-    }
-
-    @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimit(Long userId, Long folderId, Integer page,
-            Integer limit) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException(
-                "Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndPageAndLimit'");
-    }
-
-    @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndKeyword(Long userId, Long folderId,
-            Integer page, Integer limit, String keyword) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException(
-                "Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndKeyword'");
-    }
-
-    @Override
-    public List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndConnectorType(Long userId, Long folderId,
-            Integer page, Integer limit, Integer connectorType) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException(
-                "Unimplemented method 'getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndConnectorType'");
+    public Optional<Source> createSource(Source source) {
+        sourceJpaRepository.save(source);
+        return Optional.of(source);
     }
 
 }

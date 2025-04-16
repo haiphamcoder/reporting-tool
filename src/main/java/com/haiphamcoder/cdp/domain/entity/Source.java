@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.domain.entity;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,6 +12,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -59,8 +62,13 @@ public class Source extends BaseEntity {
     @JsonProperty("user")
     private User user;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "source_share", joinColumns = @JoinColumn(name = "source_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JsonProperty("shared_users")
+    private List<User> sharedUsers;
+
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "folder_id", nullable = false)
+    @JoinColumn(name = "folder_id")
     @JsonProperty("folder")
     private Folder folder;
 

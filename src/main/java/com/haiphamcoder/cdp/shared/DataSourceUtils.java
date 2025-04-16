@@ -2,7 +2,6 @@ package com.haiphamcoder.cdp.shared;
 
 import javax.sql.DataSource;
 
-import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -16,14 +15,12 @@ public class DataSourceUtils {
     public static LocalContainerEntityManagerFactoryBean createEntityManagerFactoryBean(
             EntityManagerFactoryBuilder entityManagerFactoryBuilder,
             DataSource dataSource,
-            JpaProperties jpaProperties,
             String persistenceUnitName,
             String entityPackage) {
         return entityManagerFactoryBuilder
                 .dataSource(dataSource)
                 .packages(entityPackage)
                 .persistenceUnit(persistenceUnitName)
-                .properties(jpaProperties.getProperties())
                 .build();
     }
 

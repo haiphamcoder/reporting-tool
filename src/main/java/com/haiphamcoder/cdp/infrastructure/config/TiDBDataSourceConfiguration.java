@@ -3,9 +3,9 @@ package com.haiphamcoder.cdp.infrastructure.config;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,16 +24,24 @@ import jakarta.persistence.EntityManager;
 @EnableJpaRepositories(basePackages = {
         "com.haiphamcoder.cdp.adapter.persistence.raw" }, entityManagerFactoryRef = "tidbEntityManagerFactory", transactionManagerRef = "tidbTransactionManager")
 public class TiDBDataSourceConfiguration {
-    @Bean(name = "tidbJpaProperties")
-    @ConfigurationProperties(prefix = "jpa.tidb")
-    JpaProperties tidbJpaProperties() {
-        return new JpaProperties();
+
+    @Bean(name = "tidbDataSourceProperties")
+    @ConfigurationProperties(prefix = "datasource.secondary")
+    DataSourceProperties tidbDataSourceProperties() {
+        return new DataSourceProperties();
     }
 
     @Bean(name = "tidbDataSource")
-    @ConfigurationProperties(prefix = "datasource.tidb")
-    DataSource tidbDataSource() {
-        return DataSourceBuilder.create().type(HikariDataSource.class).build();
+    DataSource tidbDataSource(@Qualifier("tidbDataSourceProperties") DataSourceProperties tidbDataSourceProperties,
+            @Value("${datasource.secondary.pool.size}") int poolSize,
+            @Value("${datasource.secondary.pool.name}") String poolName) {
+        HikariDataSource dataSource = tidbDataSourceProperties
+                .initializeDataSourceBuilder()
+                .type(HikariDataSource.class)
+                .build();
+        dataSource.setMaximumPoolSize(poolSize);
+        dataSource.setPoolName(poolName);
+        return dataSource;
     }
 
     @Bean(name = "tidbEntityManager")
@@ -45,12 +53,10 @@ public class TiDBDataSourceConfiguration {
     @Bean(name = "tidbEntityManagerFactory")
     LocalContainerEntityManagerFactoryBean tidbEntityManagerFactory(
             EntityManagerFactoryBuilder entityManagerFactoryBuilder,
-            @Qualifier("tidbJpaProperties") JpaProperties tidbJpaProperties,
             @Qualifier("tidbDataSource") DataSource tidbDataSource) {
         return DataSourceUtils.createEntityManagerFactoryBean(
                 entityManagerFactoryBuilder,
                 tidbDataSource,
-                tidbJpaProperties,
                 "tidb",
                 "com.haiphamcoder.cdp.domain.entity.raw");
     }

@@ -90,6 +90,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: cdp-for-service
+    profiles:
+      - prod
     ports:
       - "8080:8080"
     working_dir: /app
@@ -97,6 +99,12 @@ services:
     depends_on:
       hdfs-namenode:
         condition: service_healthy
+      tidb-server:
+        condition: service_started
+      mysql-server:
+        condition: service_started
+      hdfs-datanode:
+        condition: service_started
     networks:
       - cdp-network
 

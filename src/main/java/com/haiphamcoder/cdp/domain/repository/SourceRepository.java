@@ -6,20 +6,17 @@ import java.util.Optional;
 import com.haiphamcoder.cdp.domain.entity.Source;
 
 public interface SourceRepository {
+
     Optional<Source> getSourceById(Long id);
 
-    List<Source> getAllSourcesByUserIdAndFolderId(Long userId, Long folderId);
+    List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    List<Source> getAllSourcesByUserIdAndFolderIdAndKeyword(Long userId, Long folderId, String keyword);
+    default List<Source> getAllSourcesByUserId(Long userId) {
+        return getAllSourcesByUserIdAndIsDeleted(userId, false);
+    }
 
-    List<Source> getAllSourcesByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId, Integer connectorType);
+    Optional<Source> deleteSourceById(Long id);
 
-    List<Source> getAllSourcesByUserIdAndFolderIdAndStatus(Long userId, Long folderId, Integer status);
+    Optional<Source> createSource(Source source);
 
-    List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimit(Long userId, Long folderId, Integer page, Integer limit);
-
-    List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndKeyword(Long userId, Long folderId, Integer page, Integer limit, String keyword);
-
-    List<Source> getAllSourcesByUserIdAndFolderIdAndPageAndLimitAndConnectorType(Long userId, Long folderId, Integer page, Integer limit, Integer connectorType);
-     
 }
