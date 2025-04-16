@@ -1,12 +1,17 @@
 package com.haiphamcoder.cdp.application.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.repository.SourceRepository;
+import com.haiphamcoder.cdp.shared.StringUtils;
+import com.haiphamcoder.cdp.shared.security.HashUtils;
+import com.haiphamcoder.cdp.shared.security.exception.HashingException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SourceService {
 
     private final SourceRepository sourceRepository;
+    private final HdfsFileService hdfsFileService;
 
     public List<Source> getAllSourcesByUserId(Long userId) {
         return sourceRepository.getAllSourcesByUserId(userId);
@@ -36,6 +42,21 @@ public class SourceService {
             return createdSource.get();
         }
         throw new RuntimeException("Create source failed");
+    }
+
+    public String uploadFile(String userId, MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        if (StringUtils.isNullOrEmpty(fileName)) {
+            throw new RuntimeException("File name is required");
+        }
+        String filePath;
+        try {
+            filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
+                    fileName.trim().replaceAll("\\s+", "_"));
+        } catch (IOException  e) {
+            throw new RuntimeException("Upload file failed");
+        }
+        return filePath;
     }
 
 }

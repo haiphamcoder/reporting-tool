@@ -19,6 +19,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -58,6 +59,9 @@ public class JwtTokenProvider {
             .getPayload();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
+        } catch (SignatureException e) {
+            log.error("Invalid JWT signature: {}", e.getMessage());
+            throw new SignatureException("Invalid JWT signature");
         }
     }
 
