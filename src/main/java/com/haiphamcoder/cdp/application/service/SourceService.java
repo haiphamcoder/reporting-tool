@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.domain.entity.Source;
+import com.haiphamcoder.cdp.domain.model.PreviewData;
+import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 import com.haiphamcoder.cdp.domain.repository.SourceRepository;
 import com.haiphamcoder.cdp.shared.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +61,10 @@ public class SourceService {
 
     public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType) {
         return hdfsFileService.getHistoryUploadFile(userId, connectorType);
+    }
+
+    public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest) {
+        return null;
     }
 
 }

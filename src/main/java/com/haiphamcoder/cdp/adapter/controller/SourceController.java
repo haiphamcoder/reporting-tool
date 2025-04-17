@@ -7,12 +7,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.application.service.SourceService;
 import com.haiphamcoder.cdp.domain.entity.Source;
+import com.haiphamcoder.cdp.domain.model.PreviewData;
+import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 import com.haiphamcoder.cdp.shared.exception.BaseException;
 import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +67,14 @@ public class SourceController {
             @RequestParam(name = "connector-type", required = true) Integer connectorType) {
         Map<String, String> historyUploadFile = sourceService.getHistoryUploadFile(userId, connectorType);
         return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(historyUploadFile));
+    }
+
+    @GetMapping("/preview-data")
+    public ResponseEntity<RestAPIResponse<PreviewData>> getPreviewData(
+            @CookieValue(name = "user-id") String userId,
+            @RequestBody PreviewDataRequest previewDataRequest) {
+        PreviewData previewData = sourceService.getPreviewData(userId, previewDataRequest);
+        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(previewData));
     }
 
     @DeleteMapping("/{id}")
