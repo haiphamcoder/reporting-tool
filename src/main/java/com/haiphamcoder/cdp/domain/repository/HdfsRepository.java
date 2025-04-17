@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.domain.repository;
 
 import java.io.InputStream;
+import java.util.Map;
 
 public interface HdfsRepository {
 
@@ -9,4 +10,6 @@ public interface HdfsRepository {
     Object downloadFile(String fileUrl);
 
     InputStream streamFile(String fileUrl);
+
+    Map<String, String> getHistoryUploadFile(String userId, Integer connectorType);
 }

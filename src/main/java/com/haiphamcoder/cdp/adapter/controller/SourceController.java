@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.adapter.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -37,9 +39,15 @@ public class SourceController {
 
     @PostMapping("/upload-file")
     public ResponseEntity<Object> uploadFile(@CookieValue(name = "user-id") String userId,
+            @RequestParam(name = "connector-type", required = true) Integer connectorType,
             @RequestBody MultipartFile file) {
         try {
-            String filePath = sourceService.uploadFile(userId, file);
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(RestAPIResponse.ResponseFactory.createResponse("File is empty"));
+            }
+
+            String filePath = sourceService.uploadFile(userId, connectorType, file);
             return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(filePath));
         } catch (BaseException e) {
             RestAPIResponse<Object> apiResponse = RestAPIResponse.ResponseFactory.createResponse(e);
@@ -48,6 +56,14 @@ public class SourceController {
             return ResponseEntity.internalServerError()
                     .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
         }
+    }
+
+    @GetMapping("/history-upload-file")
+    public ResponseEntity<RestAPIResponse<Map<String, String>>> getHistoryUploadFil(
+            @CookieValue(name = "user-id") String userId,
+            @RequestParam(name = "connector-type", required = true) Integer connectorType) {
+        Map<String, String> historyUploadFile = sourceService.getHistoryUploadFile(userId, connectorType);
+        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(historyUploadFile));
     }
 
     @DeleteMapping("/{id}")

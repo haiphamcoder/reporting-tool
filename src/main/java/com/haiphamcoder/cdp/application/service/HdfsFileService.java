@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.application.service;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,10 @@ public class HdfsFileService {
 
     public InputStream streamFile(String userId, String fileUrl) {
         return hdfsRepository.streamFile(fileUrl);
+    }
+
+    public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType) {
+        return hdfsRepository.getHistoryUploadFile(userId, connectorType);
     }
 
 }

@@ -3,10 +3,13 @@ package com.haiphamcoder.cdp.adapter.persistence;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -90,5 +93,23 @@ public class HdfsRepositoryImpl implements HdfsRepository {
             log.error("Error stream file from hdfs", e);
         }
         return null;
+    }
+
+    @Override
+    public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType) {
+        String hdfsFolder = this.defaultFS + hdfsProperties.getRootFolder();
+        String fileUpload = hdfsFolder + "/" + userId + "/" + connectorType;
+        log.info("Getting history upload file from hdfs: {}", fileUpload);
+        try {
+            FileStatus[] fileStatuses = this.fileSystem.listStatus(new Path(fileUpload));
+            Map<String, String> historyUploadFile = new HashMap<>();
+            for (FileStatus fileStatus : fileStatuses) {
+                historyUploadFile.put(fileStatus.getPath().getName(), fileStatus.getPath().toString());
+            }
+            return historyUploadFile;
+        } catch (IOException e) {
+            log.error("Error getting history upload file from hdfs", e);
+        }
+        return Collections.emptyMap();
     }
 }
