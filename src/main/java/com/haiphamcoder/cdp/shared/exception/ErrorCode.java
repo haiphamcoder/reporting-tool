@@ -26,7 +26,7 @@ public enum ErrorCode {
     // Business Logic Errors (4xx)
     DUPLICATE_RESOURCE(409, "Resource already exists", HttpStatus.CONFLICT),
     INVALID_OPERATION(400, "Invalid operation", HttpStatus.BAD_REQUEST),
-
+    PERMISSION_DENIED(403, "Permission denied", HttpStatus.FORBIDDEN),
     // Server Errors (5xx)
     INTERNAL_SERVER_ERROR(500, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
     SERVICE_UNAVAILABLE(503, "Service temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE),

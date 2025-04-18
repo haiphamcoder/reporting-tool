@@ -10,6 +10,7 @@ CREATE TABLE
         name VARCHAR(255) NOT NULL COMMENT 'Tên của source',
         description VARCHAR(255) COMMENT 'Mô tả của source',
         type_connector INT NOT NULL COMMENT 'Loại connector của source',
+        mapping TEXT NOT NULL COMMENT 'Schema của source',
         config TEXT NOT NULL COMMENT 'Cấu hình của source',
         status INT NOT NULL COMMENT 'Trạng thái của source',
         user_id BIGINT NOT NULL COMMENT 'ID của user',

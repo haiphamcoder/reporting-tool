@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.haiphamcoder.cdp.adapter.dto.SourceDto;
 import com.haiphamcoder.cdp.application.service.SourceService;
 import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
@@ -39,6 +40,20 @@ public class SourceController {
         return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sources));
     }
 
+    @PostMapping()
+    public ResponseEntity<Object> createSource(@CookieValue(name = "user-id") String userId,
+            @RequestBody SourceDto sourceDto) {
+        try {
+            sourceService.createSource(sourceDto);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Source created successfully"));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
+    }
+
     @PostMapping("/upload-file")
     public ResponseEntity<Object> uploadFile(@CookieValue(name = "user-id") String userId,
             @RequestParam(name = "connector-type", required = true) Integer connectorType,
@@ -69,11 +84,47 @@ public class SourceController {
     }
 
     @GetMapping("/preview-data")
-    public ResponseEntity<RestAPIResponse<PreviewData>> getPreviewData(
+    public ResponseEntity<Object> getPreviewData(
             @CookieValue(name = "user-id") String userId,
             @RequestBody PreviewDataRequest previewDataRequest) {
-        PreviewData previewData = sourceService.getPreviewData(userId, previewDataRequest);
-        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(previewData));
+        try {
+            PreviewData previewData = sourceService.getPreviewData(userId, previewDataRequest);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(previewData));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
+    }
+
+    @GetMapping("/confirm-schema")
+    public ResponseEntity<Object> confirmSchema(@CookieValue(name = "user-id") String userId,
+            @RequestParam(name = "source-id", required = true) Long sourceId,
+            @RequestBody Map<String, String> mapping) {
+        try {
+            sourceService.confirmSchema(userId, sourceId, mapping);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Schema confirmed successfully"));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
+    }
+
+    @PostMapping("/submit-import")
+    public ResponseEntity<Object> submitImport(@CookieValue(name = "user-id") String userId,
+            @RequestParam(name = "source-id", required = true) Long sourceId) {
+        try {
+            sourceService.submitImport(userId, sourceId);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Import submitted successfully"));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
     }
 
     @DeleteMapping("/{id}")

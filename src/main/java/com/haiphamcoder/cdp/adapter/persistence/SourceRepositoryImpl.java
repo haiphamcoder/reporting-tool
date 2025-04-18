@@ -21,7 +21,7 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
 
     List<Source> findAllByUserIdAndFolderId(Long userId, Long folderId);
 
-    List<Source> findAllByUserIdAndFolderIdAndTypeConnector(Long userId, Long folderId, Integer typeConnector);
+    List<Source> findAllByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId, Integer connectorType);
 }
 
 @Component

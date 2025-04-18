@@ -29,10 +29,9 @@ public class ImportDataSourceManager {
         this.taskManager = new TaskManager(1, executor);
     }
 
-    public boolean submit(String fileUrl, boolean isFirstTime) {
+    public boolean submit(String userId, Long sourceId) {
 
-        // TODO: implement more...
-        AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(fileUrl, isFirstTime);
+        AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(sourceId);
 
         if (taskManager.trySubmit(task) == null) {
             log.info("max queue size");

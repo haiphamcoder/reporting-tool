@@ -20,7 +20,7 @@ public class SourceDto {
     private Long id;
     private String name;
     private String description;
-    private Integer typeConnector;
+    private Integer connectorType;
     private String config;
     private Integer status;
     private Long userId;

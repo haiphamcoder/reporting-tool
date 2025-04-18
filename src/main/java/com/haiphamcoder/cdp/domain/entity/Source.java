@@ -2,12 +2,18 @@ package com.haiphamcoder.cdp.domain.entity;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.cdp.shared.BaseEntity;
+import com.haiphamcoder.cdp.shared.converter.JsonNodeStringConverter;
+import com.haiphamcoder.cdp.shared.converter.MapStringConverter;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -48,11 +54,16 @@ public class Source extends BaseEntity {
     @JsonProperty("description")
     private String description;
 
-    @Column(name = "type_connector", nullable = false)
-    private Integer typeConnector;
+    @Column(name = "connector_type", nullable = false)
+    private Integer connectorType;
+
+    @Column(name = "mapping", nullable = false)
+    @Convert(converter = MapStringConverter.class)
+    private Map<String, Object> mapping;
 
     @Column(name = "config", nullable = false)
-    private String config;
+    @Convert(converter = JsonNodeStringConverter.class)
+    private JsonNode config;
 
     @Column(name = "status", nullable = false)
     private Integer status;

@@ -13,6 +13,7 @@ public class SourceMapper {
                 .id(source.getId())
                 .name(source.getName())
                 .description(source.getDescription())
+                .connectorType(source.getConnectorType())
                 .build();
     }
 
