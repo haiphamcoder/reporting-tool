@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PreviewDataRequest {
     @JsonProperty("connector_type")
-    private String connectorType;
+    private Integer connectorType;
 
     @JsonProperty("path")
     private String path;

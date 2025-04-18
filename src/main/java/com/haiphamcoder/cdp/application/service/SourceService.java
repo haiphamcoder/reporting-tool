@@ -12,6 +12,7 @@ import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 import com.haiphamcoder.cdp.domain.repository.SourceRepository;
+import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
 import com.haiphamcoder.cdp.shared.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class SourceService {
 
     private final SourceRepository sourceRepository;
     private final HdfsFileService hdfsFileService;
-
+    private final CSVProcessingService csvProcessingService;
     public List<Source> getAllSourcesByUserId(Long userId) {
         return sourceRepository.getAllSourcesByUserId(userId);
     }
@@ -65,7 +66,10 @@ public class SourceService {
 
     public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest) {
         switch (previewDataRequest.getConnectorType()) {
-            case 1: 
+            case CommonConstants.CONNECTOR_TYPE_CSV:
+                return csvProcessingService.getPreviewData(userId, previewDataRequest.getPath(), previewDataRequest.getLimit());
+            default:
+                throw new RuntimeException("Unsupported connector type");
         }
     }
 

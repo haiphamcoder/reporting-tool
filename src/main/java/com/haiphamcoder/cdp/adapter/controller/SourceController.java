@@ -15,7 +15,6 @@ import com.haiphamcoder.cdp.shared.http.RestAPIResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

@@ -1,11 +1,11 @@
 package com.haiphamcoder.cdp.domain.model;
 
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,5 +21,5 @@ public class PreviewData {
     private List<String> schema;
 
     @JsonProperty("records")
-    private List<Map<String, Object>> records;
+    private List<JsonNode> records;
 }

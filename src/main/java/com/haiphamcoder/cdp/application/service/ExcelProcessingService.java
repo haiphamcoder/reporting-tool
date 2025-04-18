@@ -1,7 +1,6 @@
 package com.haiphamcoder.cdp.application.service;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -19,18 +18,6 @@ public class ExcelProcessingService implements HdfsFileProcessingService{
     @Override
     public List<String> getSchema(String userId, String fileName) {
         return ExcelFileUtils.getHeader(hdfsFileService.streamFile(userId, fileName), fileName);
-    }
-
-    @Override
-    public Stream<List<?>> getRecords(String userId, String fileName) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRecords'");
-    }
-
-    @Override
-    public Stream<List<?>> getRecords(String userId, String fileName, int skip, int limit) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRecords'");
     }
     
 }

@@ -27,15 +27,6 @@ public class CSVFileUtilsTest {
     }
 
     @Test
-    public void testGetRecords() {
-        InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
-        List<String[]> records = CSVFileUtils.getAllRecords(inputStream);
-        records.forEach(record -> {
-            log.info("Record: {}", Arrays.toString(record));
-        });
-    }
-
-    @Test
     public void testGetRecordsWithSkipAndLimit() {
         InputStream inputStream = getClass().getResourceAsStream("/csv/test-input.csv");
         List<String[]> records = CSVFileUtils.getRecords(inputStream, 1, 2);
