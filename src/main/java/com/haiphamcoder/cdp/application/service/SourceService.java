@@ -64,7 +64,9 @@ public class SourceService {
     }
 
     public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest) {
-        return null;
+        switch (previewDataRequest.getConnectorType()) {
+            case 1: 
+        }
     }
 
 }
