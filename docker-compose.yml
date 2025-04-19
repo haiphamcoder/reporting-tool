@@ -19,13 +19,14 @@ services:
     networks:
       - cdp-network
 
-  hdfs-namenode:
+  hdfs-standalone:
     image: apache/hadoop:${HADOOP_VERSION}
-    container_name: hdfs-namenode
-    hostname: hdfs-namenode
+    container_name: hdfs-standalone
+    hostname: hdfs-standalone
     ports:
       - "9870:9870"
       - "9000:9000"
+      - "9864:9864"
     env_file:
       - .env
     environment:
@@ -33,39 +34,16 @@ services:
       - HADOOP_HEAPSIZE=2048
     volumes:
       - ./docker/hadoop/dfs/namenode:/hadoop/dfs/namenode
-      - ./docker/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
-      - ./docker/hadoop/script/start-namenode.sh:/start-namenode.sh
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://hdfs-namenode:9870/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    command: ["/bin/bash", "-c", "/start-namenode.sh"]
-    restart: always
-    networks:
-      - cdp-network
-
-  hdfs-datanode:
-    image: apache/hadoop:${HADOOP_VERSION}
-    container_name: hdfs-datanode
-    hostname: hdfs-datanode
-    ports:
-      - "9864:9864"
-    depends_on:
-      hdfs-namenode:
-        condition: service_healthy
-    env_file:
-      - .env
-    environment:
-      - HADOOP_HOME=/opt/hadoop
-      - HADOOP_HEAPSIZE=2048
-    volumes:
       - ./docker/hadoop/dfs/datanode:/hadoop/dfs/datanode
       - ./docker/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
       - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
-      - ./docker/hadoop/script/start-datanode.sh:/start-datanode.sh
-    command: ["/bin/bash", "-c", "/start-datanode.sh"]
+      - ./docker/hadoop/script/start-standalone.sh:/start-standalone.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://hdfs-standalone:9870/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    command: ["/bin/bash", "-c", "/start-standalone.sh"]
     restart: always
     networks:
       - cdp-network
@@ -95,13 +73,11 @@ services:
     working_dir: /app
     command: sh bin/run.sh
     depends_on:
-      hdfs-namenode:
+      hdfs-standalone:
         condition: service_healthy
       tidb-server:
         condition: service_started
       mysql-server:
-        condition: service_started
-      hdfs-datanode:
         condition: service_started
     networks:
       - cdp-network
