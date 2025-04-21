@@ -9,7 +9,7 @@ CREATE TABLE
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất cho mỗi source',
         name VARCHAR(255) NOT NULL COMMENT 'Tên của source',
         description VARCHAR(255) COMMENT 'Mô tả của source',
-        type_connector INT NOT NULL COMMENT 'Loại connector của source',
+        connector_type INT NOT NULL COMMENT 'Loại connector của source',
         mapping TEXT NOT NULL COMMENT 'Schema của source',
         config TEXT NOT NULL COMMENT 'Cấu hình của source',
         status INT NOT NULL COMMENT 'Trạng thái của source',
