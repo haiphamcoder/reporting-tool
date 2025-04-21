@@ -59,20 +59,6 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration apiCorsConfiguration = new CorsConfiguration();
-        apiCorsConfiguration.setAllowedOriginPatterns(Arrays.asList("*"));
-        apiCorsConfiguration.setAllowedMethods(Arrays.asList("HEAD", "GET", "POST", "PUT", "DELETE"));
-        apiCorsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        apiCorsConfiguration.setExposedHeaders(Arrays.asList("Authorization"));
-        apiCorsConfiguration.setMaxAge(corsMaxAgeInSec);
-        apiCorsConfiguration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/v1/**", apiCorsConfiguration);
-        return source;
-    }
-
-    @Bean
     HttpFirewall allowUrlEncodedSlashHttpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
         firewall.setAllowUrlEncodedSlash(true);
