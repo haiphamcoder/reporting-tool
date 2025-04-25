@@ -45,7 +45,7 @@ CREATE INDEX idx_source_user_id ON source (user_id);
 
 CREATE INDEX idx_source_folder_id ON source (folder_id);
 
-CREATE INDEX idx_source_type_connector ON source (type_connector);
+CREATE INDEX idx_source_type_connector ON source (connector_type);
 
 CREATE INDEX idx_source_status ON source (status);
 
