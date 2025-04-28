@@ -29,9 +29,11 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request,
             HttpServletResponse response) {
+        log.info("Request URI is " + request.toString());
+        log.info("Response: " + response.toString());
         httpSessionOAuth2AuthorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, request,
                 response);
-        saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
+        // saveParamInCookie(request, response, OAuth2AuthorizationRequestParams.REDIRECT_URI.getValue());
     }
 
     private void saveParamInCookie(HttpServletRequest request, HttpServletResponse response, String name) {
