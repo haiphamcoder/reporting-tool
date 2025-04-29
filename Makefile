@@ -1,5 +1,5 @@
 # Define required directories
-REQUIRED_DIRS := docker/hadoop/dfs/namenode docker/hadoop/dfs/datanode docker/mysql-server/data
+REQUIRED_DIRS := database/hadoop/dfs/namenode database/hadoop/dfs/datanode database/mysql-server/data
 
 # Create directories
 init:
@@ -10,11 +10,15 @@ init:
 # Clean up
 clean:
 	@echo "Cleaning up..."
-	@sudo rm -rf docker/hadoop/dfs
-	@sudo rm -rf docker/mysql-server/data
-	@if docker image ls | grep -q cdp-for-service-app; then \
-		docker image rm cdp-for-service-app; \
-		echo "Removed cdp-for-service-app image"; \
+	@sudo rm -rf database/hadoop/dfs
+	@sudo rm -rf database/mysql-server/data
+	@if docker image ls | grep -q reporting-tool-backend; then \
+		docker image rm reporting-tool-backend; \
+		echo "Removed reporting-tool-backend image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-frontend; then \
+		docker image rm reporting-tool-frontend; \
+		echo "Removed reporting-tool-frontend image"; \
 	fi
 	@echo "Cleaned up successfully!"
 

@@ -12,12 +12,12 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: true
     command: mysqld --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - ./docker/mysql-server/data:/var/lib/mysql
-      - ./docker/mysql-server/init:/docker-entrypoint-initdb.d
-      - ./docker/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./database/mysql-server/data:/var/lib/mysql
+      - ./database/mysql-server/init:/docker-entrypoint-initdb.d
+      - ./database/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
     restart: always
     networks:
-      - cdp-network
+      - reporting-tool-network
 
   hdfs-standalone:
     image: apache/hadoop:${HADOOP_VERSION}
@@ -33,20 +33,20 @@ services:
       - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
     volumes:
-      - ./docker/hadoop/dfs/namenode:/hadoop/dfs/namenode
-      - ./docker/hadoop/dfs/datanode:/hadoop/dfs/datanode
-      - ./docker/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ./docker/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
-      - ./docker/hadoop/script/start-standalone.sh:/start-standalone.sh
+      - ./database/hadoop/dfs/namenode:/hadoop/dfs/namenode
+      - ./database/hadoop/dfs/datanode:/hadoop/dfs/datanode
+      - ./database/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./database/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./database/hadoop/script/start-standalone.sh:/start-standalone.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://hdfs-standalone:9870/"]
+      test: [ "CMD", "curl", "-f", "http://hdfs-standalone:9870/" ]
       interval: 30s
       timeout: 5s
       retries: 3
-    command: ["/bin/bash", "-c", "/start-standalone.sh"]
+    command: [ "/bin/bash", "-c", "/start-standalone.sh" ]
     restart: always
     networks:
-      - cdp-network
+      - reporting-tool-network
 
   tidb-server:
     image: pingcap/tidb:${TIDB_VERSION}
@@ -55,19 +55,19 @@ services:
       - "4000:4000"
     env_file:
       - .env
-    command: 
+    command:
       - --config=/tidb.toml
     volumes:
-      - ./docker/tidb/tidb.toml:/tidb.toml:ro
+      - ./database/tidb/tidb.toml:/tidb.toml:ro
     restart: always
     networks:
-      - cdp-network
+      - reporting-tool-network
 
-  app:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-    container_name: cdp-for-service
+    container_name: reporting-tool-backend
     ports:
       - "8080:8080"
     working_dir: /app
@@ -80,10 +80,24 @@ services:
       mysql-server:
         condition: service_started
     networks:
-      - cdp-network
+      - reporting-tool-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reporting-tool-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - reporting-tool-network
 
 networks:
-  cdp-network:
+  reporting-tool-network:
     driver: bridge
-
-    
