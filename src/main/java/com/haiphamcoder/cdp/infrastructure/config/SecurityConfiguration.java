@@ -5,13 +5,10 @@ import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -19,6 +16,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.haiphamcoder.cdp.application.service.LogoutService;
 import com.haiphamcoder.cdp.domain.model.Permission;
 import com.haiphamcoder.cdp.domain.model.Role;
+import com.haiphamcoder.cdp.infrastructure.security.CustomLogoutSuccessHandler;
 import com.haiphamcoder.cdp.infrastructure.security.UsernamePasswordBodyAuthenticationFilter;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtAuthenticationFilter;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.CustomOAuth2UserService;
@@ -27,13 +25,13 @@ import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2Authent
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.haiphamcoder.cdp.shared.UnauthorizedAuthenticationEntryPoint;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableMethodSecurity
 @Slf4j
 public class SecurityConfiguration {
         public static final String[] AUTH_WHITELIST = {
@@ -45,6 +43,7 @@ public class SecurityConfiguration {
                         "/api/v1/sse/subscribe/**",
                         "/api/v1/sse/publish/**",
                         "/oauth2/authorization/**",
+                        "/login/oauth2/code/**",
                         "/oauth2/callback/**",
                         "/api/docs/**",
                         "/swagger-ui/**",
@@ -58,7 +57,14 @@ public class SecurityConfiguration {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+        private final CustomLogoutSuccessHandler oAuth2LogoutSuccessHandler;
         private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+
+        @PostConstruct
+        public void init() {
+                log.info("SecurityConfiguration initialized");
+                log.info("CustomOAuth2UserService: {}", customOAuth2UserService);
+        }
 
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -97,17 +103,10 @@ public class SecurityConfiguration {
                                                 UsernamePasswordBodyAuthenticationFilter.class)
                                 .logout(logout -> logout
                                                 .logoutUrl("/api/v1/auth/logout")
+                                                .invalidateHttpSession(true)
                                                 .addLogoutHandler(logoutHandler)
-                                                .logoutSuccessHandler(logoutSuccessHandler()));
+                                                .logoutSuccessHandler(oAuth2LogoutSuccessHandler));
                 return http.build();
-        }
-
-        @Bean
-        LogoutSuccessHandler logoutSuccessHandler() {
-                SimpleUrlLogoutSuccessHandler handler = new SimpleUrlLogoutSuccessHandler();
-                handler.setAlwaysUseDefaultTargetUrl(true);
-                handler.setDefaultTargetUrl("/");
-                return handler;
         }
 
         @Bean

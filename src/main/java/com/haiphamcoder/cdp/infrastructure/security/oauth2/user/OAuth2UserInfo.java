@@ -2,27 +2,31 @@ package com.haiphamcoder.cdp.infrastructure.security.oauth2.user;
 
 import java.util.Map;
 
-public abstract class OAuth2UserInfo {
-    protected Map<String, Object> attributes;
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2Provider;
 
-    protected OAuth2UserInfo(Map<String, Object> attributes) {
-        this.attributes = attributes;
-    }
+/**
+ * OAuth2UserInfo interface
+ */
+public interface OAuth2UserInfo {
 
-    public abstract String getId();
+    OAuth2Provider getProvider();
 
-    public abstract String getName();
+    String getAccessToken();
 
-    public abstract String getEmail();
+    Map<String, Object> getAttributes();
 
-    public abstract String getImageUrl();
+    String getId();
 
-    public String getFirstName() {
-        return null;
-    }
+    String getEmail();
 
-    public String getLastName() {
-        return null;
-    }
-    
+    String getName();
+
+    String getFirstName();
+
+    String getLastName();
+
+    String getNickname();
+
+    String getProfileImageUrl();
+
 }

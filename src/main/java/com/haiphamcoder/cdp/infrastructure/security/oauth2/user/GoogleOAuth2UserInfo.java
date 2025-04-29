@@ -2,39 +2,94 @@ package com.haiphamcoder.cdp.infrastructure.security.oauth2.user;
 
 import java.util.Map;
 
-public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
-    public GoogleOAuth2UserInfo(Map<String, Object> attributes) {
-        super(attributes);
+import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2Provider;
+
+public class GoogleOAuth2UserInfo implements OAuth2UserInfo {
+
+    private final String accessToken;
+
+    private final Map<String, Object> attributes;
+
+    private final String id;
+
+    private final String email;
+
+    private final String name;
+
+    private final String firstName;
+
+    private final String lastName;
+
+    private final String nickname;
+
+    private final String profileImageUrl;
+
+    /**
+     * Constructor for GoogleOAuth2UserInfo
+     * 
+     * @param accessToken access token from Google
+     * @param attributes  attributes from Google
+     */
+    public GoogleOAuth2UserInfo(String accessToken, Map<String, Object> attributes) {
+        this.accessToken = accessToken;
+        this.attributes = attributes;
+        this.id = String.valueOf(attributes.get("sub"));
+        this.email = (String) attributes.get("email");
+        this.name = (String) attributes.get("name");
+        this.firstName = (String) attributes.get("given_name");
+        this.lastName = (String) attributes.get("family_name");
+        this.nickname = (String) attributes.get("nickname");
+        this.profileImageUrl = (String) attributes.get("picture");
+    }
+
+    @Override
+    public OAuth2Provider getProvider() {
+        return OAuth2Provider.GOOGLE;
+    }
+
+    @Override
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 
     @Override
     public String getId() {
-        return String.valueOf(attributes.get("sub"));
-    }
-
-    @Override
-    public String getName() {
-        return (String) attributes.get("name");
-    }
-
-    @Override
-    public String getFirstName() {
-        return (String) attributes.get("given_name");
-    }
-
-    @Override
-    public String getLastName() {
-        return (String) attributes.get("family_name");
+        return id;
     }
 
     @Override
     public String getEmail() {
-        return (String) attributes.get("email");
+        return email;
     }
 
     @Override
-    public String getImageUrl() {
-        return (String) attributes.get("picture");
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getFirstName() {
+        return firstName;
+    }
+
+    @Override
+    public String getLastName() {
+        return lastName;
+    }
+
+    @Override
+    public String getNickname() {
+        return nickname;
+    }
+
+    @Override
+    public String getProfileImageUrl() {
+        return profileImageUrl;
     }
 
 }

@@ -1,7 +1,6 @@
 package com.haiphamcoder.cdp.infrastructure.security.jwt;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.springframework.lang.NonNull;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.haiphamcoder.cdp.domain.entity.User;
+import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
 import com.haiphamcoder.cdp.infrastructure.config.SecurityConfiguration;
 import com.haiphamcoder.cdp.infrastructure.security.CustomUserDetailsService;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2AuthorizationRequestParams;
@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final String USER_ID_HEADER = "user-id";
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
@@ -44,19 +43,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
-        if (Arrays.stream(SecurityConfiguration.AUTH_WHITELIST).anyMatch(uri -> requestURI.equals(uri))) {
-            filterChain.doFilter(request, response);
-            return;
+        log.info("Request URI: {}", requestURI);
+        for (String uri : SecurityConfiguration.AUTH_WHITELIST) {
+            if (requestURI.equals("/") || (!uri.equals("/") && requestURI.startsWith(uri.replace("*", "")))) {
+                log.info("Request URI in whitelist: {}", uri);
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         log.info("Request URI: {}", requestURI);
 
         final Optional<String> userIdInCookie = CookieUtils
-                .getCookie(request, USER_ID_HEADER).map(Cookie::getValue);
+                .getCookie(request, CommonConstants.USER_ID_COOKIE_NAME).map(Cookie::getValue);
         final Optional<String> accessTokenInCookie = CookieUtils
-                .getCookie(request, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue()).map(Cookie::getValue);
+                .getCookie(request, CommonConstants.ACCESS_TOKEN_COOKIE_NAME).map(Cookie::getValue);
         final Optional<String> refreshTokenInCookie = CookieUtils
-                .getCookie(request, OAuth2AuthorizationRequestParams.REFRESH_TOKEN.getValue()).map(Cookie::getValue);
+                .getCookie(request, CommonConstants.REFRESH_TOKEN_COOKIE_NAME).map(Cookie::getValue);
 
         if (!userIdInCookie.isPresent() || !accessTokenInCookie.isPresent() || !refreshTokenInCookie.isPresent()) {
             filterChain.doFilter(request, response);
@@ -71,6 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String username = jwtTokenProvider.extractUsername(accessToken);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                log.info("User Details: {}", userDetails);
                 if (((User) userDetails).getId() == Long.parseLong(userId)) {
                     if (!jwtTokenProvider.isTokenValid(accessToken, userDetails)) {
                         if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {

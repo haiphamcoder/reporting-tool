@@ -8,15 +8,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum OAuth2Provider {
     LOCAL("local"),
-    GOOGLE("google");
+    GOOGLE("google"),
+    FACEBOOK("facebook"),
+    GITHUB("github");
 
     @Getter
-    private final String name;
+    private final String registrationId;
 
-    public static OAuth2Provider fromName(String name) {
+    public static OAuth2Provider fromRegistrationId(String registrationId) {
         return Arrays.stream(OAuth2Provider.values())
-                .filter(provider -> provider.getName().equals(name))
+                .filter(provider -> provider.getRegistrationId().equals(registrationId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Invalid OAuth2 provider: " + name));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid OAuth2 provider: " + registrationId));
     }
 }
