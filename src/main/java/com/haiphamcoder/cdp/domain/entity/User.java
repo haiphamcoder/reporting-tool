@@ -11,14 +11,11 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.haiphamcoder.cdp.domain.model.Role;
-import com.haiphamcoder.cdp.infrastructure.security.oauth2.OAuth2Provider;
 import com.haiphamcoder.cdp.shared.BaseEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -65,9 +62,8 @@ public class User extends BaseEntity implements OAuth2User, UserDetails {
     private boolean emailVerified = false;
 
     @Column(name = "provider", nullable = false)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private OAuth2Provider provider = OAuth2Provider.LOCAL;
+    private String provider = "local";
 
     @Column(name = "provider_id")
     private String providerId;
@@ -84,9 +80,8 @@ public class User extends BaseEntity implements OAuth2User, UserDetails {
     private boolean deleted = false;
 
     @Column(name = "role", nullable = false)
-    @Enumerated(EnumType.STRING)
     @Builder.Default
-    private Role role = Role.USER;
+    private String role = "user";
 
     private transient Map<String, Object> attributes;
 
@@ -98,7 +93,7 @@ public class User extends BaseEntity implements OAuth2User, UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return role.getAuthorities();
+        return Role.fromName(role).getAuthorities();
     }
 
     @Override

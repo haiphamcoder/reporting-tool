@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class OAuth2UserInfoFactory {
     public static OAuth2UserInfo getOAuth2UserInfo(String registrationId, Map<String, Object> attributes) {
-        if (registrationId.equalsIgnoreCase(OAuth2Provider.GOOGLE.getValue())) {
+        if (registrationId.equalsIgnoreCase(OAuth2Provider.GOOGLE.getName())) {
             return new GoogleOAuth2UserInfo(attributes);
         } else {
             throw new IllegalArgumentException("Unsupported OAuth2 provider: " + registrationId);

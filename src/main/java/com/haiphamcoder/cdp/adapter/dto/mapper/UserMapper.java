@@ -2,7 +2,6 @@ package com.haiphamcoder.cdp.adapter.dto.mapper;
 
 import com.haiphamcoder.cdp.adapter.dto.UserDto;
 import com.haiphamcoder.cdp.domain.entity.User;
-import com.haiphamcoder.cdp.domain.model.Role;
 
 import lombok.experimental.UtilityClass;
 
@@ -18,7 +17,7 @@ public class UserMapper {
                 .email(userDto.getEmail())
                 .password(userDto.getPassword())
                 .avatarUrl(userDto.getAvatarUrl())
-                .role(Role.valueOf(userDto.getRole()))
+                .role(userDto.getRole())
                 .build();
     }
 

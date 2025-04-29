@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.domain.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,7 +17,7 @@ public enum Role {
                         Permission.USER_READ,
                         Permission.USER_UPDATE,
                         Permission.USER_CREATE,
-                        Permission.USER_DELETE)),
+                        Permission.USER_DELETE), "user"),
         ADMIN(Set.of(
                         Permission.ADMIN_READ,
                         Permission.ADMIN_UPDATE,
@@ -25,15 +26,18 @@ public enum Role {
                         Permission.MANAGER_READ,
                         Permission.MANAGER_UPDATE,
                         Permission.MANAGER_CREATE,
-                        Permission.MANAGER_DELETE)),
+                        Permission.MANAGER_DELETE), "admin"),
         MANAGER(Set.of(
                         Permission.MANAGER_READ,
                         Permission.MANAGER_UPDATE,
                         Permission.MANAGER_CREATE,
-                        Permission.MANAGER_DELETE));
+                        Permission.MANAGER_DELETE), "manager");
 
         @Getter
         private final Set<Permission> permissions;
+
+        @Getter
+        private final String name;
 
         public List<SimpleGrantedAuthority> getAuthorities() {
                 List<SimpleGrantedAuthority> authorities = permissions
@@ -42,6 +46,13 @@ public enum Role {
                                 .collect(Collectors.toList());
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
                 return authorities;
+        }
+
+        public static Role fromName(String name) {
+                return Arrays.stream(Role.values())
+                                .filter(role -> role.getName().equals(name))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalArgumentException("Invalid role: " + name));
         }
 
 }

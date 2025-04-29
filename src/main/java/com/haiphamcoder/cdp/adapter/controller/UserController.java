@@ -1,10 +1,14 @@
 package com.haiphamcoder.cdp.adapter.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +29,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+
+    @GetMapping(path = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RestAPIResponse<List<UserDto>>> getAll() {
+        List<User> users = userService.getAllUsers();
+        List<UserDto> userDtos = users.stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(userDtos));
+    }
+
+    @GetMapping(path = "/all/provider/{provider}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RestAPIResponse<List<UserDto>>> getAllByProvider(@PathVariable String provider) {
+        List<User> users = userService.getAllUsersByProvider(provider);
+        List<UserDto> userDtos = users.stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(userDtos));
+    }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<UserDto>> get(@CookieValue(name = "user-id") String userId) {

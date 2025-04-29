@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.application.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,6 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public List<User> getAllUsers() {
+        return userRepository.getAllUsers();
+    }
+
+    public List<User> getAllUsersByProvider(String provider) {
+        return userRepository.getAllUsersByProvider(provider);
+    }
 
     public User getUserByUsername(String username) {
         Optional<User> user = userRepository.getUserByUsername(username);

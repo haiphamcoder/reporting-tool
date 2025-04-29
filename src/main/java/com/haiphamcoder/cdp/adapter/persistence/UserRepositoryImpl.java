@@ -1,5 +1,6 @@
 package com.haiphamcoder.cdp.adapter.persistence;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,8 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     Optional<User> findByEmail(String email);
+
+    List<User> findAllByProvider(String provider);
 }
 
 @Component
@@ -26,6 +29,16 @@ public class UserRepositoryImpl implements UserRepository {
     private final UserJpaRepository userJpaRepository;
 
     private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
+
+    @Override
+    public List<User> getAllUsers() {
+        return userJpaRepository.findAll();
+    }
+
+    @Override
+    public List<User> getAllUsersByProvider(String provider) {
+        return userJpaRepository.findAllByProvider(provider);
+    }
 
     @Override
     public Optional<User> getUserByUsername(String username) {

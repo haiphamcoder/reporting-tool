@@ -45,7 +45,7 @@ public class AuthenticationService {
                                 .username(request.getUsername())
                                 .password(request.getPassword())
                                 .email(request.getEmail())
-                                .role(request.getRole())
+                                .role(request.getRole().getName())
                                 .build();
                 return userService.saveUser(user);
         }

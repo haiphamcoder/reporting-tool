@@ -40,7 +40,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         User user = userRepository.getUserByEmail(oAuth2UserInfo.getEmail()).orElse(null);
         if (user != null) {
-            if (!user.getProvider().equals(OAuth2Provider.valueOf(userRequest.getClientRegistration().getRegistrationId().toUpperCase()))){
+            if (!user.getProvider().equals(OAuth2Provider.fromName(userRequest.getClientRegistration().getRegistrationId().toLowerCase()).getName())){
                 throw new OAuth2AuthenticationProcessingException("error","Looks like you're signed up with " + user.getProvider() + " account. Please use your " + user.getProvider() + " account to login.");
             }
             user = updateExistingUser(user, oAuth2UserInfo);
@@ -59,7 +59,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private User registerNewUser(OAuth2UserRequest userRequest, OAuth2UserInfo oAuth2UserInfo) {
         User user = User.builder()
-                        .provider(OAuth2Provider.valueOf(userRequest.getClientRegistration().getRegistrationId().toUpperCase()))
+                        .provider(OAuth2Provider.fromName(userRequest.getClientRegistration().getRegistrationId().toLowerCase()).getName())
                         .providerId(oAuth2UserInfo.getId())
                         .username(oAuth2UserInfo.getEmail())
                         .email(oAuth2UserInfo.getEmail())
