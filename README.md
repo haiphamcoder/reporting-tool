@@ -1,6 +1,6 @@
-# CDP Reporting Tool
+# Reporting Tool
 
-A Customer Data Platform (CDP) reporting service that provides comprehensive reporting capabilities, user management, and social media data integration. This service is built using Spring Boot and follows a layered architecture pattern.
+A reporting tool that provides comprehensive reporting capabilities, user management, and social media data integration. This service is built using Spring Boot and follows a layered architecture pattern.
 
 ## Features
 
