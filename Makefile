@@ -5,7 +5,9 @@ REQUIRED_DIRS := database/hadoop/dfs/namenode database/hadoop/dfs/datanode datab
 init:
 	@echo "Creating required directories..."
 	@mkdir -p $(REQUIRED_DIRS)
-	@chmod 777 $(REQUIRED_DIRS)
+	@chmod 777 database/hadoop/dfs/namenode
+	@chmod 777 database/hadoop/dfs/datanode
+	@chmod 777 database/mysql-server/data
 	@echo "Directories created successfully!"
 
 # Clean up
