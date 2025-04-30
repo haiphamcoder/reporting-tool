@@ -2,6 +2,7 @@ package com.haiphamcoder.cdp.infrastructure.config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -34,6 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfiguration {
+
+        @Value("${endpoints.cors.allowed-origins}")
+        private String allowedOrigins;
+
         public static final String[] AUTH_WHITELIST = {
                         "/",
                         "/error/**",
@@ -112,7 +117,7 @@ public class SecurityConfiguration {
         @Bean
         CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+                configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
                 configuration.setAllowedMethods(Arrays.asList("*"));
                 configuration.setAllowedHeaders(Arrays.asList("*"));
                 configuration.setAllowCredentials(true);

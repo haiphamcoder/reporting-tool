@@ -92,9 +92,6 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    depends_on:
-      backend:
-        condition: service_started
     networks:
       - reporting-tool-network
 
