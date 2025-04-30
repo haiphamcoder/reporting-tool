@@ -26,4 +26,19 @@
         <value>true</value>
         <description>Whether clients should use datanode hostnames when connecting to datanodes.</description>
     </property>
+    <property>
+        <name>dfs.datanode.use.datanode.hostname</name>
+        <value>true</value>
+        <description>Whether datanodes should use hostnames when connecting to other datanodes for data transfer.</description>
+    </property>
+    <property>
+        <name>dfs.namenode.hostname</name>
+        <value>reporting-tool.site</value>
+        <description>The hostname that the namenode binds to.</description>
+    </property>
+    <property>
+        <name>dfs.datanode.hostname</name>
+        <value>reporting-tool.site</value>
+        <description>The hostname that the datanode binds to.</description>
+    </property>
 </configuration>
