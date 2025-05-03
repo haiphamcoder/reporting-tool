@@ -4,7 +4,7 @@
 *.ipr
 .vscode/
 
-backend/config/application.properties
+backend/config/
 backend/target/
 
 database/mysql-server/data/
