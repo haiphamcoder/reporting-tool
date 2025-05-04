@@ -14,3 +14,4 @@ database/hadoop/dfs/datanode/
 frontend/node_modules/
 frontend/dist/
 frontend/package-lock.json
+frontend/src/config/api.ts
