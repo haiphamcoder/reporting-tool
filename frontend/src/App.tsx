@@ -6,7 +6,6 @@ import SignUpPage from './pages/SignUpPage';
 import Dashboard from './pages/Dashboard';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
-import OAuth2RedirectHandler from './routes/OAuth2RedirectHandler';
 import { ContentProvider } from './context/ContentContext';
 
 ReactDOM.createRoot(document.querySelector("#root")!).render(

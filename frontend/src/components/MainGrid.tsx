@@ -7,6 +7,10 @@ import { GridColDef } from '@mui/x-data-grid';
 import CustomizedDataGrid from './CustomizedDataGrid';
 import StatCard from './StatCard';
 import Button from '@mui/material/Button';
+import { useState, useEffect } from 'react';
+import { API_CONFIG } from '../config/api';
+import { useTheme } from '@mui/material/styles';
+import AddSourceDialog from './AddSourceDialog';
 
 const sourcesColumns: GridColDef[] = [
   { field: 'name', headerName: 'Name', width: 200 },
@@ -49,6 +53,41 @@ const reportsRows = [
 
 export default function MainGrid() {
   const { currentContent } = useContent();
+
+  // Dialog state and connector logic
+  const [addSourceOpen, setAddSourceOpen] = useState(false);
+  const [connectors, setConnectors] = useState<any[]>([]);
+  const [loadingConnectors, setLoadingConnectors] = useState(false);
+
+  const theme = useTheme();
+
+  useEffect(() => {
+    if (addSourceOpen) {
+      setLoadingConnectors(true);
+      fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONNECTOR}`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          setConnectors(data.data || []);
+          setLoadingConnectors(false);
+        })
+        .catch(() => setLoadingConnectors(false));
+    }
+  }, [addSourceOpen]);
+
+  const handleOpenAddSource = () => {
+    setAddSourceOpen(true);
+  };
+  const handleCloseAddSource = () => {
+    setAddSourceOpen(false);
+  };
+  const handleAddSourceNext = (data: { sourceName: string; connector: any; file?: File | null }) => {
+    console.log(data.connector);
+    setAddSourceOpen(false);
+  };
 
   const renderContent = () => {
     switch (currentContent) {
@@ -114,13 +153,21 @@ export default function MainGrid() {
               <Typography variant="h6" component="h2" gutterBottom>
                 Sources
               </Typography>
-              <Button variant="contained" color="primary">
+              <Button variant="contained" color="primary" onClick={handleOpenAddSource}>
                 Add Source
               </Button>
             </Stack>
             <CustomizedDataGrid
               rows={sourcesRows}
               columns={sourcesColumns}
+            />
+            <AddSourceDialog
+              open={addSourceOpen}
+              onClose={handleCloseAddSource}
+              onNext={handleAddSourceNext}
+              connectors={connectors}
+              loadingConnectors={loadingConnectors}
+              disableCustomTheme={false}
             />
           </Stack>
         );
