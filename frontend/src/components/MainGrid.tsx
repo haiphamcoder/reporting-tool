@@ -111,7 +111,7 @@ export default function MainGrid() {
         return (
           <Stack gap={2}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" component="h1" gutterBottom>
+              <Typography variant="h6" component="h2" gutterBottom>
                 Sources
               </Typography>
               <Button variant="contained" color="primary">
