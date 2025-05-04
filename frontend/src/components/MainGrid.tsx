@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import { useContent } from '../context/ContentContext';
 import { GridColDef } from '@mui/x-data-grid';
 import CustomizedDataGrid from './CustomizedDataGrid';
+import StatCard from './StatCard';
+import Button from '@mui/material/Button';
 
 const sourcesColumns: GridColDef[] = [
   { field: 'name', headerName: 'Name', width: 200 },
@@ -45,8 +47,6 @@ const reportsRows = [
   { id: 3, name: 'Report 3', type: 'Type 3', schedule: 'Monthly', lastRun: '2023-01-03' },
 ];
 
-
-
 export default function MainGrid() {
   const { currentContent } = useContent();
 
@@ -64,7 +64,33 @@ export default function MainGrid() {
               columns={12}
               sx={{ mb: (theme) => theme.spacing(2) }}
             >
-              {/* Add your home content here */}
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <StatCard
+                  title="Data Sources"
+                  value={sourcesRows.length.toString()}
+                  interval=""
+                  trend="up"
+                  data={[5, 7, 8, 9, 10, 12, 15]}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <StatCard
+                  title="Charts"
+                  value={chartsRows.length.toString()}
+                  interval=""
+                  trend="neutral"
+                  data={[3, 4, 5, 6, 7, 8, 9]}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <StatCard
+                  title="Reports"
+                  value={reportsRows.length.toString()}
+                  interval=""
+                  trend="down"
+                  data={[8, 7, 6, 5, 4, 3, 2]}
+                />
+              </Grid>
             </Grid>
             <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
               Details
@@ -83,27 +109,54 @@ export default function MainGrid() {
         );
       case 'sources':
         return (
-          <CustomizedDataGrid
-            title="Data Sources"
-            rows={sourcesRows}
-            columns={sourcesColumns}
-          />
+          <Stack gap={2}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" component="h1" gutterBottom>
+                Sources
+              </Typography>
+              <Button variant="contained" color="primary">
+                Add Source
+              </Button>
+            </Stack>
+            <CustomizedDataGrid
+              rows={sourcesRows}
+              columns={sourcesColumns}
+            />
+          </Stack>
         );
       case 'charts':
         return (
-          <CustomizedDataGrid
-            title="Charts"
-            rows={chartsRows}
-            columns={chartsColumns}
-          />
+          <Stack gap={2}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" component="h1" gutterBottom>
+                Charts
+              </Typography>
+              <Button variant="contained" color="primary">
+                Add Chart
+              </Button>
+            </Stack>
+            <CustomizedDataGrid
+              rows={chartsRows}
+              columns={chartsColumns}
+            />
+          </Stack>
         );
       case 'reports':
         return (
-          <CustomizedDataGrid
-            title="Reports"
-            rows={reportsRows}
-            columns={reportsColumns}
-          />
+          <Stack gap={2}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" component="h1" gutterBottom>
+                Reports
+              </Typography>
+              <Button variant="contained" color="primary">
+                Add Report
+              </Button>
+            </Stack>
+            <CustomizedDataGrid
+              rows={reportsRows}
+              columns={reportsColumns}
+            />
+          </Stack>
         );
       case 'settings':
         return (

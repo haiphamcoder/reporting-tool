@@ -1,12 +1,9 @@
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
-export default function CustomizedDataGrid({ title, rows, columns }: { title: string, rows: any[], columns: any[] }) {
+export default function CustomizedDataGrid({ rows, columns }: { rows: any[], columns: any[] }) {
   return (
     <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {title}
-      </Typography>
       <DataGrid
         checkboxSelection
         rows={rows}
@@ -18,7 +15,7 @@ export default function CustomizedDataGrid({ title, rows, columns }: { title: st
           pagination: { paginationModel: { pageSize: 20 } },
         }}
         pageSizeOptions={[10, 20, 50]}
-        disableColumnResize
+        disableColumnResize={false}
         density="compact"
         slotProps={{
           filterPanel: {

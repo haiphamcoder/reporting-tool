@@ -10,6 +10,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import com.haiphamcoder.cdp.domain.entity.User;
@@ -90,9 +91,10 @@ public class JwtTokenProvider {
     }
 
     public Map<String, String> generateTokens(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        String accessToken = buildToken(new HashMap<>(), user.getUsername(), jwtExpiration);
-        String refreshToken = buildToken(new HashMap<>(), user.getUsername(), jwtRefreshExpiration);
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        String email = oAuth2User.getAttributes().get("email").toString();
+        String accessToken = buildToken(new HashMap<>(), email, jwtExpiration);
+        String refreshToken = buildToken(new HashMap<>(), email, jwtRefreshExpiration);
         Map<String, String> tokens = new HashMap<>();
         tokens.put("access-token", accessToken);
         tokens.put("refresh-token", refreshToken);

@@ -25,7 +25,6 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
               </ProtectedRoute>
             } />
           <Route path="/" element={<Navigate to="/dashboard" />} />
-          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
