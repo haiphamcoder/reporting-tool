@@ -6,4 +6,6 @@ import org.json.JSONObject;
 
 public interface StorageService {
     void saveBatch(List<JSONObject> data);
+
+    void saveData(JSONObject record);
 }

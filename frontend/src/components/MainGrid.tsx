@@ -9,7 +9,6 @@ import StatCard from './StatCard';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
-import { useTheme } from '@mui/material/styles';
 import AddSourceDialog from './AddSourceDialog';
 
 const sourcesColumns: GridColDef[] = [
@@ -58,8 +57,6 @@ export default function MainGrid() {
   const [addSourceOpen, setAddSourceOpen] = useState(false);
   const [connectors, setConnectors] = useState<any[]>([]);
   const [loadingConnectors, setLoadingConnectors] = useState(false);
-
-  const theme = useTheme();
 
   useEffect(() => {
     if (addSourceOpen) {

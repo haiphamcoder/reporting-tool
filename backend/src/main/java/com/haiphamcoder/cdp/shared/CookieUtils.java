@@ -129,6 +129,7 @@ public class CookieUtils {
      * @param string the string to deserialize
      * @return the deserialized object
      */
+    @SuppressWarnings("deprecation")
     public static <T> T deserialize(Cookie cookie, Class<T> cls) {
         return cls.cast(SerializationUtils.deserialize(
                 Base64.getUrlDecoder().decode(cookie.getValue())));

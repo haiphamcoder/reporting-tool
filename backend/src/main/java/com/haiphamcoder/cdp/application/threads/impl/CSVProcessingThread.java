@@ -12,6 +12,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.json.JSONObject;
 
+import com.haiphamcoder.cdp.application.service.SourceService;
 import com.haiphamcoder.cdp.application.service.StorageService;
 import com.haiphamcoder.cdp.application.threads.AbstractProcessingThread;
 import com.haiphamcoder.cdp.domain.repository.HdfsRepository;
@@ -27,9 +28,10 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     private final String fileUrl;
 
     public CSVProcessingThread(StorageService storageService,
+            SourceService sourceService,
             HdfsRepository hdfsRepository,
             String fileUrl){
-        super(storageService);
+        super(storageService, sourceService);
         this.hdfsRepository = hdfsRepository;
         this.fileUrl = fileUrl;
         

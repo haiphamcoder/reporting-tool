@@ -8,7 +8,8 @@ public class CommonConstants {
     public static final int AUTHEN_SUCCESS = 1;
 
     public static final int CONNECTOR_TYPE_CSV = 1;
-
+    public static final int CONNECTOR_TYPE_EXCEL = 2;
+    
     // Authentication and Authorization Cookies
     public static final String USER_ID_COOKIE_NAME = "user-id";
     public static final String ACCESS_TOKEN_COOKIE_NAME = "access-token";
