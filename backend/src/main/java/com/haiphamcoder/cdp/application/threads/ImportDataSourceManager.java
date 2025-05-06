@@ -13,10 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImportDataSourceManager {
     private final TaskManager taskManager;
-    private final ImportDataThreadFactory importDataThreadFactory;
 
-    public ImportDataSourceManager(ImportDataThreadFactory importDataThreadFactory) {
-        this.importDataThreadFactory = importDataThreadFactory;
+    public ImportDataSourceManager() {
 
         ExecutorService executor = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
@@ -29,9 +27,7 @@ public class ImportDataSourceManager {
         this.taskManager = new TaskManager(1, executor);
     }
 
-    public boolean submit(String userId, Long sourceId) {
-
-        AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(sourceId);
+    public boolean submit(AbstractProcessingThread task) {
 
         if (taskManager.trySubmit(task) == null) {
             log.info("max queue size");

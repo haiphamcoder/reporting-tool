@@ -1,57 +1,19 @@
 package com.haiphamcoder.cdp.application.service;
 
 import java.util.List;
-import java.util.Optional;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import com.haiphamcoder.cdp.domain.entity.User;
-import com.haiphamcoder.cdp.domain.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+public interface UserService {
 
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    public List<User> getAllUsers();
 
-    public List<User> getAllUsers() {
-        return userRepository.getAllUsers();
-    }
+    public List<User> getAllUsersByProvider(String provider);
 
-    public List<User> getAllUsersByProvider(String provider) {
-        return userRepository.getAllUsersByProvider(provider);
-    }
+    public User getUserByUsername(String username);
 
-    public User getUserByUsername(String username) {
-        Optional<User> user = userRepository.getUserByUsername(username);
-        if (user.isEmpty()) {
-            return null;
-        }
-        return user.get();
-    }
+    public User getUserByEmail(String email);
 
-    public User getUserByEmail(String email) {
-        Optional<User> user = userRepository.getUserByEmail(email);
-        if (user.isEmpty()) {
-            return null;
-        }
-        return user.get();
-    }
+    public User getUserById(Long id);
 
-    public User getUserById(Long id) {
-        Optional<User> user = userRepository.getUserById(id);
-        if (user.isEmpty()) {
-            return null;
-        }
-        return user.get();
-    }
-
-    public User saveUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.saveUser(user);
-    }
+    public User saveUser(User user);
 }

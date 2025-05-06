@@ -13,7 +13,9 @@ import com.haiphamcoder.cdp.adapter.dto.mapper.SourceMapper;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.application.service.SourceService;
+import com.haiphamcoder.cdp.application.service.StorageService;
 import com.haiphamcoder.cdp.application.threads.ImportDataSourceManager;
+import com.haiphamcoder.cdp.application.threads.ImportDataThreadFactory;
 import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.exception.PermissionDeniedException;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
@@ -33,6 +35,7 @@ public class SourceServiceImpl implements SourceService {
     private final HdfsFileService hdfsFileService;
     private final CSVProcessingService csvProcessingService;
     private final ImportDataSourceManager importDataSourceManager;
+    private final StorageService storageService;
 
     @Override
     public Source getSourceById(Long sourceId) {
@@ -111,8 +114,9 @@ public class SourceServiceImpl implements SourceService {
     @Override
     public void submitImport(String userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
+
         if (source.isPresent()) {
-            importDataSourceManager.submit(userId, sourceId);
+            importDataSourceManager.submit(ImportDataThreadFactory.getThreadImportData(source.get(), storageService, hdfsFileService));
         } else {
             throw new RuntimeException("Source not found");
         }

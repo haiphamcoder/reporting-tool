@@ -12,10 +12,9 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.json.JSONObject;
 
-import com.haiphamcoder.cdp.application.service.SourceService;
+import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.application.service.StorageService;
 import com.haiphamcoder.cdp.application.threads.AbstractProcessingThread;
-import com.haiphamcoder.cdp.domain.repository.HdfsRepository;
 import com.haiphamcoder.cdp.shared.concurrent.ThreadPool;
 import com.haiphamcoder.cdp.shared.processing.CSVFileUtils;
 
@@ -23,16 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CSVProcessingThread extends AbstractProcessingThread {
-    private final HdfsRepository hdfsRepository;
+    private final HdfsFileService hdfsFileService;
     private final ExecutorService executorService;
     private final String fileUrl;
 
     public CSVProcessingThread(StorageService storageService,
-            SourceService sourceService,
-            HdfsRepository hdfsRepository,
+            HdfsFileService hdfsFileService,
             String fileUrl){
-        super(storageService, sourceService);
-        this.hdfsRepository = hdfsRepository;
+        super(storageService);
+        this.hdfsFileService = hdfsFileService;
         this.fileUrl = fileUrl;
         
         executorService = ThreadPool.builder()
@@ -46,7 +44,7 @@ public class CSVProcessingThread extends AbstractProcessingThread {
 
     @Override
     protected boolean process() {
-        try (InputStream inputStream = hdfsRepository.streamFile(fileUrl)) {
+        try (InputStream inputStream = hdfsFileService.streamFile(fileUrl)) {
             try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)){
                 String[] firstLine = csvReader.readNext();
                 List<String> header = firstLine != null? Arrays.asList(firstLine): Collections.emptyList();

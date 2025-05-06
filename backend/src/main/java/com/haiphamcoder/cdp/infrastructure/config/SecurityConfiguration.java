@@ -17,7 +17,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.haiphamcoder.cdp.application.service.LogoutService;
 import com.haiphamcoder.cdp.domain.model.Permission;
 import com.haiphamcoder.cdp.domain.model.Role;
-import com.haiphamcoder.cdp.infrastructure.security.CustomLogoutSuccessHandler;
 import com.haiphamcoder.cdp.infrastructure.security.UsernamePasswordBodyAuthenticationFilter;
 import com.haiphamcoder.cdp.infrastructure.security.jwt.JwtAuthenticationFilter;
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.CustomOAuth2UserService;
@@ -26,7 +25,6 @@ import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2Authent
 import com.haiphamcoder.cdp.infrastructure.security.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.haiphamcoder.cdp.shared.UnauthorizedAuthenticationEntryPoint;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,14 +60,7 @@ public class SecurityConfiguration {
         private final CustomOAuth2UserService customOAuth2UserService;
         private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
         private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-        private final CustomLogoutSuccessHandler oAuth2LogoutSuccessHandler;
         private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-
-        @PostConstruct
-        public void init() {
-                log.info("SecurityConfiguration initialized");
-                log.info("CustomOAuth2UserService: {}", customOAuth2UserService);
-        }
 
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -108,9 +99,7 @@ public class SecurityConfiguration {
                                                 UsernamePasswordBodyAuthenticationFilter.class)
                                 .logout(logout -> logout
                                                 .logoutUrl("/api/v1/auth/logout")
-                                                .invalidateHttpSession(true)
-                                                .addLogoutHandler(logoutHandler)
-                                                .logoutSuccessHandler(oAuth2LogoutSuccessHandler));
+                                                .addLogoutHandler(logoutHandler));
                 return http.build();
         }
 
