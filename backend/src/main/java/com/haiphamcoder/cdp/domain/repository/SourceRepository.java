@@ -19,4 +19,8 @@ public interface SourceRepository {
 
     Optional<Source> createSource(Source source);
 
+    Long getTotalSourceByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+
+    List<Long> getSourceCountByLast30Days(Long userId);
+
 }
