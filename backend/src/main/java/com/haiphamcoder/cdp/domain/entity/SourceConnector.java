@@ -37,8 +37,10 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 @Entity
-@Table(name = "source")
-public class Source extends BaseEntity {
+@Table(name = "source_connector")
+
+public class SourceConnector extends BaseEntity {
+
     @Id
     @Column(name = "id", nullable = false)
     @JsonProperty("id")
@@ -52,46 +54,6 @@ public class Source extends BaseEntity {
     @JsonProperty("description")
     private String description;
 
-    @Column(name = "connector_type", nullable = false)
-    private Integer connectorType;
-
-    @Column(name = "mapping", nullable = false)
-    @Convert(converter = MapStringConverter.class)
-    private Map<String, Object> mapping;
-
-    @Column(name = "table_name", nullable = false)
-    private String tableName;
-
-    @Column(name = "status", nullable = false)
-    private Integer status;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonProperty("user")
-    private User user;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "source_share", joinColumns = @JoinColumn(name = "source_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-    @JsonProperty("shared_users")
-    private List<User> sharedUsers;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "folder_id")
-    @JsonProperty("folder")
-    private Folder folder;
-
-    @Column(name = "is_deleted", nullable = false)
-    @Builder.Default
-    @JsonProperty("is_deleted")
-    private Boolean isDeleted = false;
-
-    @Column(name = "is_starred", nullable = false)
-    @Builder.Default
-    @JsonProperty("is_starred")
-    private Boolean isStarred = false;
-
-    @Column(name = "last_sync_time", nullable = true)
-    @JsonProperty("last_sync_time")
-    private Timestamp lastSyncTime;
-
+    
+    
 }

@@ -11,7 +11,7 @@ CREATE TABLE
         description VARCHAR(255) COMMENT 'Mô tả của source',
         connector_type INT NOT NULL COMMENT 'Loại connector của source',
         mapping TEXT NOT NULL COMMENT 'Schema của source',
-        config TEXT NOT NULL COMMENT 'Cấu hình của source',
+        table_name VARCHAR(255) NOT NULL COMMENT 'Tên bảng của source',
         status INT NOT NULL COMMENT 'Trạng thái của source',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
         folder_id BIGINT COMMENT 'ID của folder',

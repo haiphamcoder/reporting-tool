@@ -25,5 +25,4 @@ public interface SourceService {
 
     public void confirmSchema(String userId, Long sourceId, Map<String, String> mapping);
 
-    public void submitImport(String userId, Long sourceId);
 }

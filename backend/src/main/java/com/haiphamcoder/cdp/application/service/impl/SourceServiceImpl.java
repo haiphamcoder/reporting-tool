@@ -34,8 +34,6 @@ public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
     private final HdfsFileService hdfsFileService;
     private final CSVProcessingService csvProcessingService;
-    private final ImportDataSourceManager importDataSourceManager;
-    private final StorageService storageService;
 
     @Override
     public Source getSourceById(Long sourceId) {
@@ -111,14 +109,4 @@ public class SourceServiceImpl implements SourceService {
         }
     }
 
-    @Override
-    public void submitImport(String userId, Long sourceId) {
-        Optional<Source> source = sourceRepository.getSourceById(sourceId);
-
-        if (source.isPresent()) {
-            importDataSourceManager.submit(ImportDataThreadFactory.getThreadImportData(source.get(), storageService, hdfsFileService));
-        } else {
-            throw new RuntimeException("Source not found");
-        }
-    }
 }

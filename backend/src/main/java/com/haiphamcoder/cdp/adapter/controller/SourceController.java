@@ -113,20 +113,6 @@ public class SourceController {
         }
     }
 
-    @PostMapping("/submit-import")
-    public ResponseEntity<Object> submitImport(@CookieValue(name = "user-id") String userId,
-            @RequestParam(name = "source-id", required = true) Long sourceId) {
-        try {
-            sourceService.submitImport(userId, sourceId);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Import submitted successfully"));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<RestAPIResponse<String>> deleteSource(@CookieValue(name = "user-id") String userId,
             @PathVariable("source-id") Long sourceId) {
