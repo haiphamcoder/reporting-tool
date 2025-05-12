@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.adapter.dto.SourceDto;
+import com.haiphamcoder.cdp.adapter.dto.SourceDto.Mapping;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 
@@ -27,5 +28,7 @@ public interface SourceService {
     public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest);
 
     public SourceDto updateSchema(String userId, SourceDto sourceDto);
+
+    public List<Mapping> getSchema(String userId, Long sourceId);
 
 }

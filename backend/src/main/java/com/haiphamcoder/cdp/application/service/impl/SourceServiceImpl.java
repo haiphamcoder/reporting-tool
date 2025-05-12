@@ -9,8 +9,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.cdp.adapter.dto.SourceDto;
+import com.haiphamcoder.cdp.adapter.dto.SourceDto.Mapping;
 import com.haiphamcoder.cdp.adapter.dto.mapper.SourceMapper;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
@@ -80,10 +83,10 @@ public class SourceServiceImpl implements SourceService {
         if (createdSource.isPresent()) {
 
             SourcePermission sourcePermission = SourcePermission.builder()
-                .source(createdSource.get())
-                .user(user)
-                .permission(CommonConstants.SOURCE_PERMISSION_ALL)
-                .build();
+                    .source(createdSource.get())
+                    .user(user)
+                    .permission(CommonConstants.SOURCE_PERMISSION_ALL)
+                    .build();
             sourcePermissionRepository.createSourcePermission(sourcePermission);
 
             return SourceMapper.toDto(createdSource.get());
@@ -168,29 +171,60 @@ public class SourceServiceImpl implements SourceService {
             throw new MissingRequiredFieldException("mapping");
         }
 
-        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
-                .getSourcePermissionBySourceIdAndUserId(Long.valueOf(sourceDto.getId()), Long.valueOf(userId));
-        if (sourcePermission.isPresent()) {
-            String permission = sourcePermission.get().getPermission();
-            if (permission.charAt(1) == 'w') {
-                Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
-                if (existingSource.isPresent()) {
-                    existingSource.get()
-                            .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
-                    Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
-                    if (updatedSource.isPresent()) {
-                        return SourceMapper.toDto(updatedSource.get());
-                    }
-                    throw new RuntimeException("Update source failed");
-                } else {
-                    throw new SourceNotFoundException("Source not found");
+        if (hasWritePermission(Long.valueOf(userId), sourceDto.getId())) {
+            Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
+            if (existingSource.isPresent()) {
+                existingSource.get()
+                        .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
+                Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
+                if (updatedSource.isPresent()) {
+                    return SourceMapper.toDto(updatedSource.get());
                 }
+                throw new RuntimeException("Update source failed");
             } else {
-                throw new PermissionDeniedException("You are not allowed to update this source");
+                throw new SourceNotFoundException("Source not found");
             }
         } else {
             throw new PermissionDeniedException("You are not allowed to update this source");
         }
+    }
+
+    @Override
+    public List<Mapping> getSchema(String userId, Long sourceId) {
+        if (hasReadPermission(Long.valueOf(userId), sourceId)) {
+            Optional<Source> source = sourceRepository.getSourceById(sourceId);
+            if (source.isPresent()) {
+                try {
+                    return MapperUtils.objectMapper.readValue(source.get().getMapping().toString(),
+                            new TypeReference<List<Mapping>>() {
+                            });
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException("Get schema failed");
+                }
+            }
+            throw new SourceNotFoundException("Source not found");
+        } else {
+            throw new PermissionDeniedException("You are not allowed to get schema of this source");
+        }
+    }
+
+    private Boolean hasReadPermission(Long userId, Long sourceId) {
+        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
+                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
+        if (sourcePermission.isPresent()) {
+            return sourcePermission.get().getPermission().charAt(0) == 'r';
+        }
+        return false;
+    }
+
+    private Boolean hasWritePermission(Long userId, Long sourceId) {
+        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
+                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
+        if (sourcePermission.isPresent()) {
+            return sourcePermission.get().getPermission().charAt(1) == 'w';
+        }
+        return false;
     }
 
 }

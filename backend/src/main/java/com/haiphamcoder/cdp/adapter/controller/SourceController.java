@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.adapter.dto.SourceDto;
+import com.haiphamcoder.cdp.adapter.dto.SourceDto.Mapping;
 import com.haiphamcoder.cdp.application.service.SourceService;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
@@ -103,6 +104,21 @@ public class SourceController {
             @RequestParam(name = "connector-type", required = true) Integer connectorType) {
         Map<String, String> historyUploadFile = sourceService.getHistoryUploadFile(userId, connectorType);
         return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(historyUploadFile));
+    }
+
+    @GetMapping("/get-schema")
+    public ResponseEntity<Object> getSchema(@CookieValue(name = "user-id") String userId,
+            @RequestParam(name = "source-id", required = true) Long sourceId) {
+        try {
+            List<Mapping> sourceMapping = sourceService.getSchema(userId, sourceId);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sourceMapping));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
     }
 
     @GetMapping("/preview-data")
