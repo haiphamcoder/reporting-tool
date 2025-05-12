@@ -7,7 +7,9 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.cdp.shared.BaseEntity;
+import com.haiphamcoder.cdp.shared.converter.JsonNodeStringConverter;
 import com.haiphamcoder.cdp.shared.converter.MapStringConverter;
 
 import jakarta.persistence.Column;
@@ -55,11 +57,15 @@ public class Source extends BaseEntity {
     @Column(name = "connector_type", nullable = false)
     private Integer connectorType;
 
-    @Column(name = "mapping", nullable = false)
-    @Convert(converter = MapStringConverter.class)
-    private Map<String, Object> mapping;
+    @Column(name = "mapping", nullable = true)
+    @Convert(converter = JsonNodeStringConverter.class)
+    private JsonNode mapping;
 
-    @Column(name = "table_name", nullable = false)
+    @Column(name = "config", nullable = false)
+    @Convert(converter = MapStringConverter.class)
+    private Map<String, Object> config;
+
+    @Column(name = "table_name", nullable = true)
     private String tableName;
 
     @Column(name = "status", nullable = false)
@@ -71,7 +77,7 @@ public class Source extends BaseEntity {
     private User user;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "source_share", joinColumns = @JoinColumn(name = "source_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JoinTable(name = "source_permission", joinColumns = @JoinColumn(name = "source_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     @JsonProperty("shared_users")
     private List<User> sharedUsers;
 

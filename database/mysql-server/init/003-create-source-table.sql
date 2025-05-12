@@ -10,8 +10,9 @@ CREATE TABLE
         name VARCHAR(255) NOT NULL COMMENT 'Tên của source',
         description VARCHAR(255) COMMENT 'Mô tả của source',
         connector_type INT NOT NULL COMMENT 'Loại connector của source',
-        mapping TEXT NOT NULL COMMENT 'Schema của source',
-        table_name VARCHAR(255) NOT NULL COMMENT 'Tên bảng của source',
+        mapping TEXT COMMENT 'Schema của source',
+        config TEXT NOT NULL COMMENT 'Config của source',
+        table_name VARCHAR(255) COMMENT 'Tên bảng của source',
         status INT NOT NULL COMMENT 'Trạng thái của source',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
         folder_id BIGINT COMMENT 'ID của folder',
@@ -24,16 +25,17 @@ CREATE TABLE
         CONSTRAINT fk_source_folder FOREIGN KEY (folder_id) REFERENCES folder (id)
     );
 
-
-DROP TABLE IF EXISTS source_share;
+DROP TABLE IF EXISTS source_permission;
 
 CREATE TABLE
-    source_share (
+    source_permission (
         source_id BIGINT NOT NULL COMMENT 'ID của source',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
         permission VARCHAR(255) NOT NULL COMMENT 'Quyền của user',
-        CONSTRAINT fk_source_share_source FOREIGN KEY (source_id) REFERENCES source (id),
-        CONSTRAINT fk_source_share_user FOREIGN KEY (user_id) REFERENCES users (id),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo source',
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+        CONSTRAINT fk_source_permission_source FOREIGN KEY (source_id) REFERENCES source (id),
+        CONSTRAINT fk_source_permission_user FOREIGN KEY (user_id) REFERENCES users (id),
         PRIMARY KEY (source_id, user_id)
     );
 

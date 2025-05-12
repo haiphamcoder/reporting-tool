@@ -32,6 +32,9 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
 
     @Query("SELECT COUNT(s) FROM Source s WHERE s.user.id = :userId AND DATE(s.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    @Query("SELECT COUNT(s) FROM Source s WHERE s.user.id = :userId AND s.name = :sourceName")
+    Long countByUserIdAndName(@Param("userId") Long userId, @Param("sourceName") String sourceName);
 }
 
 @Component
@@ -40,6 +43,11 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
 public class SourceRepositoryImpl implements SourceRepository {
 
     private final SourceJpaRepository sourceJpaRepository;
+
+    @Override
+    public Boolean checkSourceName(String userId, String sourceName) {
+        return sourceJpaRepository.countByUserIdAndName(Long.parseLong(userId), sourceName) > 0;
+    }
 
     @Override
     public Optional<Source> getSourceById(Long id) {
@@ -87,4 +95,11 @@ public class SourceRepositoryImpl implements SourceRepository {
         Collections.reverse(result);
         return result;
     }
+
+    @Override
+    public Optional<Source> updateSource(Source source) {
+        Source savedSource = sourceJpaRepository.save(source);
+        return Optional.of(savedSource);
+    }
+    
 }

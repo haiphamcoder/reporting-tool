@@ -4,21 +4,33 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.cdp.adapter.dto.SourceDto;
 import com.haiphamcoder.cdp.adapter.dto.mapper.SourceMapper;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.application.service.SourceService;
+import com.haiphamcoder.cdp.application.service.UserService;
 import com.haiphamcoder.cdp.domain.entity.Source;
+import com.haiphamcoder.cdp.domain.entity.SourcePermission;
+import com.haiphamcoder.cdp.domain.entity.User;
+import com.haiphamcoder.cdp.domain.exception.DuplicateSourceNameException;
+import com.haiphamcoder.cdp.domain.exception.MissingRequiredFieldException;
 import com.haiphamcoder.cdp.domain.exception.PermissionDeniedException;
+import com.haiphamcoder.cdp.domain.exception.SourceNotFoundException;
+import com.haiphamcoder.cdp.domain.exception.UserNotFoundException;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
+import com.haiphamcoder.cdp.domain.repository.SourcePermissionRepository;
 import com.haiphamcoder.cdp.domain.repository.SourceRepository;
 import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
+import com.haiphamcoder.cdp.shared.MapperUtils;
+import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.cdp.shared.StringUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -29,28 +41,82 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
+    private final SourcePermissionRepository sourcePermissionRepository;
     private final HdfsFileService hdfsFileService;
     private final CSVProcessingService csvProcessingService;
+    private final UserService userService;
 
     @Override
-    public Source getSourceById(Long sourceId) {
+    public SourceDto initSource(String userId, SourceDto sourceDto) {
+        if (sourceDto.getName() == null) {
+            throw new MissingRequiredFieldException("name");
+        }
+        if (sourceRepository.checkSourceName(userId, sourceDto.getName())) {
+            throw new DuplicateSourceNameException("Source name already exists");
+        }
+
+        if (sourceDto.getConnectorType() == null) {
+            throw new MissingRequiredFieldException("connector_type");
+        }
+        if (sourceDto.getConfig() == null) {
+            throw new MissingRequiredFieldException("config");
+        }
+
+        User user = userService.getUserById(Long.parseLong(userId));
+        if (user == null) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        Source source = Source.builder()
+                .id(SnowflakeIdGenerator.getInstance().generateId())
+                .name(sourceDto.getName())
+                .connectorType(sourceDto.getConnectorType())
+                .config(sourceDto.getConfig())
+                .user(user)
+                .status(CommonConstants.SOURCE_STATUS_INIT)
+                .build();
+
+        Optional<Source> createdSource = sourceRepository.createSource(source);
+        if (createdSource.isPresent()) {
+
+            SourcePermission sourcePermission = SourcePermission.builder()
+                .source(createdSource.get())
+                .user(user)
+                .permission(CommonConstants.SOURCE_PERMISSION_ALL)
+                .build();
+            sourcePermissionRepository.createSourcePermission(sourcePermission);
+
+            return SourceMapper.toDto(createdSource.get());
+        }
+        throw new RuntimeException("Create source failed");
+    }
+
+    @Override
+    public Boolean checkSourceName(String userId, String sourceName) {
+        return sourceRepository.checkSourceName(userId, sourceName);
+    }
+
+    @Override
+    public SourceDto getSourceById(Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            return source.get();
+            return SourceMapper.toDto(source.get());
         }
         throw new RuntimeException("Source not found");
     }
 
     @Override
-    public List<Source> getAllSourcesByUserId(Long userId) {
-        return sourceRepository.getAllSourcesByUserId(userId);
+    public List<SourceDto> getAllSourcesByUserId(Long userId) {
+        return sourceRepository.getAllSourcesByUserId(userId).stream()
+                .map(SourceMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Source createSource(SourceDto sourceDto) {
+    public SourceDto createSource(SourceDto sourceDto) {
         Optional<Source> createdSource = sourceRepository.createSource(SourceMapper.toEntity(sourceDto));
         if (createdSource.isPresent()) {
-            return createdSource.get();
+            return SourceMapper.toDto(createdSource.get());
         }
         throw new RuntimeException("Create source failed");
     }
@@ -92,17 +158,38 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public void confirmSchema(String userId, Long sourceId, Map<String, String> mapping) {
-        Optional<Source> source = sourceRepository.getSourceById(sourceId);
-        if (source.isPresent()) {
-            Map<String, Object> schema = source.get().getMapping();
-            for (Map.Entry<String, String> entry : mapping.entrySet()) {
-                schema.put(entry.getKey(), entry.getValue());
+    public SourceDto updateSchema(String userId, SourceDto sourceDto) {
+
+        if (sourceDto.getId() == null) {
+            throw new MissingRequiredFieldException("id");
+        }
+
+        if (sourceDto.getMapping() == null) {
+            throw new MissingRequiredFieldException("mapping");
+        }
+
+        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
+                .getSourcePermissionBySourceIdAndUserId(Long.valueOf(sourceDto.getId()), Long.valueOf(userId));
+        if (sourcePermission.isPresent()) {
+            String permission = sourcePermission.get().getPermission();
+            if (permission.charAt(1) == 'w') {
+                Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
+                if (existingSource.isPresent()) {
+                    existingSource.get()
+                            .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
+                    Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
+                    if (updatedSource.isPresent()) {
+                        return SourceMapper.toDto(updatedSource.get());
+                    }
+                    throw new RuntimeException("Update source failed");
+                } else {
+                    throw new SourceNotFoundException("Source not found");
+                }
+            } else {
+                throw new PermissionDeniedException("You are not allowed to update this source");
             }
-            source.get().setMapping(schema);
-            sourceRepository.createSource(source.get());
         } else {
-            throw new RuntimeException("Source not found");
+            throw new PermissionDeniedException("You are not allowed to update this source");
         }
     }
 

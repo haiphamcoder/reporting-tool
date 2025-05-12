@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.cdp.adapter.dto.SourceDto;
 import com.haiphamcoder.cdp.application.service.SourceService;
-import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 import com.haiphamcoder.cdp.shared.exception.BaseException;
@@ -19,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,13 +34,35 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class SourceController {
     private final SourceService sourceService;
 
-    @GetMapping
-    public ResponseEntity<RestAPIResponse<List<Source>>> getSources(@CookieValue(name = "user-id") String userId) {
-        List<Source> sources = sourceService.getAllSourcesByUserId(Long.parseLong(userId));
-        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sources));
+    @PostMapping(path = "/init", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> initSource(@CookieValue(name = "user-id") String userId,
+            @RequestBody SourceDto sourceDto) {
+        try {
+            SourceDto source = sourceService.initSource(userId, sourceDto);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(source));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
     }
 
-    @PostMapping()
+    @GetMapping()
+    public ResponseEntity<Object> getSources(@CookieValue(name = "user-id") String userId) {
+        try {
+            List<SourceDto> sources = sourceService.getAllSourcesByUserId(Long.parseLong(userId));
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sources));
+        } catch (BaseException e) {
+            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
+        }
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> createSource(@CookieValue(name = "user-id") String userId,
             @RequestBody SourceDto sourceDto) {
         try {
@@ -100,14 +122,14 @@ public class SourceController {
 
     @GetMapping("/confirm-schema")
     public ResponseEntity<Object> confirmSchema(@CookieValue(name = "user-id") String userId,
-            @RequestParam(name = "source-id", required = true) Long sourceId,
-            @RequestBody Map<String, String> mapping) {
+            @RequestBody SourceDto sourceDto) {
         try {
-            sourceService.confirmSchema(userId, sourceId, mapping);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Schema confirmed successfully"));
+            SourceDto updatedSource = sourceService.updateSchema(userId, sourceDto);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(updatedSource));
         } catch (BaseException e) {
             return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError()
                     .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
         }

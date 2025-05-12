@@ -3,7 +3,7 @@ package com.haiphamcoder.cdp.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haiphamcoder.cdp.domain.model.SourceShareComposeKey;
+import com.haiphamcoder.cdp.domain.model.SourcePermissionComposeKey;
 import com.haiphamcoder.cdp.shared.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -27,9 +27,9 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 @Entity
-@Table(name = "source_share")
-@IdClass(SourceShareComposeKey.class)
-public class SourceShare extends BaseEntity {
+@Table(name = "source_permission")
+@IdClass(SourcePermissionComposeKey.class)
+public class SourcePermission extends BaseEntity {
 
     @Id
     private Source source;

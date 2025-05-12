@@ -9,6 +9,8 @@ public interface SourceRepository {
 
     Optional<Source> getSourceById(Long id);
 
+    Boolean checkSourceName(String userId, String sourceName);
+
     List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     default List<Source> getAllSourcesByUserId(Long userId) {
@@ -22,5 +24,7 @@ public interface SourceRepository {
     Long getTotalSourceByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     List<Long> getSourceCountByLast30Days(Long userId);
+
+    Optional<Source> updateSource(Source source);
 
 }

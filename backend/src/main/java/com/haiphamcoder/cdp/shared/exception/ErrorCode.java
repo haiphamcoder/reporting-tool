@@ -17,11 +17,13 @@ public enum ErrorCode {
     MISSING_REQUIRED_FIELD(400, "Missing required field", HttpStatus.BAD_REQUEST),
     INVALID_FORMAT(400, "Invalid format", HttpStatus.BAD_REQUEST),
     SOURCE_NAME_EXISTED(400, "Source name already exists", HttpStatus.BAD_REQUEST),
+    DUPLICATE_SOURCE_NAME(400, "Duplicate source name", HttpStatus.BAD_REQUEST),
 
     // Resource Not Found (4xx)
     RESOURCE_NOT_FOUND(404, "Resource not found", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
     SOURCE_NOT_FOUND(404, "Source not found", HttpStatus.NOT_FOUND),
+    SOURCE_CONNECTOR_NOT_FOUND(404, "Source connector not found", HttpStatus.NOT_FOUND),
 
     // Business Logic Errors (4xx)
     DUPLICATE_RESOURCE(409, "Resource already exists", HttpStatus.CONFLICT),
