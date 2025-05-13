@@ -1,6 +1,8 @@
 package com.haiphamcoder.cdp.adapter.persistence.raw;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -10,7 +12,7 @@ import com.haiphamcoder.cdp.domain.repository.TiDBRepository;
 import jakarta.persistence.EntityManager;
 
 @Component
-public class TiDBRepositoryImpl implements TiDBRepository{
+public class TiDBRepositoryImpl implements TiDBRepository {
 
     private final EntityManager entityManager;
 
@@ -32,8 +34,18 @@ public class TiDBRepositoryImpl implements TiDBRepository{
 
     @Override
     public boolean insertData(String tableName, List<String> schema, List<String> values) {
-        entityManager.createNativeQuery("INSERT INTO " + tableName + " (" + String.join(", ", schema) + ") VALUES (" + String.join(", ", values) + ")").executeUpdate();
+        entityManager.createNativeQuery("INSERT INTO " + tableName + " (" + String.join(", ", schema) + ") VALUES ("
+                + String.join(", ", values) + ")").executeUpdate();
         return true;
     }
-    
+
+    @Override
+    public boolean createTable(String tableName, Map<String, String> tableSchema) {
+        String tableSchemaString = tableSchema.entrySet().stream()
+                .map(entry -> entry.getKey() + " " + entry.getValue())
+                .collect(Collectors.joining(", "));
+        entityManager.createNativeQuery("CREATE TABLE " + tableName + " (" + tableSchemaString + ")").executeUpdate();
+        return true;
+    }
+
 }

@@ -5,17 +5,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import com.haiphamcoder.cdp.adapter.dto.SourceDto.Mapping;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
+import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.shared.MapperUtils;
 import com.haiphamcoder.cdp.shared.processing.CSVFileUtils;
 import com.haiphamcoder.cdp.shared.processing.HeaderNormalizer;
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -83,6 +87,43 @@ public class CSVProcessingServiceImpl implements CSVProcessingService {
         }
 
         return previewData;
+    }
+
+    @Override
+    public List<Mapping> getSchema(Source source) {
+        if (source.getConfig() == null) {
+            throw new RuntimeException("Source config is null");
+        }
+
+        if (source.getConfig().get("file_path") == null) {
+            throw new RuntimeException("File path is null");
+        }
+
+        char delimiter = ',';
+        String filePath = source.getConfig().get("file_path").toString();
+
+        try (CSVReader csvReader = CSVFileUtils.createCSVReader(hdfsFileService.streamFile(filePath), delimiter)) {
+            String[] fieldNameArray = csvReader.readNext();
+            List<String> fieldNames = new LinkedList<>();
+            for (String fieldName : fieldNameArray) {
+                fieldNames.add(HeaderNormalizer.normalize(fieldName));
+            }
+
+            return fieldNames.stream().map(fieldName -> Mapping.builder()
+                    .fieldName(fieldName)
+                    .fieldMapping(fieldName)
+                    .fieldType("text")
+                    .build())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Get file on server error");
+            e.printStackTrace();
+            throw new RuntimeException("Get file on server error");
+        } catch (CsvValidationException e) {
+            log.error("Get file on server error");
+        }
+
+        return new LinkedList<>();
     }
 
 }

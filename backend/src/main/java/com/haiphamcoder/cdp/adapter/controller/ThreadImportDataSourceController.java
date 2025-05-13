@@ -26,7 +26,7 @@ public class ThreadImportDataSourceController {
     public ResponseEntity<Object> submit(@CookieValue(name = "user-id") String userId,
             @PathVariable("source-id") Long sourceId) {
         try {
-            importDataSourceManager.submit(sourceId);
+            importDataSourceManager.submit(sourceId, false);
             return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Submit successfully"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()

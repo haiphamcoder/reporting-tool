@@ -1,6 +1,7 @@
 package com.haiphamcoder.cdp.application.service.impl;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +36,6 @@ import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
 import com.haiphamcoder.cdp.shared.MapperUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.cdp.shared.StringUtils;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -125,19 +125,45 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public String uploadFile(String userId, Integer connectorType, MultipartFile file) {
+    public String uploadFile(String userId, Long sourceId, MultipartFile file) {
         String fileName = file.getOriginalFilename();
         if (StringUtils.isNullOrEmpty(fileName)) {
             throw new RuntimeException("File name is required");
         }
-        String filePath;
-        try {
-            filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
-                    connectorType + "/" + fileName.trim().replaceAll("\\s+", "_"));
-        } catch (IOException e) {
-            throw new RuntimeException("Upload file failed");
+
+        if (hasWritePermission(Long.valueOf(userId), sourceId)) {
+            Optional<Source> source = sourceRepository.getSourceById(sourceId);
+            if (source.isPresent()) {
+                Map<String, Object> config = source.get().getConfig();
+                if (config == null) {
+                    config = new HashMap<>();
+                }
+                Integer connectorType = source.get().getConnectorType();
+
+                if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV) {
+                    try {
+                        String filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
+                                connectorType + "/" + fileName.trim().replaceAll("\\s+", "_"));
+                        config.put("file_path", filePath);
+                        source.get().setConfig(config);
+
+                        List<Mapping> schema = csvProcessingService.getSchema(source.get());
+                        source.get().setMapping(MapperUtils.objectMapper.convertValue(schema, JsonNode.class));
+                        sourceRepository.updateSource(source.get());
+
+                        return filePath;
+                    } catch (IOException e) {
+                        throw new RuntimeException("Upload file failed");
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported connector type");
+                }
+            } else {
+                throw new SourceNotFoundException("Source not found");
+            }
+        } else {
+            throw new PermissionDeniedException("You are not allowed to upload file to this source");
         }
-        return filePath;
     }
 
     @Override
@@ -164,7 +190,7 @@ public class SourceServiceImpl implements SourceService {
     public SourceDto updateSchema(String userId, SourceDto sourceDto) {
 
         if (sourceDto.getId() == null) {
-            throw new MissingRequiredFieldException("id");
+            throw new MissingRequiredFieldException("source_id");
         }
 
         if (sourceDto.getMapping() == null) {
@@ -190,17 +216,29 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public List<Mapping> getSchema(String userId, Long sourceId) {
-        if (hasReadPermission(Long.valueOf(userId), sourceId)) {
-            Optional<Source> source = sourceRepository.getSourceById(sourceId);
+    public List<Mapping> getSchema(String userId, SourceDto sourceDto) {
+        if (sourceDto.getId() == null) {
+            throw new MissingRequiredFieldException("source_id");
+        }
+
+        if (hasReadPermission(Long.valueOf(userId), sourceDto.getId())) {
+            Optional<Source> source = sourceRepository.getSourceById(sourceDto.getId());
             if (source.isPresent()) {
-                try {
-                    return MapperUtils.objectMapper.readValue(source.get().getMapping().toString(),
-                            new TypeReference<List<Mapping>>() {
-                            });
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                    throw new RuntimeException("Get schema failed");
+                if (source.get().getMapping() != null) {
+                    try {
+                        return MapperUtils.objectMapper.readValue(source.get().getMapping().toString(),
+                                new TypeReference<List<Mapping>>() {
+                                });
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Get schema failed");
+                    }
+                } else {
+                    if (source.get().getConnectorType() == CommonConstants.CONNECTOR_TYPE_CSV) {
+                        return csvProcessingService.getSchema(source.get());
+                    } else {
+                        throw new RuntimeException("Unsupported connector type");
+                    }
                 }
             }
             throw new SourceNotFoundException("Source not found");

@@ -79,7 +79,7 @@ public class SourceController {
 
     @PostMapping("/upload-file")
     public ResponseEntity<Object> uploadFile(@CookieValue(name = "user-id") String userId,
-            @RequestParam(name = "connector-type", required = true) Integer connectorType,
+            @RequestParam(name = "source-id", required = true) Long sourceId,
             @RequestBody MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -87,12 +87,13 @@ public class SourceController {
                         .body(RestAPIResponse.ResponseFactory.createResponse("File is empty"));
             }
 
-            String filePath = sourceService.uploadFile(userId, connectorType, file);
+            String filePath = sourceService.uploadFile(userId, sourceId, file);
             return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(filePath));
         } catch (BaseException e) {
             RestAPIResponse<Object> apiResponse = RestAPIResponse.ResponseFactory.createResponse(e);
             return ResponseEntity.status(e.getHttpStatus()).body(apiResponse);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError()
                     .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
         }
@@ -108,9 +109,9 @@ public class SourceController {
 
     @GetMapping("/get-schema")
     public ResponseEntity<Object> getSchema(@CookieValue(name = "user-id") String userId,
-            @RequestParam(name = "source-id", required = true) Long sourceId) {
+            @RequestBody SourceDto sourceDto) {
         try {
-            List<Mapping> sourceMapping = sourceService.getSchema(userId, sourceId);
+            List<Mapping> sourceMapping = sourceService.getSchema(userId, sourceDto);
             return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sourceMapping));
         } catch (BaseException e) {
             return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));

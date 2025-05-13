@@ -66,13 +66,13 @@ public class SourceDto {
     public static class Mapping {
 
         @JsonProperty("field_name")
-        private String field_name;
+        private String fieldName;
 
         @JsonProperty("field_mapping")
-        private String field_mapping;
+        private String fieldMapping;
 
         @JsonProperty("field_type")
-        private String field_type;
+        private String fieldType;
 
     }
 }

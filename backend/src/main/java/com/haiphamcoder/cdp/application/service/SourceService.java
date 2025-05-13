@@ -21,7 +21,7 @@ public interface SourceService {
 
     public SourceDto createSource(SourceDto sourceDto);
 
-    public String uploadFile(String userId, Integer connectorType, MultipartFile file);
+    public String uploadFile(String userId, Long sourceId, MultipartFile file);
 
     public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType);
 
@@ -29,6 +29,6 @@ public interface SourceService {
 
     public SourceDto updateSchema(String userId, SourceDto sourceDto);
 
-    public List<Mapping> getSchema(String userId, Long sourceId);
+    public List<Mapping> getSchema(String userId, SourceDto sourceDto);
 
 }
