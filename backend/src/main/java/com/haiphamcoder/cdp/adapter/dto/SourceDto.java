@@ -74,5 +74,9 @@ public class SourceDto {
         @JsonProperty("field_type")
         private String fieldType;
 
+        @JsonProperty("is_hidden")
+        @Builder.Default
+        private Boolean isHidden = true;
+
     }
 }

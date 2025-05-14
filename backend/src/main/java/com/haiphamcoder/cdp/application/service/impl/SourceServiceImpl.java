@@ -33,6 +33,7 @@ import com.haiphamcoder.cdp.domain.model.PreviewDataRequest;
 import com.haiphamcoder.cdp.domain.repository.SourcePermissionRepository;
 import com.haiphamcoder.cdp.domain.repository.SourceRepository;
 import com.haiphamcoder.cdp.infrastructure.config.CommonConstants;
+import com.haiphamcoder.cdp.shared.HashingUtils;
 import com.haiphamcoder.cdp.shared.MapperUtils;
 import com.haiphamcoder.cdp.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.cdp.shared.StringUtils;
@@ -61,9 +62,6 @@ public class SourceServiceImpl implements SourceService {
         if (sourceDto.getConnectorType() == null) {
             throw new MissingRequiredFieldException("connector_type");
         }
-        if (sourceDto.getConfig() == null) {
-            throw new MissingRequiredFieldException("config");
-        }
 
         User user = userService.getUserById(Long.parseLong(userId));
         if (user == null) {
@@ -74,7 +72,7 @@ public class SourceServiceImpl implements SourceService {
                 .id(SnowflakeIdGenerator.getInstance().generateId())
                 .name(sourceDto.getName())
                 .connectorType(sourceDto.getConnectorType())
-                .config(sourceDto.getConfig())
+                .tableName(HashingUtils.hashingText(sourceDto.getName() + "_" + System.currentTimeMillis()))
                 .user(user)
                 .status(CommonConstants.SOURCE_STATUS_INIT)
                 .build();

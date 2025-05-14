@@ -61,7 +61,7 @@ public class Source extends BaseEntity {
     @Convert(converter = JsonNodeStringConverter.class)
     private JsonNode mapping;
 
-    @Column(name = "config", nullable = false)
+    @Column(name = "config", nullable = true)
     @Convert(converter = MapStringConverter.class)
     private Map<String, Object> config;
 
