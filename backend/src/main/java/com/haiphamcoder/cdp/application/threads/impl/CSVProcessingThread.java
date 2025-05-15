@@ -12,6 +12,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.json.JSONObject;
 
+import com.haiphamcoder.cdp.adapter.dto.SourceDto;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.application.service.StorageService;
 import com.haiphamcoder.cdp.application.threads.AbstractProcessingThread;
@@ -26,13 +27,12 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     private final ExecutorService executorService;
     private final String fileUrl;
 
-    public CSVProcessingThread(StorageService storageService,
-            HdfsFileService hdfsFileService,
-            String fileUrl){
+    public CSVProcessingThread(SourceDto sourceDto, StorageService storageService,
+            HdfsFileService hdfsFileService) {
         super(storageService);
         this.hdfsFileService = hdfsFileService;
-        this.fileUrl = fileUrl;
-        
+        this.fileUrl = sourceDto.getConfig().get("file_path").toString();
+
         executorService = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
                 .setMaxSize(Runtime.getRuntime().availableProcessors() * 2)
@@ -45,9 +45,9 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     @Override
     protected boolean process() {
         try (InputStream inputStream = hdfsFileService.streamFile(fileUrl)) {
-            try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)){
+            try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)) {
                 String[] firstLine = csvReader.readNext();
-                List<String> header = firstLine != null? Arrays.asList(firstLine): Collections.emptyList();
+                List<String> header = firstLine != null ? Arrays.asList(firstLine) : Collections.emptyList();
                 if (header.isEmpty()) {
                     log.error("Header is empty");
                     return false;
@@ -57,14 +57,14 @@ public class CSVProcessingThread extends AbstractProcessingThread {
                 int recordCount = 0;
                 List<String[]> records = new LinkedList<>();
                 String[] record;
-                while((record = csvReader.readNext()) != null){
+                while ((record = csvReader.readNext()) != null) {
                     if (record.length != header.size()) {
                         log.error("Record length does not match field names size");
                         continue;
                     }
                     recordCount++;
 
-                    if (records.size() == chunkSize){
+                    if (records.size() == chunkSize) {
                         final List<String[]> recordsChunk = new LinkedList<>(records);
                         executorService.submit(() -> processChunk(recordsChunk, header));
                         records.clear();
