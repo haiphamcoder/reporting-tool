@@ -1,7 +1,10 @@
 package com.haiphamcoder.cdp.application.service.impl;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -44,7 +47,19 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public List<Mapping> createStorageSource(SourceDto sourceDto) {
-        return null;
+        String tableName = sourceDto.getTableName();
+        Map<String, String> schemaMap = new LinkedHashMap<>();
+        for (Mapping mapping : sourceDto.getMapping()) {
+            schemaMap.put(mapping.getFieldMapping(), mapping.getFieldType());
+        }
+
+        try (TidbWriter tidbWriter = new TidbWriter(url, username, password)) {
+            tidbWriter.createTable(tableName, schemaMap);
+        } catch (Exception e) {
+            log.error("Create table failed! {}", e.getMessage());
+        }
+
+        return sourceDto.getMapping();
     }
 
     @Override

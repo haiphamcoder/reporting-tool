@@ -16,6 +16,7 @@ import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
 import com.haiphamcoder.cdp.shared.MapperUtils;
+import com.haiphamcoder.cdp.shared.TidbDataTypeDetector;
 import com.haiphamcoder.cdp.shared.processing.CSVFileUtils;
 import com.haiphamcoder.cdp.shared.processing.HeaderNormalizer;
 import com.opencsv.CSVReader;
@@ -109,12 +110,26 @@ public class CSVProcessingServiceImpl implements CSVProcessingService {
                 fieldNames.add(fieldName);
             }
 
-            return fieldNames.stream().map(fieldName -> Mapping.builder()
-                    .fieldName(fieldName)
-                    .fieldMapping(HeaderNormalizer.normalize(fieldName))
-                    .fieldType("text")
-                    .build())
-                    .collect(Collectors.toList());
+            List<Mapping> mappings = new LinkedList<>();
+            String[] firstRecord = csvReader.readNext();
+            if (firstRecord == null || (firstRecord != null && firstRecord.length != fieldNames.size())) {
+                mappings = fieldNames.stream().map(fieldName -> Mapping.builder()
+                        .fieldName(fieldName)
+                        .fieldMapping(HeaderNormalizer.normalize(fieldName))
+                        .fieldType("text")
+                        .build())
+                        .collect(Collectors.toList());
+            } else {
+                for (int i = 0; i < fieldNames.size(); i++) {
+                    mappings.add(Mapping.builder()
+                            .fieldName(fieldNames.get(i))
+                            .fieldMapping(HeaderNormalizer.normalize(fieldNames.get(i)))
+                            .fieldType(TidbDataTypeDetector.detectGeneralizedDataType(firstRecord[i]).name())
+                            .build());
+                }
+            }
+
+            return mappings;
         } catch (IOException e) {
             log.error("Get file on server error");
             e.printStackTrace();

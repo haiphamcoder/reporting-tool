@@ -27,7 +27,7 @@ public interface SourceService {
 
     public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest);
 
-    public SourceDto updateSchema(String userId, SourceDto sourceDto);
+    public SourceDto confirmSchema(String userId, SourceDto sourceDto);
 
     public List<Mapping> getSchema(String userId, SourceDto sourceDto);
 

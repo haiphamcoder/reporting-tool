@@ -141,7 +141,7 @@ public class SourceController {
     public ResponseEntity<Object> confirmSchema(@CookieValue(name = "user-id") String userId,
             @RequestBody SourceDto sourceDto) {
         try {
-            SourceDto updatedSource = sourceService.updateSchema(userId, sourceDto);
+            SourceDto updatedSource = sourceService.confirmSchema(userId, sourceDto);
             return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(updatedSource));
         } catch (BaseException e) {
             return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));

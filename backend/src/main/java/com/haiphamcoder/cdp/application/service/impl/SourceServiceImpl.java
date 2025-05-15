@@ -18,6 +18,7 @@ import com.haiphamcoder.cdp.adapter.dto.SourceDto.Mapping;
 import com.haiphamcoder.cdp.adapter.dto.mapper.SourceMapper;
 import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
+import com.haiphamcoder.cdp.application.service.RawDataService;
 import com.haiphamcoder.cdp.application.service.SourceService;
 import com.haiphamcoder.cdp.application.service.UserService;
 import com.haiphamcoder.cdp.domain.entity.Source;
@@ -48,6 +49,7 @@ public class SourceServiceImpl implements SourceService {
     private final HdfsFileService hdfsFileService;
     private final CSVProcessingService csvProcessingService;
     private final UserService userService;
+    private final RawDataService rawDataService;
 
     @Override
     public SourceDto initSource(String userId, SourceDto sourceDto) {
@@ -184,7 +186,7 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public SourceDto updateSchema(String userId, SourceDto sourceDto) {
+    public SourceDto confirmSchema(String userId, SourceDto sourceDto) {
 
         if (sourceDto.getId() == null) {
             throw new MissingRequiredFieldException("source_id");
@@ -201,7 +203,10 @@ public class SourceServiceImpl implements SourceService {
                         .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
                 Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
                 if (updatedSource.isPresent()) {
-                    return SourceMapper.toDto(updatedSource.get());
+                    if (rawDataService.submit(updatedSource.get().getId(), true)) {
+                        return SourceMapper.toDto(updatedSource.get());
+                    }
+                    throw new RuntimeException("Update source failed");
                 }
                 throw new RuntimeException("Update source failed");
             } else {

@@ -58,11 +58,14 @@ public class ImportDataSourceManager {
         if (source.isPresent()) {
             SourceDto sourceDto = SourceMapper.toDto(source.get());
             List<Mapping> schema = sourceDto.getMapping();
-            if (schema != null && !schema.isEmpty() && schema.get(0).getFieldMapping() == null) {
+
+            if (schema == null || (schema != null && schema.isEmpty())) {
+                throw new RuntimeException("Schema is empty");
+            }
+
+            if (isFirstTime) {
                 sourceDto.setMapping(storageService.createStorageSource(sourceDto));
                 sourceRepository.updateSource(source.get());
-            } else {
-                throw new RuntimeException("Schema is empty");
             }
 
             AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(sourceDto);
