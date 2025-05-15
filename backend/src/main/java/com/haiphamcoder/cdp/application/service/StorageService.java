@@ -12,5 +12,7 @@ public interface StorageService {
 
     void saveData(JSONObject record);
 
+    void batchInsert(SourceDto sourceDto, List<JSONObject> data);
+
     List<Mapping> createStorageSource(SourceDto sourceDto);
 }

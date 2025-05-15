@@ -33,6 +33,9 @@ public class SourceDto {
     @JsonProperty("connector_type")
     private Integer connectorType;
 
+    @JsonProperty("table_name")
+    private String tableName;
+
     @JsonProperty("config")
     private Map<String, Object> config;
 
@@ -76,7 +79,7 @@ public class SourceDto {
 
         @JsonProperty("is_hidden")
         @Builder.Default
-        private Boolean isHidden = true;
+        private Boolean isHidden = false;
 
     }
 }

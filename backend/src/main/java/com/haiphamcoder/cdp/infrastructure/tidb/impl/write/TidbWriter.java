@@ -1,11 +1,17 @@
 package com.haiphamcoder.cdp.infrastructure.tidb.impl.write;
 
 import com.haiphamcoder.cdp.infrastructure.tidb.impl.TidbAdapterImpl;
-import java.sql.PreparedStatement;
+
+import lombok.extern.slf4j.Slf4j;
+
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONObject;
+
+@Slf4j
 public class TidbWriter extends TidbAdapterImpl {
 
     public TidbWriter(String url, String username, String password) {
@@ -18,23 +24,17 @@ public class TidbWriter extends TidbAdapterImpl {
 
         data.keySet().forEach(key -> {
             sql.append(key).append(",");
-            values.append("?,");
+            values.append(data.get(key)).append(",");
         });
 
         sql.deleteCharAt(sql.length() - 1).append(") ");
         values.deleteCharAt(values.length() - 1).append(")");
         sql.append(values);
 
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql.toString())) {
-            int index = 1;
-            for (Object value : data.values()) {
-                stmt.setObject(index++, value);
-            }
-            stmt.executeUpdate();
-        }
+        executeUpdate(sql.toString());
     }
 
-    public void batchInsert(String table, List<String> columns, List<Map<String, Object>> dataList)
+    public void batchInsert(String table, List<String> columns, List<JSONObject> dataList)
             throws SQLException {
         if (dataList.isEmpty()) {
             return;
@@ -44,94 +44,38 @@ public class TidbWriter extends TidbAdapterImpl {
         columns.forEach(column -> sql.append(column).append(","));
         sql.deleteCharAt(sql.length() - 1).append(") ");
 
-        StringBuilder values = new StringBuilder("VALUES (");
-        columns.forEach(column -> values.append("?,"));
-        values.deleteCharAt(values.length() - 1).append(")");
-
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql.toString())) {
-            for (Map<String, Object> data : dataList) {
-                int index = 1;
-                for (String column : columns) {
-                    stmt.setObject(index++, data.get(column));
+        StringBuilder values = new StringBuilder(" VALUES ");
+        for (JSONObject data : dataList) {
+            values.append("(");
+            columns.forEach(column -> {
+                if (data.get(column) instanceof String) {
+                    values.append("'").append(data.get(column)).append("',");
+                } else {
+                    values.append(data.get(column)).append(",");
                 }
-                stmt.addBatch();
-            }
-            stmt.executeBatch();
+            });
+            values.deleteCharAt(values.length() - 1).append("),");
         }
-    }
-
-    public void update(String table, Map<String, Object> data, String whereClause, Object... params)
-            throws SQLException {
-        StringBuilder sql = new StringBuilder("UPDATE ").append(table).append(" SET ");
-
-        data.keySet().forEach(key -> sql.append(key).append("=?,"));
-        sql.deleteCharAt(sql.length() - 1);
-
-        if (whereClause != null && !whereClause.isEmpty()) {
-            sql.append(" WHERE ").append(whereClause);
-        }
-
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql.toString())) {
-            int index = 1;
-            for (Object value : data.values()) {
-                stmt.setObject(index++, value);
-            }
-            for (Object param : params) {
-                stmt.setObject(index++, param);
-            }
-            stmt.executeUpdate();
-        }
-    }
-
-    public void delete(String table, String whereClause, Object... params) throws SQLException {
-        String sql = "DELETE FROM " + table;
-        if (whereClause != null && !whereClause.isEmpty()) {
-            sql += " WHERE " + whereClause;
-        }
-
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            stmt.executeUpdate();
-        }
-    }
-
-    public void batchInsert(String table, List<Map<String, Object>> dataList) throws SQLException {
-        if (dataList.isEmpty())
-            return;
-
-        Map<String, Object> firstRow = dataList.get(0);
-        StringBuilder sql = new StringBuilder("INSERT INTO ").append(table).append(" (");
-        StringBuilder values = new StringBuilder("VALUES (");
-
-        firstRow.keySet().forEach(key -> {
-            sql.append(key).append(",");
-            values.append("?,");
-        });
-
-        sql.deleteCharAt(sql.length() - 1).append(") ");
-        values.deleteCharAt(values.length() - 1).append(")");
+        values.deleteCharAt(values.length() - 1);
         sql.append(values);
+        executeUpdate(sql.toString());
+    }
 
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql.toString())) {
-            for (Map<String, Object> data : dataList) {
-                int index = 1;
-                for (String key : firstRow.keySet()) {
-                    stmt.setObject(index++, data.get(key));
-                }
-                stmt.addBatch();
-            }
-            stmt.executeBatch();
+    private void doExecuteUpdate(Statement statement, String sql) throws SQLException {
+        try {
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            log.error("Execute update failed! {}", e.getMessage());
+            throw e;
         }
     }
 
-    public void executeUpdate(String sql, Object... params) throws SQLException {
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            stmt.executeUpdate();
+    public void executeUpdate(String sql) throws SQLException {
+        try (Statement statement = getConnection().createStatement()) {
+            doExecuteUpdate(statement, sql);
+        } catch (SQLException e) {
+            log.error("Execute update failed! {}", e.getMessage());
+            throw e;
         }
     }
 

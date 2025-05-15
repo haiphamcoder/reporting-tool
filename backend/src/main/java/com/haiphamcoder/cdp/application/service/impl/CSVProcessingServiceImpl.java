@@ -15,7 +15,6 @@ import com.haiphamcoder.cdp.application.service.CSVProcessingService;
 import com.haiphamcoder.cdp.application.service.HdfsFileService;
 import com.haiphamcoder.cdp.domain.entity.Source;
 import com.haiphamcoder.cdp.domain.model.PreviewData;
-import com.haiphamcoder.cdp.shared.HashingUtils;
 import com.haiphamcoder.cdp.shared.MapperUtils;
 import com.haiphamcoder.cdp.shared.processing.CSVFileUtils;
 import com.haiphamcoder.cdp.shared.processing.HeaderNormalizer;
@@ -107,12 +106,12 @@ public class CSVProcessingServiceImpl implements CSVProcessingService {
             String[] fieldNameArray = csvReader.readNext();
             List<String> fieldNames = new LinkedList<>();
             for (String fieldName : fieldNameArray) {
-                fieldNames.add(HeaderNormalizer.normalize(fieldName));
+                fieldNames.add(fieldName);
             }
 
             return fieldNames.stream().map(fieldName -> Mapping.builder()
                     .fieldName(fieldName)
-                    .fieldMapping(HashingUtils.hashingText(source.getTableName() + "_" + fieldName + "_" + System.currentTimeMillis()))
+                    .fieldMapping(HeaderNormalizer.normalize(fieldName))
                     .fieldType("text")
                     .build())
                     .collect(Collectors.toList());

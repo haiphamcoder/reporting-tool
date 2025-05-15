@@ -25,13 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 public class CSVProcessingThread extends AbstractProcessingThread {
     private final HdfsFileService hdfsFileService;
     private final ExecutorService executorService;
-    private final String fileUrl;
+    private final StorageService storageService;
+    private final SourceDto sourceDto;
 
     public CSVProcessingThread(SourceDto sourceDto, StorageService storageService,
             HdfsFileService hdfsFileService) {
-        super(storageService);
+        super("csv-processing-thread", false);
+        this.storageService = storageService;
         this.hdfsFileService = hdfsFileService;
-        this.fileUrl = sourceDto.getConfig().get("file_path").toString();
+        this.sourceDto = sourceDto;
 
         executorService = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
@@ -42,9 +44,8 @@ public class CSVProcessingThread extends AbstractProcessingThread {
                 .getExecutorService();
     }
 
-    @Override
     protected boolean process() {
-        try (InputStream inputStream = hdfsFileService.streamFile(fileUrl)) {
+        try (InputStream inputStream = hdfsFileService.streamFile(sourceDto.getConfig().get("file_path").toString())) {
             try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)) {
                 String[] firstLine = csvReader.readNext();
                 List<String> header = firstLine != null ? Arrays.asList(firstLine) : Collections.emptyList();
@@ -105,22 +106,22 @@ public class CSVProcessingThread extends AbstractProcessingThread {
             chunkData.add(recordJson);
         }
 
-        storageService.saveBatch(chunkData);
+        storageService.batchInsert(sourceDto, chunkData);
         log.info("Chunk of {} records processed", records.size());
     }
 
     @Override
-    public void run() {
+    public void execute() {
         try {
-            log.info("Start processing CSV of {}", fileUrl);
+            log.info("Start processing CSV for source {}", sourceDto.getId());
 
             if (process()) {
-                log.info("CSV of {} processed successfully", fileUrl);
+                log.info("CSV of {} processed successfully", sourceDto.getId());
             } else {
-                log.error("CSV of {} processed failed", fileUrl);
+                log.error("CSV of {} processed failed", sourceDto.getId());
             }
         } catch (Exception exception) {
-            log.error("CSV of {} process error!", fileUrl);
+            log.error("CSV of {} process error!", sourceDto.getId());
             log.error(exception.getMessage());
         }
     }

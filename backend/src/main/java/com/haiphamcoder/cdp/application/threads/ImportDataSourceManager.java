@@ -3,6 +3,7 @@ package com.haiphamcoder.cdp.application.threads;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Component;
 
@@ -23,11 +24,14 @@ public class ImportDataSourceManager {
     private final TaskManager taskManager;
     private final SourceRepository sourceRepository;
     private final StorageService storageService;
+    private final ImportDataThreadFactory importDataThreadFactory;
 
     public ImportDataSourceManager(SourceRepository sourceRepository,
-            StorageService storageService) {
+            StorageService storageService,
+            ImportDataThreadFactory importDataThreadFactory) {
         this.sourceRepository = sourceRepository;
         this.storageService = storageService;
+        this.importDataThreadFactory = importDataThreadFactory;
 
         ExecutorService executor = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
@@ -49,7 +53,7 @@ public class ImportDataSourceManager {
         return true;
     }
 
-    public void submit(Long sourceId, boolean isFirstTime) {
+    public boolean submit(Long sourceId, boolean isFirstTime) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
             SourceDto sourceDto = SourceMapper.toDto(source.get());
@@ -61,6 +65,18 @@ public class ImportDataSourceManager {
                 throw new RuntimeException("Schema is empty");
             }
 
+            AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(sourceDto);
+            if (taskManager.trySubmit(task) == null) {
+                log.info("Submit task failed! Max queue size");
+                try {
+                    task.shutdown(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    log.error("Shutdown task failed! {}", e.getMessage());
+                }
+                return false;
+            } else {
+                return true;
+            }
         } else {
             throw new RuntimeException("Source not found");
         }

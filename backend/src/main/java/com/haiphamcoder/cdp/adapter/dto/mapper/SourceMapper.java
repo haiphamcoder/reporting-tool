@@ -21,6 +21,7 @@ public class SourceMapper {
                     .name(source.getName() != null ? source.getName() : null)
                     .description(source.getDescription() != null ? source.getDescription() : null)
                     .connectorType(source.getConnectorType() != null ? source.getConnectorType() : null)
+                    .tableName(source.getTableName() != null ? source.getTableName() : null)
                     .config(source.getConfig() != null ? source.getConfig() : null)
                     .mapping(source.getMapping() != null ? MapperUtils.objectMapper
                             .readValue(source.getMapping().toString(), new TypeReference<List<Mapping>>() {
