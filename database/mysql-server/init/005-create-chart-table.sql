@@ -10,6 +10,7 @@ CREATE TABLE
         name VARCHAR(255) NOT NULL COMMENT 'Tên của chart',
         description VARCHAR(255) COMMENT 'Mô tả của chart',
         config TEXT NOT NULL COMMENT 'Cấu hình của chart',
+        query_option TEXT NOT NULL COMMENT 'Cấu hình của chart',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái xóa của chart',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',
