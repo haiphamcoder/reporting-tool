@@ -18,6 +18,18 @@ CREATE TABLE
         CONSTRAINT fk_chart_user FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
+CREATE TABLE
+    chart_permission (
+        chart_id BIGINT NOT NULL COMMENT 'ID của chart',
+        user_id BIGINT NOT NULL COMMENT 'ID của user',
+        permission VARCHAR(255) NOT NULL COMMENT 'Quyền của user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo source',
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+        CONSTRAINT fk_chart_permission_chart FOREIGN KEY (chart_id) REFERENCES chart (id),
+        CONSTRAINT fk_chart_permission_user FOREIGN KEY (user_id) REFERENCES users (id),
+        PRIMARY KEY (chart_id, user_id)
+    );
+
 CREATE INDEX idx_chart_name ON chart (name);
 
 CREATE INDEX idx_chart_description ON chart (description);

@@ -17,6 +17,29 @@ CREATE TABLE
         CONSTRAINT fk_report_user FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
+CREATE TABLE
+    report_permission (
+        report_id BIGINT NOT NULL COMMENT 'ID của report',
+        user_id BIGINT NOT NULL COMMENT 'ID của user',
+        permission VARCHAR(255) NOT NULL COMMENT 'Quyền của user',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo source',
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+        CONSTRAINT fk_report_permission_report FOREIGN KEY (report_id) REFERENCES report (id),
+        CONSTRAINT fk_report_permission_user FOREIGN KEY (user_id) REFERENCES users (id),
+        PRIMARY KEY (report_id, user_id)
+    );
+
+CREATE TABLE
+    chart_report (
+        chart_id BIGINT NOT NULL COMMENT 'ID của chart',
+        report_id BIGINT NOT NULL COMMENT 'ID của report',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo source',
+        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
+        CONSTRAINT fk_chart_report_chart FOREIGN KEY (chart_id) REFERENCES chart (id),
+        CONSTRAINT fk_chart_report_report FOREIGN KEY (report_id) REFERENCES report (id),
+        PRIMARY KEY (chart_id, report_id)
+    );
+
 CREATE INDEX idx_report_name ON report (name);
 
 CREATE INDEX idx_report_description ON report (description);

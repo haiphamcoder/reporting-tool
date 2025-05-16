@@ -1,5 +1,7 @@
 package com.haiphamcoder.reporting.domain.entity;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,6 +15,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -55,6 +59,16 @@ public class Report extends BaseEntity {
     @Column(name = "config", nullable = false)
     @Convert(converter = JsonNodeStringConverter.class)
     private JsonNode config;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "report_chart", joinColumns = @JoinColumn(name = "report_id"), inverseJoinColumns = @JoinColumn(name = "chart_id"))
+    @JsonProperty("charts")
+    private List<Chart> charts;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "report_permission", joinColumns = @JoinColumn(name = "report_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JsonProperty("shared_users")
+    private List<User> sharedUsers;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

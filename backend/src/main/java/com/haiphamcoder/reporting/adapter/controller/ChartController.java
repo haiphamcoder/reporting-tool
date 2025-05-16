@@ -28,7 +28,7 @@ public class ChartController {
     public ResponseEntity<Object> getAll(@CookieValue(name = "user-id") String userId) {
         try {
             List<ChartDto> charts = chartService.getAllChartsByUserId(Long.parseLong(userId));
-            return ResponseEntity.ok(charts);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(charts));
         } catch (BaseException e) {
             return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
         } catch (Exception e) {

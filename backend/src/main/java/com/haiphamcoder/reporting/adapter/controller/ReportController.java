@@ -28,7 +28,7 @@ public class ReportController {
     public ResponseEntity<Object> getAll(@CookieValue(name = "user-id") String userId) {
         try {
             List<ReportDto> reports = reportService.getAllReportsByUserId(Long.parseLong(userId));
-            return ResponseEntity.ok(reports);
+            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(reports));
         } catch (BaseException e) {
             return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
         } catch (Exception e) {
