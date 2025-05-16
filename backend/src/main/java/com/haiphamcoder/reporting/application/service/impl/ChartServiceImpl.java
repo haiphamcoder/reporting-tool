@@ -26,4 +26,10 @@ public class ChartServiceImpl implements ChartService {
         return charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList());
     }
 
+    @Override
+    public ChartDto getChartById(Long userId, Long chartId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getChartById'");
+    }
+
 }

@@ -8,4 +8,6 @@ public interface ChartService {
 
     List<ChartDto> getAllChartsByUserId(Long userId);
 
+    ChartDto getChartById(Long userId,Long chartId);
+
 }
