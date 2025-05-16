@@ -33,19 +33,6 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public void saveBatch(List<JSONObject> data) {
-        log.info("Saving batch of {} records", data.size());
-        // for (JSONObject record: data) {
-        // log.info("Saving record: {}", record);
-        // }
-    }
-
-    @Override
-    public void saveData(JSONObject record) {
-
-    }
-
-    @Override
     public List<Mapping> createStorageSource(SourceDto sourceDto) {
         String tableName = sourceDto.getTableName();
         Map<String, String> schemaMap = new LinkedHashMap<>();
