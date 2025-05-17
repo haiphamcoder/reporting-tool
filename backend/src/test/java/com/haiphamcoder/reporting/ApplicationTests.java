@@ -1,4 +1,4 @@
-package com.haiphamcoder.cdp;
+package com.haiphamcoder.reporting;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
