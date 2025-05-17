@@ -19,5 +19,5 @@ CREATE TABLE connector (
 
 INSERT INTO connector (id, name, description, type, category) VALUES
 (1, 'CSV', 'Connector for CSV files', 1, 'FILE'),
-(2, 'Excel', 'Connector for Excel files', 1, 'FILE');
+(2, 'Excel', 'Connector for Excel files', 2, 'FILE');
 
