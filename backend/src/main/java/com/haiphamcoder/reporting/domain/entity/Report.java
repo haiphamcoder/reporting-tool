@@ -1,13 +1,13 @@
 package com.haiphamcoder.reporting.domain.entity;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.reporting.shared.BaseEntity;
-import com.haiphamcoder.reporting.shared.converter.JsonNodeStringConverter;
+import com.haiphamcoder.reporting.shared.converter.MapStringConverter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -57,8 +57,8 @@ public class Report extends BaseEntity {
     private String description;
 
     @Column(name = "config", nullable = false)
-    @Convert(converter = JsonNodeStringConverter.class)
-    private JsonNode config;
+    @Convert(converter = MapStringConverter.class)
+    private Map<String, Object> config;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "report_chart", joinColumns = @JoinColumn(name = "report_id"), inverseJoinColumns = @JoinColumn(name = "chart_id"))
