@@ -26,4 +26,28 @@ public class ReportServiceImpl implements ReportService {
         return reports.stream().map(ReportMapper::toReportDto).collect(Collectors.toList());
     }
 
+    @Override
+    public ReportDto getReportById(Long userId, Long reportId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getReportById'");
+    }
+
+    @Override
+    public ReportDto updateReport(Long userId, Long reportId, ReportDto reportDto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateReport'");
+    }
+
+    @Override
+    public void deleteReport(Long userId, Long reportId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteReport'");
+    }
+
+    @Override
+    public ReportDto createReport(Long userId, ReportDto reportDto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createReport'");
+    }
+
 }

@@ -41,4 +41,16 @@ public class ChartPermission extends BaseEntity {
     @JsonProperty("permission")
     private String permission;
 
+    public boolean hasReadPermission() {
+        return permission.contains("r");
+    }
+
+    public boolean hasWritePermission() {
+        return permission.contains("w");
+    }
+
+    public boolean hasExecutePermission() {
+        return permission.contains("x");
+    }
+
 }

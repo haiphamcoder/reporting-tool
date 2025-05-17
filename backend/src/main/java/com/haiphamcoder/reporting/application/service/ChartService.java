@@ -10,4 +10,10 @@ public interface ChartService {
 
     ChartDto getChartById(Long userId,Long chartId);
 
+    ChartDto updateChart(Long userId, Long chartId, ChartDto chartDto);
+
+    void deleteChart(Long userId, Long chartId);
+
+    ChartDto createChart(Long userId, ChartDto chartDto);
+
 }

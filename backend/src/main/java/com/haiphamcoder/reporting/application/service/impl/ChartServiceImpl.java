@@ -32,4 +32,22 @@ public class ChartServiceImpl implements ChartService {
         throw new UnsupportedOperationException("Unimplemented method 'getChartById'");
     }
 
+    @Override
+    public ChartDto updateChart(Long userId, Long chartId, ChartDto chartDto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateChart'");
+    }
+
+    @Override
+    public void deleteChart(Long userId, Long chartId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'deleteChart'");
+    }
+
+    @Override
+    public ChartDto createChart(Long userId, ChartDto chartDto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createChart'");
+    }
+
 }
