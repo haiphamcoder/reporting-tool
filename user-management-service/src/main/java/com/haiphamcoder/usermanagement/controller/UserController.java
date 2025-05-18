@@ -1,8 +1,6 @@
 package com.haiphamcoder.usermanagement.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -14,8 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
-import com.haiphamcoder.usermanagement.domain.entity.User;
-import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.service.UserService;
 import com.haiphamcoder.usermanagement.shared.http.RestAPIResponse;
 
@@ -28,26 +24,23 @@ public class UserController {
 
     @GetMapping(path = "/get-all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<List<UserDto>>> getAll() {
-        List<User> users = userService.getAllUsers();
-        List<UserDto> userDtos = users.stream().map(UserMapper::toDto).collect(Collectors.toList());
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(userDtos));
+        List<UserDto> users = userService.getAllUsers();
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(users));
     }
 
     @GetMapping(path = "/get-all/provider/{provider}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<List<UserDto>>> getAllByProvider(@PathVariable String provider) {
-        List<User> users = userService.getAllUsersByProvider(provider);
-        List<UserDto> userDtos = users.stream().map(UserMapper::toDto).collect(Collectors.toList());
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(userDtos));
+        List<UserDto> users = userService.getAllUsersByProvider(provider);
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(users));
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RestAPIResponse<UserDto>> get(@CookieValue(name = "user-id") String userId) {
-        User user = userService.getUserById(Long.parseLong(userId));
+        UserDto user = userService.getUserById(Long.parseLong(userId));
         if (user == null) {
             return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createResponse("User not found"));
         }
-        UserDto userDto = UserMapper.toDto(user);
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(userDto));
+        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(user));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)

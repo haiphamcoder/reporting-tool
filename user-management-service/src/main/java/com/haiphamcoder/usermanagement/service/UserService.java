@@ -2,19 +2,19 @@ package com.haiphamcoder.usermanagement.service;
 
 import java.util.List;
 
-import com.haiphamcoder.usermanagement.domain.entity.User;
+import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 
 public interface UserService {
 
-    public List<User> getAllUsers();
+    public List<UserDto> getAllUsers();
 
-    public List<User> getAllUsersByProvider(String provider);
+    public List<UserDto> getAllUsersByProvider(String provider);
 
-    public User getUserByUsername(String username);
+    public UserDto getUserByUsername(String username);
 
-    public User getUserByEmail(String email);
+    public UserDto getUserByEmail(String email);
 
-    public User getUserById(Long id);
+    public UserDto getUserById(Long id);
 
-    public User saveUser(User user);
+    public UserDto saveUser(UserDto user);
 }
