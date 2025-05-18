@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.usermanagement.proto";
+
+package user;
+
+// User service definition
+service UserService {
+  // Get all users
+  rpc GetAllUsers(GetAllUsersRequest) returns (GetAllUsersResponse) {}
+  
+  // Get all users by provider
+  rpc GetAllUsersByProvider(GetAllUsersByProviderRequest) returns (GetAllUsersByProviderResponse) {}
+  
+  // Get user by username
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (GetUserByUsernameResponse) {}
+  
+  // Get user by email
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserByEmailResponse) {}
+  
+  // Get user by id
+  rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {}
+  
+  // Save user
+  rpc SaveUser(SaveUserRequest) returns (SaveUserResponse) {}
+}
+
+// Base entity fields
+message BaseEntity {
+  string created_at = 1;
+  string modified_at = 2;
+}
+
+// User message definition
+message User {
+  int64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string username = 4;
+  string password = 5;
+  string email = 6;
+  bool email_verified = 7;
+  string provider = 8;
+  string provider_id = 9;
+  string avatar_url = 10;
+  bool enabled = 11;
+  bool deleted = 12;
+  string role = 13;
+  BaseEntity base_entity = 14;
+}
+
+// Request/Response messages for GetAllUsers
+message GetAllUsersRequest {}
+
+message GetAllUsersResponse {
+  repeated User users = 1;
+}
+
+// Request/Response messages for GetAllUsersByProvider
+message GetAllUsersByProviderRequest {
+  string provider = 1;
+}
+
+message GetAllUsersByProviderResponse {
+  repeated User users = 1;
+}
+
+// Request/Response messages for GetUserByUsername
+message GetUserByUsernameRequest {
+  string username = 1;
+}
+
+message GetUserByUsernameResponse {
+  User user = 1;
+}
+
+// Request/Response messages for GetUserByEmail
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message GetUserByEmailResponse {
+  User user = 1;
+}
+
+// Request/Response messages for GetUserById
+message GetUserByIdRequest {
+  int64 id = 1;
+}
+
+message GetUserByIdResponse {
+  User user = 1;
+}
+
+// Request/Response messages for SaveUser
+message SaveUserRequest {
+  User user = 1;
+}
+
+message SaveUserResponse {
+  User user = 1;
+}
+
