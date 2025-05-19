@@ -11,6 +11,12 @@ services:
       MYSQL_DATABASE: sandbox
       MYSQL_ALLOW_EMPTY_PASSWORD: true
     command: mysqld --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "/usr/bin/mysql", "--user=root", "--password=root", "--execute", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./database/mysql-server/data:/var/lib/mysql
       - ./database/mysql-server/init:/docker-entrypoint-initdb.d
