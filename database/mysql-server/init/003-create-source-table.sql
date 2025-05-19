@@ -15,7 +15,6 @@ CREATE TABLE
         table_name VARCHAR(255) COMMENT 'Tên bảng của source',
         status INT NOT NULL COMMENT 'Trạng thái của source',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
-        folder_id BIGINT COMMENT 'ID của folder',
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái xóa của source',
         is_starred BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái yêu thích của source',
         last_sync_time TIMESTAMP NULL COMMENT 'Thời gian cuối cùng sync của source',
