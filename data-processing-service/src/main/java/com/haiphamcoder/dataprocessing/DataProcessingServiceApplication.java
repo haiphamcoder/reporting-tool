@@ -1,9 +1,11 @@
-package com.haiphamcoder.data_processing_service;
+package com.haiphamcoder.dataprocessing;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 public class DataProcessingServiceApplication {
 
 	public static void main(String[] args) {

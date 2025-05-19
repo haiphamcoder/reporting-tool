@@ -1,4 +1,4 @@
-package com.haiphamcoder.data_processing_service;
+package com.haiphamcoder.dataprocessing;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
