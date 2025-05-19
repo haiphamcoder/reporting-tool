@@ -15,9 +15,37 @@ clean:
 	@echo "Cleaning up..."
 	@sudo rm -rf database/hadoop/dfs
 	@sudo rm -rf database/mysql-server/data
-	@if docker image ls | grep -q reporting-tool-backend; then \
-		docker image rm reporting-tool-backend; \
-		echo "Removed reporting-tool-backend image"; \
+	@if docker image ls | grep -q reporting-tool-eureka-discovery-server; then \
+		docker image rm reporting-tool-eureka-discovery-server; \
+		echo "Removed reporting-tool-eureka-discovery-server image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-api-gateway; then \
+		docker image rm reporting-tool-api-gateway; \
+		echo "Removed reporting-tool-api-gateway image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-user-management-service; then \
+		docker image rm reporting-tool-user-management-service; \
+		echo "Removed reporting-tool-user-management-service image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-authentication-service; then \
+		docker image rm reporting-tool-authentication-service; \
+		echo "Removed reporting-tool-authentication-service image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-reporting-service; then \
+		docker image rm reporting-tool-reporting-service; \
+		echo "Removed reporting-tool-reporting-service image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-storage-service; then \
+		docker image rm reporting-tool-storage-service; \
+		echo "Removed reporting-tool-storage-service image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-data-processing-service; then \
+		docker image rm reporting-tool-data-processing-service; \
+		echo "Removed reporting-tool-data-processing-service image"; \
+	fi
+	@if docker image ls | grep -q reporting-tool-integrated-service; then \
+		docker image rm reporting-tool-integrated-service; \
+		echo "Removed reporting-tool-integrated-service image"; \
 	fi
 	@if docker image ls | grep -q reporting-tool-frontend; then \
 		docker image rm reporting-tool-frontend; \
