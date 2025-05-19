@@ -1,4 +1,4 @@
-package com.haiphamcoder.integrated_service;
+package com.haiphamcoder.integrated;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
