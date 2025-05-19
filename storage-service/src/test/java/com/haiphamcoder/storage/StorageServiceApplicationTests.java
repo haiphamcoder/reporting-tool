@@ -1,4 +1,4 @@
-package com.haiphamcoder.storage_service;
+package com.haiphamcoder.storage;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

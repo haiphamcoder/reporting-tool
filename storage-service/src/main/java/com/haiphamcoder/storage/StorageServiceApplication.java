@@ -1,4 +1,4 @@
-package com.haiphamcoder.storage_service;
+package com.haiphamcoder.storage;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
