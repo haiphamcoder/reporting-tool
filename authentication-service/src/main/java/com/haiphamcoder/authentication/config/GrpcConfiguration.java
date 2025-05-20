@@ -15,7 +15,7 @@ public class GrpcConfiguration {
     @Value("${grpc.user-management-service.port:9090}")
     private int userManagementServicePort;
 
-    @Bean("userManagementServiceChannel")
+    @Bean
     public ManagedChannel userManagementServiceChannel() {
         return ManagedChannelBuilder.forAddress(userManagementServiceHost, userManagementServicePort)
                 .usePlaintext()

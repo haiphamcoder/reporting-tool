@@ -32,6 +32,15 @@ public class UserDto {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("provider_id")
+    private String providerId;
+
+    @JsonProperty("email_verified")
+    private Boolean emailVerified;
+
+    @JsonProperty("provider")
+    private String provider;
+
     @JsonProperty("password")
     private String password;
 

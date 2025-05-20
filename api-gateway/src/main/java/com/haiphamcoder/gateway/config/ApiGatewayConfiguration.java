@@ -17,6 +17,9 @@ public class ApiGatewayConfiguration {
                 .route("user-management-service", r -> r.path("/user-management/**")
                         .filters(f -> f.stripPrefix(1))
                         .uri("lb://user-management-service"))
+                .route("authentication-service", r -> r.path("/authentication/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://authentication-service"))
                 .build();
     }
 

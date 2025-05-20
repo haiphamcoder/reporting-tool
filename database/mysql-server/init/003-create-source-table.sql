@@ -20,8 +20,7 @@ CREATE TABLE
         last_sync_time TIMESTAMP NULL COMMENT 'Thời gian cuối cùng sync của source',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',
         modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
-        CONSTRAINT fk_source_user FOREIGN KEY (user_id) REFERENCES users (id),
-        CONSTRAINT fk_source_folder FOREIGN KEY (folder_id) REFERENCES folder (id)
+        CONSTRAINT fk_source_user FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
 DROP TABLE IF EXISTS source_permission;
@@ -43,8 +42,6 @@ CREATE INDEX idx_source_name ON source (name);
 CREATE INDEX idx_source_description ON source (description);
 
 CREATE INDEX idx_source_user_id ON source (user_id);
-
-CREATE INDEX idx_source_folder_id ON source (folder_id);
 
 CREATE INDEX idx_source_type_connector ON source (connector_type);
 

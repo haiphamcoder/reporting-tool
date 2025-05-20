@@ -1,20 +1,28 @@
 package com.haiphamcoder.authentication.service.impl;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;
 import com.haiphamcoder.authentication.domain.entity.RefreshToken;
 import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
+import com.haiphamcoder.authentication.domain.model.CustomUserDetail;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
 import com.haiphamcoder.authentication.domain.model.TokenType;
 import com.haiphamcoder.authentication.security.JwtTokenProvider;
+import com.haiphamcoder.authentication.security.exception.UsernameOrPasswordIncorrectException;
 import com.haiphamcoder.authentication.service.AuthenticationService;
 import com.haiphamcoder.authentication.service.RefreshTokenService;
 import com.haiphamcoder.authentication.service.UserGrpcClient;
+import com.haiphamcoder.authentication.shared.CookieUtils;
+import com.haiphamcoder.authentication.shared.DateTimeUtils;
 import com.haiphamcoder.authentication.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.authentication.shared.StringUtils;
 import com.haiphamcoder.authentication.shared.http.RestAPIResponse;
+import com.haiphamcoder.usermanagement.proto.User;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
+
         private final UserGrpcClient userGrpcClient;
         private final RefreshTokenService refreshTokenService;
         private final JwtTokenProvider jwtTokenProvider;
@@ -36,25 +45,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         @Override
         public UserDto register(RegisterRequest request) {
-                UserDto user = UserDto.builder()
-                                .firstName(request.getFirstName())
-                                .lastName(request.getLastName())
-                                .username(request.getUsername())
-                                .password(request.getPassword())
-                                .email(request.getEmail())
-                                .role(request.getRole().getName())
+                User user = User.newBuilder()
+                                .setFirstName(request.getFirstName())
+                                .setLastName(request.getLastName())
+                                .setUsername(request.getUsername())
+                                .setPassword(request.getPassword())
+                                .setEmail(request.getEmail())
+                                .setRole(request.getRole().getName())
                                 .build();
                 return userGrpcClient.saveUser(user);
         }
 
         @Override
         public boolean checkUsernameExisted(String username) {
-                return userService.getUserByUsername(username) != null;
+                return userGrpcClient.getUserByUsername(username) != null;
         }
 
         @Override
         public boolean checkEmailExisted(String email) {
-                return userService.getUserByEmail(email) != null;
+                return userGrpcClient.getUserByEmail(email) != null;
         }
 
         @Override
@@ -64,11 +73,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         new UsernamePasswordAuthenticationToken(
                                                         request.getUsername(),
                                                         request.getPassword()));
-                        User authenticatedUser = (User) authentication.getPrincipal();
+                        CustomUserDetail authenticatedUser = (CustomUserDetail) authentication.getPrincipal();
                         String refreshToken = jwtTokenProvider.generateRefreshToken(authenticatedUser.getUsername());
                         RefreshToken refreshTokenEntity = RefreshToken.builder()
                                         .id(snowflakeIdGenerator.generateId())
-                                        .user(authenticatedUser)
+                                        .userId(authenticatedUser.getId())
                                         .tokenValue(refreshToken)
                                         .tokenType(TokenType.BEARER)
                                         .expiredAt(DateTimeUtils.convertToLocalDateTime(
@@ -98,7 +107,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         RefreshToken existedRefreshToken = refreshTokenService.getTokenByValue(refreshToken);
                         if (existedRefreshToken != null) {
                                 String accessToken = jwtTokenProvider
-                                                .generateAccessToken(existedRefreshToken.getUser());
+                                                .generateAccessToken(existedRefreshToken.getUserId().toString());
                                 if (!StringUtils.isNullOrEmpty(accessToken)) {
                                         return accessToken;
                                 }
@@ -107,28 +116,4 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 return null;
         }
 
-        @Override
-        public boolean createAdminUser() {
-                RegisterRequest request = RegisterRequest.builder()
-                                .firstName("Admin")
-                                .lastName("")
-                                .username("admin")
-                                .password("admin")
-                                .email("admin@example.com")
-                                .role(Role.ADMIN)
-                                .build();
-                return register(request) != null;
-        }
-
-        @Override
-        public UserDto register(RegisterRequest request) {
-                // TODO Auto-generated method stub
-                throw new UnsupportedOperationException("Unimplemented method 'register'");
-        }
-
-        @Override
-        public RestAPIResponse<String> authenticate(AuthenticationRequest request, HttpServletResponse response) {
-                // TODO Auto-generated method stub
-                throw new UnsupportedOperationException("Unimplemented method 'authenticate'");
-        }
 }

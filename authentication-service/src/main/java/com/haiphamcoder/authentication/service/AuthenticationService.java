@@ -19,6 +19,4 @@ public interface AuthenticationService {
 
         public String refreshToken(String authHeader);
 
-        public boolean createAdminUser();
-
 }

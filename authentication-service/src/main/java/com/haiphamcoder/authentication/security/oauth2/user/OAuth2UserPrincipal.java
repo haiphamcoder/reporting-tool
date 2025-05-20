@@ -1,4 +1,4 @@
-package com.haiphamcoder.reporting.infrastructure.security.oauth2.user;
+package com.haiphamcoder.authentication.security.oauth2.user;
 
 import java.util.Collection;
 import java.util.Map;
@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import com.haiphamcoder.reporting.domain.model.Role;
+import com.haiphamcoder.authentication.domain.model.Role;
 
 public class OAuth2UserPrincipal implements OAuth2User, UserDetails {
 

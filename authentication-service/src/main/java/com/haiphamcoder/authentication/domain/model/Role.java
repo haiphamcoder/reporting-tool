@@ -1,7 +1,12 @@
 package com.haiphamcoder.authentication.domain.model;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +38,15 @@ public enum Role {
 
         @Getter
         private final String name;
+
+        public List<SimpleGrantedAuthority> getAuthorities() {
+                List<SimpleGrantedAuthority> authorities = permissions
+                                .stream()
+                                .map(permission -> new SimpleGrantedAuthority(permission.getPermissionValue()))
+                                .collect(Collectors.toList());
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
+                return authorities;
+        }
 
         public static Role fromName(String name) {
                 return Arrays.stream(Role.values())

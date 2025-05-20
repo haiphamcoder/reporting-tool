@@ -38,10 +38,9 @@ public class SecurityConfiguration {
                         "/",
                         "/error/**",
                         "/favicon.ico",
-                        "/api/v1/auth/register",
-                        "/api/v1/auth/authenticate",
+                        "/register",
+                        "/authenticate",
                         "/oauth2/authorization/**",
-                        "/login/oauth2/code/**",
                         "/oauth2/callback/**",
         };
 
@@ -80,7 +79,7 @@ public class SecurityConfiguration {
                                 .addFilterBefore(jwtAuthenticationFilter,
                                                 UsernamePasswordBodyAuthenticationFilter.class)
                                 .logout(logout -> logout
-                                                .logoutUrl("/api/v1/auth/logout")
+                                                .logoutUrl("/logout")
                                                 .addLogoutHandler(logoutHandler));
                 return http.build();
         }

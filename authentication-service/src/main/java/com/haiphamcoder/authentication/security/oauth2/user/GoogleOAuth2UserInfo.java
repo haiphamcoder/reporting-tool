@@ -1,8 +1,8 @@
-package com.haiphamcoder.reporting.infrastructure.security.oauth2.user;
+package com.haiphamcoder.authentication.security.oauth2.user;
 
 import java.util.Map;
 
-import com.haiphamcoder.reporting.infrastructure.security.oauth2.OAuth2Provider;
+import com.haiphamcoder.authentication.security.oauth2.OAuth2Provider;
 
 public class GoogleOAuth2UserInfo implements OAuth2UserInfo {
 

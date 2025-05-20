@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;
+import com.haiphamcoder.authentication.mapper.UserMapper;
 import com.haiphamcoder.authentication.security.oauth2.exception.OAuth2AuthenticationProcessingException;
 import com.haiphamcoder.authentication.security.oauth2.user.OAuth2UserInfo;
 import com.haiphamcoder.authentication.security.oauth2.user.OAuth2UserInfoFactory;
@@ -71,12 +72,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserDto updateExistingUser(UserDto existingUser, OAuth2UserInfo oAuth2UserInfo) {
+        existingUser.setProvider(oAuth2UserInfo.getProvider().getRegistrationId());
         existingUser.setProviderId(oAuth2UserInfo.getId());
         existingUser.setFirstName(oAuth2UserInfo.getFirstName());
         existingUser.setLastName(oAuth2UserInfo.getLastName());
         existingUser.setAvatarUrl(oAuth2UserInfo.getProfileImageUrl());
         existingUser.setEmailVerified(true);
-        return userRepository.saveUser(existingUser);
+
+        return userGrpcClient.saveUser(UserMapper.toUser(existingUser));
     }
 
     private UserDto registerNewUser(OAuth2UserRequest userRequest, OAuth2UserInfo oAuth2UserInfo) {
@@ -91,7 +94,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .emailVerified(true)
                 .password(UUID.randomUUID().toString())
                 .build();
-        return userRepository.saveUser(user);
+        return userGrpcClient.saveUser(UserMapper.toUser(user));
     }
 
 }
