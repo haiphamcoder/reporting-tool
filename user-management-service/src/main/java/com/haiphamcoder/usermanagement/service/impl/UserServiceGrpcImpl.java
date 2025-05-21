@@ -87,6 +87,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .password(user.getPassword())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
