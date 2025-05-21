@@ -8,7 +8,9 @@ import com.haiphamcoder.usermanagement.proto.*;
 import com.haiphamcoder.usermanagement.service.UserService;
 
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     private final UserService userService;
 
@@ -74,8 +76,11 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void saveUser(SaveUserRequest request, StreamObserver<SaveUserResponse> responseObserver) {
+        log.info("Save user request: {}", request);
         UserDto userDto = this.convertToUserDto(request.getUser());
+        log.info("UserDto: {}", userDto);
         UserDto savedUser = userService.saveUser(userDto);
+        log.info("Saved user: {}", savedUser);
         SaveUserResponse response = SaveUserResponse.newBuilder()
                 .setUser(this.convertToUser(savedUser))
                 .build();
@@ -84,26 +89,30 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     }
 
     private UserDto convertToUserDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .avatarUrl(user.getAvatarUrl())
-                .build();
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setUsername(user.getUsername());
+        userDto.setPassword(user.getPassword());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
+        userDto.setEmail(user.getEmail());
+        userDto.setAvatarUrl(user.getAvatarUrl());
+        userDto.setRole(user.getRole());
+        return userDto;
     }
 
     private User convertToUser(UserDto userDto) {
-        return User.newBuilder()
+        User user = User.newBuilder()
                 .setId(userDto.getId())
                 .setUsername(userDto.getUsername())
+                // .setPassword(userDto.getPassword())
                 .setFirstName(userDto.getFirstName())
                 .setLastName(userDto.getLastName())
                 .setEmail(userDto.getEmail())
                 .setAvatarUrl(userDto.getAvatarUrl())
+                // .setRole(userDto.getRole())
                 .build();
+        return user;
     }
 
 }

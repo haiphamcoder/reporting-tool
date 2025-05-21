@@ -1,5 +1,6 @@
 package com.haiphamcoder.usermanagement.repository.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,6 +62,8 @@ public class UserRepositoryImpl implements UserRepository {
         if (existingUser.isPresent()) {
             return userJpaRepository.save(existingUser.get());
         }
+        user.setCreatedAt(LocalDateTime.now());
+        user.setModifiedAt(LocalDateTime.now());
         return userJpaRepository.save(user);
     }
 }

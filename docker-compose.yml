@@ -25,49 +25,49 @@ services:
     networks:
       - reporting-tool-network
 
-  hdfs-standalone:
-    image: apache/hadoop:${HADOOP_VERSION}
-    container_name: hdfs-standalone
-    hostname: hdfs-standalone
-    ports:
-      - "9870:9870"
-      - "9000:9000"
-      - "9864:9864"
-    env_file:
-      - .env
-    environment:
-      - HADOOP_HOME=/opt/hadoop
-      - HADOOP_HEAPSIZE=2048
-    volumes:
-      - ./database/hadoop/dfs/namenode:/hadoop/dfs/namenode
-      - ./database/hadoop/dfs/datanode:/hadoop/dfs/datanode
-      - ./database/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ./database/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
-      - ./database/hadoop/script/start-standalone.sh:/start-standalone.sh
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://hdfs-standalone:9870/" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    command: [ "/bin/bash", "-c", "/start-standalone.sh" ]
-    restart: always
-    networks:
-      - reporting-tool-network
+  # hdfs-standalone:
+  #   image: apache/hadoop:${HADOOP_VERSION}
+  #   container_name: hdfs-standalone
+  #   hostname: hdfs-standalone
+  #   ports:
+  #     - "9870:9870"
+  #     - "9000:9000"
+  #     - "9864:9864"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - HADOOP_HOME=/opt/hadoop
+  #     - HADOOP_HEAPSIZE=2048
+  #   volumes:
+  #     - ./database/hadoop/dfs/namenode:/hadoop/dfs/namenode
+  #     - ./database/hadoop/dfs/datanode:/hadoop/dfs/datanode
+  #     - ./database/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+  #     - ./database/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+  #     - ./database/hadoop/script/start-standalone.sh:/start-standalone.sh
+  #   healthcheck:
+  #     test: [ "CMD", "curl", "-f", "http://hdfs-standalone:9870/" ]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #   command: [ "/bin/bash", "-c", "/start-standalone.sh" ]
+  #   restart: always
+  #   networks:
+  #     - reporting-tool-network
 
-  tidb-server:
-    image: pingcap/tidb:${TIDB_VERSION}
-    container_name: tidb-server
-    ports:
-      - "4000:4000"
-    env_file:
-      - .env
-    command:
-      - --config=/tidb.toml
-    volumes:
-      - ./database/tidb/tidb.toml:/tidb.toml:ro
-    restart: always
-    networks:
-      - reporting-tool-network
+  # tidb-server:
+  #   image: pingcap/tidb:${TIDB_VERSION}
+  #   container_name: tidb-server
+  #   ports:
+  #     - "4000:4000"
+  #   env_file:
+  #     - .env
+  #   command:
+  #     - --config=/tidb.toml
+  #   volumes:
+  #     - ./database/tidb/tidb.toml:/tidb.toml:ro
+  #   restart: always
+  #   networks:
+  #     - reporting-tool-network
 
   eureka-discovery-server:
     build:
@@ -106,6 +106,7 @@ services:
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
+    restart: always
 
   authentication-service:
     build:
@@ -137,9 +138,7 @@ services:
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
-      mysql-server:
-        condition: service_healthy
-
+    restart: always
   user-management-service:
     build:
       context: ./user-management-service
@@ -167,8 +166,6 @@ services:
       - reporting-tool-network
     depends_on:
       eureka-discovery-server:
-        condition: service_healthy
-      mysql-server:
         condition: service_healthy
     restart: always
 
