@@ -172,88 +172,88 @@ services:
         condition: service_healthy
     restart: always
 
-  reporting-service:
-    build:
-      context: ./reporting-service
-      dockerfile: Dockerfile
-    container_name: reporting-service
-    hostname: reporting-service
-    ports:
-      - 8083:8080
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8765
-    networks:
-      - reporting-tool-network
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
+  # reporting-service:
+  #   build:
+  #     context: ./reporting-service
+  #     dockerfile: Dockerfile
+  #   container_name: reporting-service
+  #   hostname: reporting-service
+  #   ports:
+  #     - 8083:8080
+  #   environment:
+  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+  #     - PORT=8765
+  #   networks:
+  #     - reporting-tool-network
+  #   depends_on:
+  #     eureka-discovery-server:
+  #       condition: service_healthy
 
-  data-processing-service:
-    build:
-      context: ./data-processing-service
-      dockerfile: Dockerfile
-    container_name: data-processing-service
-    hostname: data-processing-service
-    ports:
-      - 8084:8080
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8765
-    networks:
-      - reporting-tool-network
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
-      user-management-service:
-        condition: service_healthy
+  # data-processing-service:
+  #   build:
+  #     context: ./data-processing-service
+  #     dockerfile: Dockerfile
+  #   container_name: data-processing-service
+  #   hostname: data-processing-service
+  #   ports:
+  #     - 8084:8080
+  #   environment:
+  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+  #     - PORT=8765
+  #   networks:
+  #     - reporting-tool-network
+  #   depends_on:
+  #     eureka-discovery-server:
+  #       condition: service_healthy
+  #     user-management-service:
+  #       condition: service_healthy
 
-  integrated-service:
-    build:
-      context: ./integrated-service
-      dockerfile: Dockerfile
-    container_name: integrated-service
-    hostname: integrated-service
-    ports:
-      - 8085:8080
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8765
-    networks:
-      - reporting-tool-network
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
+  # integrated-service:
+  #   build:
+  #     context: ./integrated-service
+  #     dockerfile: Dockerfile
+  #   container_name: integrated-service
+  #   hostname: integrated-service
+  #   ports:
+  #     - 8085:8080
+  #   environment:
+  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+  #     - PORT=8765
+  #   networks:
+  #     - reporting-tool-network
+  #   depends_on:
+  #     eureka-discovery-server:
+  #       condition: service_healthy
 
-  storage-service:
-    build:
-      context: ./storage-service
-      dockerfile: Dockerfile
-    container_name: storage-service
-    hostname: storage-service
-    ports:
-      - 8086:8080
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8765
-    networks:
-      - reporting-tool-network
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
+  # storage-service:
+  #   build:
+  #     context: ./storage-service
+  #     dockerfile: Dockerfile
+  #   container_name: storage-service
+  #   hostname: storage-service
+  #   ports:
+  #     - 8086:8080
+  #   environment:
+  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+  #     - PORT=8765
+  #   networks:
+  #     - reporting-tool-network
+  #   depends_on:
+  #     eureka-discovery-server:
+  #       condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: reporting-tool-frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks:
-      - reporting-tool-network
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: reporting-tool-frontend
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - reporting-tool-network
 
 networks:
   reporting-tool-network:
