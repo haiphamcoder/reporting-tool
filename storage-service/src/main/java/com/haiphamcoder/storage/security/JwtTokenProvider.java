@@ -1,16 +1,11 @@
 package com.haiphamcoder.storage.security;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -26,16 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtTokenProvider {
 
     private final String jwtSecret;
-    private final long jwtExpiration;
-    private final long jwtRefreshExpiration;
 
-    public JwtTokenProvider(@Value("${security.jwt.secret-key}") String jwtSecret,
-            @Value("${security.jwt.expiration}") long jwtExpiration,
-            @Value("${security.jwt.refresh-token.expiration}") long jwtRefreshExpiration) {
+    public JwtTokenProvider(@Value("${security.jwt.secret-key}") String jwtSecret) {
         this.jwtSecret = jwtSecret;
-        this.jwtExpiration = jwtExpiration;
-        this.jwtRefreshExpiration = jwtRefreshExpiration;
     }
+
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -64,62 +54,12 @@ public class JwtTokenProvider {
         }
     }
 
-    public String generateAccessToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, jwtExpiration);
-    }
-
-    public String generateAccessToken(String username) {
-        return buildToken(new HashMap<>(), username, jwtExpiration);
-    }
-
-    public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, jwtRefreshExpiration);
-    }
-
-    public String generateRefreshToken(String username) {
-        return buildToken(new HashMap<>(), username, jwtRefreshExpiration);
-    }
-
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
-    }
-
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
-    }
-
-    public Map<String, String> generateTokens(Authentication authentication) {
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        String email = oAuth2User.getAttributes().get("email").toString();
-        String accessToken = buildToken(new HashMap<>(), email, jwtExpiration);
-        String refreshToken = buildToken(new HashMap<>(), email, jwtRefreshExpiration);
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("access-token", accessToken);
-        tokens.put("refresh-token", refreshToken);
-        return tokens;
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, String username, long expiration) {
-        return Jwts.builder()
-                .claims(extraClaims)
-                .subject(username)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInKey())
-                .compact();
-    }
-
-    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
-        return buildToken(extraClaims, userDetails.getUsername(), expiration);
-    }
-
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    public boolean isTokenValid(String token) {
+        return !isTokenExpired(token);
     }
 
     private SecretKey getSignInKey() {

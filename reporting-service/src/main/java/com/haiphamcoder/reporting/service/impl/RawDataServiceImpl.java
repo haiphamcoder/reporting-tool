@@ -1,10 +1,10 @@
-package com.haiphamcoder.reporting.application.service.impl;
+package com.haiphamcoder.reporting.service.impl;
 
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.reporting.application.threads.ImportDataSourceManager;
+import com.haiphamcoder.reporting.service.ImportDataSourceService;
 import com.haiphamcoder.reporting.service.RawDataService;
 
 import lombok.RequiredArgsConstructor;

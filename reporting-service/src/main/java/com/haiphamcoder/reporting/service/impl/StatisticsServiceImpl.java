@@ -1,4 +1,4 @@
-package com.haiphamcoder.reporting.application.service.impl;
+package com.haiphamcoder.reporting.service.impl;
 
 import java.util.List;
 import java.util.Optional;

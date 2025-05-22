@@ -8,15 +8,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.haiphamcoder.storage.application.threads.ImportDataSourceManager;
+import com.haiphamcoder.storage.service.ImportDataSourceService;
 import com.haiphamcoder.storage.shared.http.RestAPIResponse;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/thread/import-data")
-@Tag(name = "thread-import-data", description = "Thread import data controller")
 @RequiredArgsConstructor
 public class ThreadImportDataSourceController {
 

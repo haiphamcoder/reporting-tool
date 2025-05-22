@@ -6,13 +6,11 @@ import java.util.Optional;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.haiphamcoder.reporting.config.CommonConstants;
-import com.haiphamcoder.reporting.config.SecurityConfiguration;
 import com.haiphamcoder.reporting.shared.CookieUtils;
 
 import io.jsonwebtoken.security.SignatureException;
@@ -38,55 +36,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String requestURI = request.getRequestURI();
-        log.info("Request URI: {}", requestURI);
-        for (String uri : SecurityConfiguration.AUTH_WHITELIST) {
-            if (requestURI.equals("/") || (!uri.equals("/") && requestURI.startsWith(uri.replace("*", "")))) {
-                log.info("Request URI in whitelist: {}", uri);
-                filterChain.doFilter(request, response);
-                return;
-            }
-        }
-
-        log.info("Request URI: {}", requestURI);
-
-        final Optional<String> userIdInCookie = CookieUtils
-                .getCookie(request, CommonConstants.USER_ID_COOKIE_NAME).map(Cookie::getValue);
         final Optional<String> accessTokenInCookie = CookieUtils
                 .getCookie(request, CommonConstants.ACCESS_TOKEN_COOKIE_NAME).map(Cookie::getValue);
-        final Optional<String> refreshTokenInCookie = CookieUtils
-                .getCookie(request, CommonConstants.REFRESH_TOKEN_COOKIE_NAME).map(Cookie::getValue);
 
-        if (!userIdInCookie.isPresent() || !accessTokenInCookie.isPresent() || !refreshTokenInCookie.isPresent()) {
+        if (!accessTokenInCookie.isPresent()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String userId = userIdInCookie.get();
         final String accessToken = accessTokenInCookie.get();
-        final String refreshToken = refreshTokenInCookie.get();
-
         try {
             final String username = jwtTokenProvider.extractUsername(accessToken);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                log.info("User Details: {}", userDetails);
-                if (((User) userDetails).getId() == Long.parseLong(userId)) {
-                    if (!jwtTokenProvider.isTokenValid(accessToken, userDetails)) {
-                        if (!jwtTokenProvider.isTokenValid(refreshToken, userDetails)) {
-                            filterChain.doFilter(request, response);
-                            return;
-                        } else {
-                            String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
-                            CookieUtils.addCookie(response, OAuth2AuthorizationRequestParams.ACCESS_TOKEN.getValue(),
-                                    newAccessToken);
-                        }
-                    }
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                
+                log.info("Start validating token");
+                if (!jwtTokenProvider.isTokenValid(accessToken)) {
+                    filterChain.doFilter(request, response);
+                    return;
                 }
+                log.info("Username: {}", username);
+                log.info("Token: {}", accessToken);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, null);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (SignatureException e) {
             log.error("Invalid JWT signature: {}", e.getMessage());

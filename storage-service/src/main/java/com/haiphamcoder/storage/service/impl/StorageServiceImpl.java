@@ -9,9 +9,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.storage.adapter.dto.SourceDto;
-import com.haiphamcoder.storage.adapter.dto.SourceDto.Mapping;
-import com.haiphamcoder.storage.application.service.StorageService;
+import com.haiphamcoder.storage.domain.dto.SourceDto;
+import com.haiphamcoder.storage.domain.dto.SourceDto.Mapping;
+import com.haiphamcoder.storage.service.StorageService;
 import com.haiphamcoder.storage.infrastructure.tidb.impl.write.TidbWriter;
 
 import lombok.extern.slf4j.Slf4j;
