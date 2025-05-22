@@ -23,7 +23,7 @@ interface ReportJpaRepository extends JpaRepository<Report, Long> {
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    @Query("SELECT COUNT(r) FROM Report r WHERE r.user.id = :userId AND DATE(r.createdAt) = DATE(:date)")
+    @Query("SELECT COUNT(r) FROM Report r WHERE r.userId = :userId AND DATE(r.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }
 

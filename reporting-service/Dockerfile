@@ -14,6 +14,8 @@ COPY src/ ./src
 
 COPY bin/ ./bin
 
+COPY config/ ./config
+
 RUN mvn clean install -DskipTests && chmod +x bin/run.sh
 
 ENTRYPOINT ["sh", "bin/run.sh"]

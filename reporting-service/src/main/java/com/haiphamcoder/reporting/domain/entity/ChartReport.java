@@ -1,24 +1,27 @@
 package com.haiphamcoder.reporting.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.haiphamcoder.reporting.domain.model.ChartReportComposeKey;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,7 +30,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "chart_report")
 @IdClass(ChartReportComposeKey.class)
-public class ChartReport extends BaseEntity {
+public class ChartReport {
 
     @Id
     @JsonProperty("chart_id")
@@ -36,5 +39,24 @@ public class ChartReport extends BaseEntity {
     @Id
     @JsonProperty("report_id")
     private Long reportId;
+
+    @Column(name = "created_at", nullable = false)
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "modified_at", nullable = false)
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.modifiedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.modifiedAt = LocalDateTime.now();
+    }
 
 }

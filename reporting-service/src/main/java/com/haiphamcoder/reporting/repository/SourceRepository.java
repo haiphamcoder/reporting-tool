@@ -9,7 +9,7 @@ public interface SourceRepository {
 
     Optional<Source> getSourceById(Long id);
 
-    Boolean checkSourceName(String userId, String sourceName);
+    Boolean checkSourceName(Long userId, String sourceName);
 
     List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 

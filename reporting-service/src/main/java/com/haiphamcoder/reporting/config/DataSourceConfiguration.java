@@ -25,7 +25,7 @@ import com.zaxxer.hikari.HikariDataSource;
 public class DataSourceConfiguration {
 
     @Bean(name = "mainDataSourceProperties")
-    @ConfigurationProperties(prefix = "datasource.primary")
+    @ConfigurationProperties(prefix = "datasource")
     @Primary
     DataSourceProperties mainDataSourceProperties() {
         return new DataSourceProperties();

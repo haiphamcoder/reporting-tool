@@ -10,25 +10,19 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
-import com.haiphamcoder.reporting.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
 import com.haiphamcoder.reporting.domain.exception.DuplicateSourceNameException;
 import com.haiphamcoder.reporting.domain.exception.MissingRequiredFieldException;
 import com.haiphamcoder.reporting.domain.exception.PermissionDeniedException;
 import com.haiphamcoder.reporting.domain.exception.SourceNotFoundException;
-import com.haiphamcoder.reporting.domain.exception.UserNotFoundException;
-import com.haiphamcoder.reporting.domain.model.PreviewData;
-import com.haiphamcoder.reporting.domain.model.PreviewDataRequest;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
-import com.haiphamcoder.reporting.service.RawDataService;
 import com.haiphamcoder.reporting.service.SourceService;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
@@ -44,12 +38,9 @@ public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
     private final SourcePermissionRepository sourcePermissionRepository;
     private final HdfsFileService hdfsFileService;
-    private final CSVProcessingService csvProcessingService;
-    private final UserService userService;
-    private final RawDataService rawDataService;
 
     @Override
-    public SourceDto initSource(String userId, SourceDto sourceDto) {
+    public SourceDto initSource(Long userId, SourceDto sourceDto) {
         if (sourceDto.getName() == null) {
             throw new MissingRequiredFieldException("name");
         }
@@ -61,26 +52,20 @@ public class SourceServiceImpl implements SourceService {
             throw new MissingRequiredFieldException("connector_type");
         }
 
-        User user = userService.getUserById(Long.parseLong(userId));
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
-        }
-
         Source source = Source.builder()
                 .id(SnowflakeIdGenerator.getInstance().generateId())
                 .name(sourceDto.getName())
                 .connectorType(sourceDto.getConnectorType())
                 .tableName("data_" + userId + "_" + System.currentTimeMillis())
-                .user(user)
+                .userId(userId)
                 .status(CommonConstants.SOURCE_STATUS_INIT)
                 .build();
 
         Optional<Source> createdSource = sourceRepository.createSource(source);
         if (createdSource.isPresent()) {
-
             SourcePermission sourcePermission = SourcePermission.builder()
-                    .source(createdSource.get())
-                    .user(user)
+                    .sourceId(createdSource.get().getId())
+                    .userId(userId)
                     .permission(CommonConstants.SOURCE_PERMISSION_ALL)
                     .build();
             sourcePermissionRepository.createSourcePermission(sourcePermission);
@@ -91,7 +76,7 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public Boolean checkSourceName(String userId, String sourceName) {
+    public Boolean checkSourceName(Long userId, String sourceName) {
         return sourceRepository.checkSourceName(userId, sourceName);
     }
 
@@ -121,13 +106,13 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public String uploadFile(String userId, Long sourceId, MultipartFile file) {
+    public String uploadFile(Long userId, Long sourceId, MultipartFile file) {
         String fileName = file.getOriginalFilename();
         if (StringUtils.isNullOrEmpty(fileName)) {
             throw new RuntimeException("File name is required");
         }
 
-        if (hasWritePermission(Long.valueOf(userId), sourceId)) {
+        if (hasWritePermission(userId, sourceId)) {
             Optional<Source> source = sourceRepository.getSourceById(sourceId);
             if (source.isPresent()) {
                 Map<String, Object> config = source.get().getConfig();
@@ -142,10 +127,6 @@ public class SourceServiceImpl implements SourceService {
                                 connectorType + "/" + fileName.trim().replaceAll("\\s+", "_"));
                         config.put("file_path", filePath);
                         source.get().setConfig(config);
-
-                        List<Mapping> schema = csvProcessingService.getSchema(source.get());
-                        source.get().setMapping(MapperUtils.objectMapper.convertValue(schema, JsonNode.class));
-                        sourceRepository.updateSource(source.get());
 
                         return filePath;
                     } catch (IOException e) {
@@ -163,27 +144,12 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType) {
+    public Map<String, String> getHistoryUploadFile(Long userId, Integer connectorType) {
         return hdfsFileService.getHistoryUploadFile(userId, connectorType);
     }
 
     @Override
-    public PreviewData getPreviewData(String userId, PreviewDataRequest previewDataRequest) {
-        if (!previewDataRequest.getPath().contains(userId + "/" + previewDataRequest.getConnectorType())) {
-            throw new PermissionDeniedException("You are not allowed to access this file");
-        }
-
-        switch (previewDataRequest.getConnectorType()) {
-            case CommonConstants.CONNECTOR_TYPE_CSV:
-                return csvProcessingService.getPreviewData(userId, previewDataRequest.getPath(),
-                        previewDataRequest.getLimit());
-            default:
-                throw new RuntimeException("Unsupported connector type");
-        }
-    }
-
-    @Override
-    public SourceDto confirmSchema(String userId, SourceDto sourceDto) {
+    public SourceDto confirmSchema(Long userId, SourceDto sourceDto) {
 
         if (sourceDto.getId() == null) {
             throw new MissingRequiredFieldException("source_id");
@@ -200,10 +166,7 @@ public class SourceServiceImpl implements SourceService {
                         .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
                 Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
                 if (updatedSource.isPresent()) {
-                    if (rawDataService.submit(updatedSource.get().getId(), true)) {
-                        return SourceMapper.toDto(updatedSource.get());
-                    }
-                    throw new RuntimeException("Update source failed");
+                    // TODO: Submit source to raw data service
                 }
                 throw new RuntimeException("Update source failed");
             } else {
@@ -212,47 +175,6 @@ public class SourceServiceImpl implements SourceService {
         } else {
             throw new PermissionDeniedException("You are not allowed to update this source");
         }
-    }
-
-    @Override
-    public List<Mapping> getSchema(String userId, SourceDto sourceDto) {
-        if (sourceDto.getId() == null) {
-            throw new MissingRequiredFieldException("source_id");
-        }
-
-        if (hasReadPermission(Long.valueOf(userId), sourceDto.getId())) {
-            Optional<Source> source = sourceRepository.getSourceById(sourceDto.getId());
-            if (source.isPresent()) {
-                if (source.get().getMapping() != null) {
-                    try {
-                        return MapperUtils.objectMapper.readValue(source.get().getMapping().toString(),
-                                new TypeReference<List<Mapping>>() {
-                                });
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException("Get schema failed");
-                    }
-                } else {
-                    if (source.get().getConnectorType() == CommonConstants.CONNECTOR_TYPE_CSV) {
-                        return csvProcessingService.getSchema(source.get());
-                    } else {
-                        throw new RuntimeException("Unsupported connector type");
-                    }
-                }
-            }
-            throw new SourceNotFoundException("Source not found");
-        } else {
-            throw new PermissionDeniedException("You are not allowed to get schema of this source");
-        }
-    }
-
-    private Boolean hasReadPermission(Long userId, Long sourceId) {
-        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
-                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
-        if (sourcePermission.isPresent()) {
-            return sourcePermission.get().getPermission().charAt(0) == 'r';
-        }
-        return false;
     }
 
     private Boolean hasWritePermission(Long userId, Long sourceId) {

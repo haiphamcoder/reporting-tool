@@ -1,11 +1,9 @@
 package com.haiphamcoder.reporting.service.impl;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.reporting.domain.exception.UserNotFoundException;
 import com.haiphamcoder.reporting.domain.model.StatisticData;
 import com.haiphamcoder.reporting.domain.model.StatisticData.StatisticItem;
 import com.haiphamcoder.reporting.repository.ChartRepository;
@@ -27,10 +25,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public StatisticData getStatistics(Long userId) {
-        Optional<User> user = userRepository.getUserById(userId);
-        if (user.isEmpty()) {
-            throw new UserNotFoundException();
-        }
 
         Long totalSource = sourceRepository.getTotalSourceByUserIdAndIsDeleted(userId, false);
         List<Long> sourceCountByLast30Days = sourceRepository.getSourceCountByLast30Days(userId);

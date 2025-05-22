@@ -23,7 +23,7 @@ interface ChartJpaRepository extends JpaRepository<Chart, Long> {
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    @Query("SELECT COUNT(c) FROM Chart c WHERE c.user.id = :userId AND DATE(c.createdAt) = DATE(:date)")
+    @Query("SELECT COUNT(c) FROM Chart c WHERE c.userId = :userId AND DATE(c.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }
 

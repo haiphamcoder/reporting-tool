@@ -22,18 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 interface SourceJpaRepository extends JpaRepository<Source, Long> {
     List<Source> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    Optional<Source> findByIdAndUserIdAndFolderId(Long id, Long userId, Long folderId);
-
-    List<Source> findAllByUserIdAndFolderId(Long userId, Long folderId);
-
-    List<Source> findAllByUserIdAndFolderIdAndConnectorType(Long userId, Long folderId, Integer connectorType);
+    Optional<Source> findByIdAndUserId(Long id, Long userId);
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    @Query("SELECT COUNT(s) FROM Source s WHERE s.user.id = :userId AND DATE(s.createdAt) = DATE(:date)")
+    @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND DATE(s.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
-    @Query("SELECT COUNT(s) FROM Source s WHERE s.user.id = :userId AND s.name = :sourceName")
+    @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND s.name = :sourceName")
     Long countByUserIdAndName(@Param("userId") Long userId, @Param("sourceName") String sourceName);
 }
 
@@ -45,8 +41,8 @@ public class SourceRepositoryImpl implements SourceRepository {
     private final SourceJpaRepository sourceJpaRepository;
 
     @Override
-    public Boolean checkSourceName(String userId, String sourceName) {
-        return sourceJpaRepository.countByUserIdAndName(Long.parseLong(userId), sourceName) > 0;
+    public Boolean checkSourceName(Long userId, String sourceName) {
+        return sourceJpaRepository.countByUserIdAndName(userId, sourceName) > 0;
     }
 
     @Override
