@@ -20,6 +20,9 @@ public class ApiGatewayConfiguration {
                 .route("authentication-service", r -> r.path("/authentication/**")
                         .filters(f -> f.stripPrefix(1))
                         .uri("lb://authentication-service"))
+                .route("reporting-service", r -> r.path("/reporting/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://reporting-service"))
                 .build();
     }
 
