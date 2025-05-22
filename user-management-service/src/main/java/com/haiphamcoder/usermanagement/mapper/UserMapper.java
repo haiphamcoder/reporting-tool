@@ -15,9 +15,15 @@ public class UserMapper {
                 .firstName(userDto.getFirstName())
                 .lastName(userDto.getLastName())
                 .email(userDto.getEmail())
+                .emailVerified(userDto.isEmailVerified())
+                .provider(userDto.getProvider())
+                .providerId(userDto.getProviderId())
                 .password(userDto.getPassword())
                 .avatarUrl(userDto.getAvatarUrl())
                 .role(userDto.getRole())
+                .enabled(userDto.isEnabled())
+                .createdAt(userDto.getCreatedAt())
+                .modifiedAt(userDto.getModifiedAt())
                 .build();
     }
 
@@ -28,7 +34,15 @@ public class UserMapper {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .email(user.getEmail())
+                .emailVerified(user.isEmailVerified())
+                .provider(user.getProvider())
+                .providerId(user.getProviderId())
+                .password(user.getPassword())
                 .avatarUrl(user.getAvatarUrl())
+                .role(user.getRole())
+                .enabled(user.isEnabled())
+                .createdAt(user.getCreatedAt())
+                .modifiedAt(user.getModifiedAt())
                 .build();
     }
 

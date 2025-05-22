@@ -1,5 +1,7 @@
 package com.haiphamcoder.authentication.domain.dto;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,6 +49,16 @@ public class UserDto {
     @JsonProperty("avatar_url")
     private String avatarUrl;
 
+    @JsonProperty("enabled")
+    private Boolean enabled;
+
     @JsonProperty("role")
     private String role;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
+    
 }

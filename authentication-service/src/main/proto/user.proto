@@ -7,11 +7,6 @@ package user;
 
 // User service definition
 service UserService {
-  // Get all users
-  rpc GetAllUsers(GetAllUsersRequest) returns (GetAllUsersResponse) {}
-  
-  // Get all users by provider
-  rpc GetAllUsersByProvider(GetAllUsersByProviderRequest) returns (GetAllUsersByProviderResponse) {}
   
   // Get user by username
   rpc GetUserByUsername(GetUserByUsernameRequest) returns (GetUserByUsernameResponse) {}
@@ -24,12 +19,7 @@ service UserService {
   
   // Save user
   rpc SaveUser(SaveUserRequest) returns (SaveUserResponse) {}
-}
 
-// Base entity fields
-message BaseEntity {
-  string created_at = 1;
-  string modified_at = 2;
 }
 
 // User message definition
@@ -47,23 +37,8 @@ message User {
   bool enabled = 11;
   bool deleted = 12;
   string role = 13;
-  BaseEntity base_entity = 14;
-}
-
-// Request/Response messages for GetAllUsers
-message GetAllUsersRequest {}
-
-message GetAllUsersResponse {
-  repeated User users = 1;
-}
-
-// Request/Response messages for GetAllUsersByProvider
-message GetAllUsersByProviderRequest {
-  string provider = 1;
-}
-
-message GetAllUsersByProviderResponse {
-  repeated User users = 1;
+  int64 created_at = 14;
+  int64 modified_at = 15;
 }
 
 // Request/Response messages for GetUserByUsername

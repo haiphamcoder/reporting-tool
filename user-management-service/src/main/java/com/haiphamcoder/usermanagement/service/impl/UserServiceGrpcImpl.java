@@ -1,47 +1,22 @@
 package com.haiphamcoder.usermanagement.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.ZoneId;
+import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.proto.*;
+import com.haiphamcoder.usermanagement.proto.User;
 import com.haiphamcoder.usermanagement.service.UserService;
 
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     private final UserService userService;
-
-    public UserServiceGrpcImpl(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Override
-    public void getAllUsers(GetAllUsersRequest request, StreamObserver<GetAllUsersResponse> responseObserver) {
-        List<UserDto> users = userService.getAllUsers();
-        GetAllUsersResponse response = GetAllUsersResponse.newBuilder()
-                .addAllUsers(users.stream()
-                        .map(this::convertToUser)
-                        .collect(Collectors.toList()))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getAllUsersByProvider(GetAllUsersByProviderRequest request,
-            StreamObserver<GetAllUsersByProviderResponse> responseObserver) {
-        List<UserDto> users = userService.getAllUsersByProvider(request.getProvider());
-        GetAllUsersByProviderResponse response = GetAllUsersByProviderResponse.newBuilder()
-                .addAllUsers(users.stream()
-                        .map(this::convertToUser)
-                        .collect(Collectors.toList()))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-    }
 
     @Override
     public void getUserByUsername(GetUserByUsernameRequest request,
@@ -76,11 +51,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
 
     @Override
     public void saveUser(SaveUserRequest request, StreamObserver<SaveUserResponse> responseObserver) {
-        log.info("Save user request: {}", request);
         UserDto userDto = this.convertToUserDto(request.getUser());
-        log.info("UserDto: {}", userDto);
         UserDto savedUser = userService.saveUser(userDto);
-        log.info("Saved user: {}", savedUser);
         SaveUserResponse response = SaveUserResponse.newBuilder()
                 .setUser(this.convertToUser(savedUser))
                 .build();
@@ -96,6 +68,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         userDto.setFirstName(user.getFirstName());
         userDto.setLastName(user.getLastName());
         userDto.setEmail(user.getEmail());
+        userDto.setProvider(user.getProvider());
+        userDto.setProviderId(user.getProviderId());
         userDto.setAvatarUrl(user.getAvatarUrl());
         userDto.setRole(user.getRole());
         return userDto;
@@ -105,12 +79,18 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         User user = User.newBuilder()
                 .setId(userDto.getId())
                 .setUsername(userDto.getUsername())
-                // .setPassword(userDto.getPassword())
-                .setFirstName(userDto.getFirstName())
-                .setLastName(userDto.getLastName())
+                .setPassword(userDto.getPassword())
+                .setFirstName(userDto.getFirstName() != null ? userDto.getFirstName() : "")
+                .setLastName(userDto.getLastName() != null ? userDto.getLastName() : "")
                 .setEmail(userDto.getEmail())
-                .setAvatarUrl(userDto.getAvatarUrl())
-                // .setRole(userDto.getRole())
+                .setEmailVerified(userDto.isEmailVerified())
+                .setProvider(userDto.getProvider())
+                .setProviderId(userDto.getProviderId() != null ? userDto.getProviderId() : "")
+                .setAvatarUrl(userDto.getAvatarUrl() != null ? userDto.getAvatarUrl() : "")
+                .setRole(userDto.getRole())
+                .setEnabled(userDto.isEnabled())
+                .setCreatedAt(userDto.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .setModifiedAt(userDto.getModifiedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .build();
         return user;
     }

@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,7 @@ import lombok.Setter;
 @Table(name = "refresh_tokens")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RefreshToken extends BaseEntity {
+public class RefreshToken {
 
     @Id
     private Long id;
@@ -46,6 +47,14 @@ public class RefreshToken extends BaseEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public static RefreshToken clone(RefreshToken token) {
         return RefreshToken.builder()
                 .id(token.getId())
@@ -53,6 +62,7 @@ public class RefreshToken extends BaseEntity {
                 .tokenType(token.getTokenType())
                 .expiredAt(token.getExpiredAt())
                 .userId(token.getUserId())
+                .createdAt(token.getCreatedAt())
                 .build();
     }
 }

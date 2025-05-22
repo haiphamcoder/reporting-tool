@@ -1,5 +1,7 @@
 package com.haiphamcoder.usermanagement.domain.dto;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,6 +34,15 @@ public class UserDto {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("email_verified")
+    private boolean emailVerified;
+
+    @JsonProperty("provider")
+    private String provider;
+
+    @JsonProperty("provider_id")
+    private String providerId;
+
     @JsonProperty("password")
     private String password;
 
@@ -40,4 +51,13 @@ public class UserDto {
 
     @JsonProperty("role")
     private String role;
+
+    @JsonProperty("enabled")
+    private boolean enabled;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
 }

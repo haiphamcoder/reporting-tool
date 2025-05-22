@@ -1,5 +1,10 @@
 package com.haiphamcoder.authentication.service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;
@@ -48,7 +53,16 @@ public class UserGrpcClient {
     private UserDto convertUserToUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
                 .email(user.getEmail())
+                .emailVerified(user.getEmailVerified())
+                .provider(user.getProvider())
+                .providerId(user.getProviderId())
+                .avatarUrl(user.getAvatarUrl())
+                .enabled(user.getEnabled())
+                .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(user.getCreatedAt()), ZoneId.systemDefault()))
+                .modifiedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(user.getModifiedAt()), ZoneId.systemDefault()))
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole())
