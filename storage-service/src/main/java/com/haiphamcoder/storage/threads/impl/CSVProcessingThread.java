@@ -8,10 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-import com.haiphamcoder.storage.adapter.dto.SourceDto;
-import com.haiphamcoder.storage.application.service.HdfsFileService;
-import com.haiphamcoder.storage.application.service.StorageService;
-import com.haiphamcoder.storage.application.threads.AbstractProcessingThread;
+import com.haiphamcoder.storage.domain.dto.SourceDto;
+import com.haiphamcoder.storage.service.HdfsFileService;
+import com.haiphamcoder.storage.service.StorageService;
+import com.haiphamcoder.storage.threads.AbstractProcessingThread;
 import com.haiphamcoder.storage.shared.concurrent.ThreadPool;
 import com.haiphamcoder.storage.shared.processing.CSVFileUtils;
 import com.opencsv.CSVReader;

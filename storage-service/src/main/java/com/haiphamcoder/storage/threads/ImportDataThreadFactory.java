@@ -2,11 +2,11 @@ package com.haiphamcoder.storage.threads;
 
 import org.springframework.stereotype.Component;
 
-import com.haiphamcoder.storage.adapter.dto.SourceDto;
-import com.haiphamcoder.storage.application.service.HdfsFileService;
-import com.haiphamcoder.storage.application.service.StorageService;
-import com.haiphamcoder.storage.application.threads.impl.CSVProcessingThread;
-import com.haiphamcoder.storage.infrastructure.config.CommonConstants;
+import com.haiphamcoder.storage.domain.dto.SourceDto;
+import com.haiphamcoder.storage.service.HdfsFileService;
+import com.haiphamcoder.storage.service.StorageService;
+import com.haiphamcoder.storage.threads.impl.CSVProcessingThread;
+import com.haiphamcoder.storage.config.CommonConstants;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

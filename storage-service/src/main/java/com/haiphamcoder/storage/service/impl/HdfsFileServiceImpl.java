@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.storage.application.service.HdfsFileService;
-import com.haiphamcoder.storage.domain.repository.HdfsRepository;
+import com.haiphamcoder.storage.repository.HdfsRepository;
+import com.haiphamcoder.storage.service.HdfsFileService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.haiphamcoder.storage.service.ImportDataSourceService;
 import com.haiphamcoder.storage.shared.http.RestAPIResponse;
+import com.haiphamcoder.storage.threads.ImportDataSourceManager;
 
 import lombok.RequiredArgsConstructor;
 

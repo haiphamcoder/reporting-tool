@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.storage.application.service.HdfsFileProcessingService;
+import com.haiphamcoder.storage.service.HdfsFileProcessingService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
