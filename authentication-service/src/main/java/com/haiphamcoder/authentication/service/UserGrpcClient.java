@@ -3,8 +3,6 @@ package com.haiphamcoder.authentication.service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;

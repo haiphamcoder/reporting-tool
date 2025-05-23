@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +13,9 @@ import com.haiphamcoder.dataprocessing.service.CSVProcessingService;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 import com.haiphamcoder.dataprocessing.shared.MapperUtils;
-import com.haiphamcoder.dataprocessing.shared.TidbDataTypeDetector;
 import com.haiphamcoder.dataprocessing.shared.processing.CSVFileUtils;
 import com.haiphamcoder.dataprocessing.shared.processing.HeaderNormalizer;
 import com.opencsv.CSVReader;
-import com.opencsv.exceptions.CsvValidationException;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

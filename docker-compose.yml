@@ -12,7 +12,7 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: true
     command: mysqld --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "/usr/bin/mysql", "--user=root", "--password=root", "--execute", "SELECT 1"]
+      test: [ "CMD", "/usr/bin/mysql", "--user=root", "--password=root", "--execute", "SELECT 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -23,7 +23,8 @@ services:
       - ./database/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
     restart: always
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.2
 
   hdfs-standalone:
     image: apache/hadoop:${HADOOP_VERSION}
@@ -52,22 +53,24 @@ services:
     command: [ "/bin/bash", "-c", "/start-standalone.sh" ]
     restart: always
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.3
 
-  # tidb-server:
-  #   image: pingcap/tidb:${TIDB_VERSION}
-  #   container_name: tidb-server
-  #   ports:
-  #     - "4000:4000"
-  #   env_file:
-  #     - .env
-  #   command:
-  #     - --config=/tidb.toml
-  #   volumes:
-  #     - ./database/tidb/tidb.toml:/tidb.toml:ro
-  #   restart: always
-  #   networks:
-  #     - reporting-tool-network
+  tidb-server:
+    image: pingcap/tidb:${TIDB_VERSION}
+    container_name: tidb-server
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    command:
+      - --config=/tidb.toml
+    volumes:
+      - ./database/tidb/tidb.toml:/tidb.toml:ro
+    restart: always
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.4
 
   eureka-discovery-server:
     build:
@@ -81,13 +84,14 @@ services:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
       - PORT=8761
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.5
     restart: always
 
   api-gateway:
@@ -102,7 +106,8 @@ services:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
       - PORT=8765
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.6
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
@@ -128,13 +133,14 @@ services:
       - USER_MANAGEMENT_SERVICE_HOST=user-management-service
       - USER_MANAGEMENT_SERVICE_PORT=9090
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 60s
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.7
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
@@ -158,13 +164,14 @@ services:
       - MYSQL_PASSWORD=root
       - MYSQL_POOL_SIZE=5
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 60s
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.8
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
@@ -188,64 +195,89 @@ services:
       - MYSQL_PASSWORD=root
       - MYSQL_POOL_SIZE=5
     networks:
-      - reporting-tool-network
+      reporting-tool-network:
+        ipv4_address: 172.19.80.9
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
 
-  # data-processing-service:
-  #   build:
-  #     context: ./data-processing-service
-  #     dockerfile: Dockerfile
-  #   container_name: data-processing-service
-  #   hostname: data-processing-service
-  #   ports:
-  #     - 8084:8080
-  #   environment:
-  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-  #     - PORT=8765
-  #   networks:
-  #     - reporting-tool-network
-  #   depends_on:
-  #     eureka-discovery-server:
-  #       condition: service_healthy
-  #     user-management-service:
-  #       condition: service_healthy
+  data-processing-service:
+    build:
+      context: ./data-processing-service
+      dockerfile: Dockerfile
+    container_name: data-processing-service
+    hostname: data-processing-service
+    ports:
+      - 8084:8080
+    environment:
+      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+      - PORT=8080
+      - MYSQL_SERVER_HOST=mysql-server
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_POOL_SIZE=5
+      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.10
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
 
-  # integrated-service:
-  #   build:
-  #     context: ./integrated-service
-  #     dockerfile: Dockerfile
-  #   container_name: integrated-service
-  #   hostname: integrated-service
-  #   ports:
-  #     - 8085:8080
-  #   environment:
-  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-  #     - PORT=8765
-  #   networks:
-  #     - reporting-tool-network
-  #   depends_on:
-  #     eureka-discovery-server:
-  #       condition: service_healthy
+  integrated-service:
+    build:
+      context: ./integrated-service
+      dockerfile: Dockerfile
+    container_name: integrated-service
+    hostname: integrated-service
+    ports:
+      - 8085:8080
+    environment:
+      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+      - PORT=8080
+      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
+      - USER_MANAGEMENT_SERVICE_PORT=9090
+      - DATA_PROCESSING_SERVICE_HOST=data-processing-service
+      - DATA_PROCESSING_SERVICE_PORT=8080
+      - REPORTING_SERVICE_HOST=reporting-service
+      - REPORTING_SERVICE_PORT=8080
+      - STORAGE_SERVICE_HOST=storage-service
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.11
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
 
-  # storage-service:
-  #   build:
-  #     context: ./storage-service
-  #     dockerfile: Dockerfile
-  #   container_name: storage-service
-  #   hostname: storage-service
-  #   ports:
-  #     - 8086:8080
-  #   environment:
-  #     - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-  #     - PORT=8765
-  #   networks:
-  #     - reporting-tool-network
-  #   depends_on:
-  #     eureka-discovery-server:
-  #       condition: service_healthy
-
+  storage-service:
+    build:
+      context: ./storage-service
+      dockerfile: Dockerfile
+    container_name: storage-service
+    hostname: storage-service
+    ports:
+      - 8086:8080
+    environment:
+      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+      - PORT=8080
+      - MYSQL_SERVER_HOST=mysql-server
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_POOL_SIZE=5
+      - TIDB_SERVER_HOST=tidb-server
+      - TIDB_SERVER_PORT=4000
+      - TIDB_SERVER_USER=root
+      - TIDB_SERVER_PASSWORD=
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.12
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
   # frontend:
   #   build:
   #     context: ./frontend
@@ -262,3 +294,8 @@ services:
 networks:
   reporting-tool-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.80.0/24
+          gateway: 172.19.80.1
+

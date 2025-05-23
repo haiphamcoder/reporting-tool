@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
-import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.threads.AbstractProcessingThread;
 import com.haiphamcoder.dataprocessing.shared.concurrent.ThreadPool;
 import com.haiphamcoder.dataprocessing.shared.processing.CSVFileUtils;
@@ -24,13 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 public class CSVProcessingThread extends AbstractProcessingThread {
     private final HdfsFileService hdfsFileService;
     private final ExecutorService executorService;
-    private final StorageService storageService;
     private final SourceDto sourceDto;
 
-    public CSVProcessingThread(SourceDto sourceDto, StorageService storageService,
+    public CSVProcessingThread(SourceDto sourceDto,
             HdfsFileService hdfsFileService) {
         super("csv-processing-thread", false);
-        this.storageService = storageService;
         this.hdfsFileService = hdfsFileService;
         this.sourceDto = sourceDto;
 
@@ -105,7 +102,8 @@ public class CSVProcessingThread extends AbstractProcessingThread {
             chunkData.add(recordJson);
         }
 
-        storageService.batchInsert(sourceDto, chunkData);
+        // Send to kafka
+
         log.info("Chunk of {} records processed", records.size());
     }
 
