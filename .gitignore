@@ -17,3 +17,4 @@ frontend/package-lock.json
 frontend/src/config/api.ts
 
 authentication-service/config/application.properties
+integrated-service/config/application.properties
