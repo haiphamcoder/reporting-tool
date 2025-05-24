@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.reporting.domain.entity.Source;
@@ -22,9 +23,11 @@ public class SourceMapper {
                     .description(source.getDescription() != null ? source.getDescription() : null)
                     .connectorType(source.getConnectorType() != null ? source.getConnectorType() : null)
                     .tableName(source.getTableName() != null ? source.getTableName() : null)
-                    .config(source.getConfig() != null ? source.getConfig() : null)
+                    .config(source.getConfig() != null
+                            ? MapperUtils.objectMapper.readValue(source.getConfig(), ObjectNode.class)
+                            : null)
                     .mapping(source.getMapping() != null ? MapperUtils.objectMapper
-                            .readValue(source.getMapping().toString(), new TypeReference<List<Mapping>>() {
+                            .readValue(source.getMapping(), new TypeReference<List<Mapping>>() {
                             }) : null)
                     .status(source.getStatus() != null ? source.getStatus() : null)
                     .userId(source.getUserId() != null ? source.getUserId() : null)

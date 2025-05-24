@@ -1,12 +1,12 @@
 package com.haiphamcoder.reporting.domain.dto;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +37,7 @@ public class SourceDto {
     private String tableName;
 
     @JsonProperty("config")
-    private Map<String, Object> config;
+    private ObjectNode config;
 
     @JsonProperty("mapping")
     private List<Mapping> mapping;
@@ -58,7 +58,7 @@ public class SourceDto {
     private Boolean isStarred;
 
     @JsonProperty("last_sync_time")
-    private Timestamp lastSyncTime;
+    private LocalDateTime lastSyncTime;
 
     @Data
     @Builder

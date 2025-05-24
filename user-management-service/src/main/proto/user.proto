@@ -23,7 +23,7 @@ service UserService {
 }
 
 // User message definition
-message User {
+message UserProto {
   int64 id = 1;
   string first_name = 2;
   string last_name = 3;
@@ -47,7 +47,7 @@ message GetUserByUsernameRequest {
 }
 
 message GetUserByUsernameResponse {
-  User user = 1;
+  UserProto user = 1;
 }
 
 // Request/Response messages for GetUserByEmail
@@ -56,7 +56,7 @@ message GetUserByEmailRequest {
 }
 
 message GetUserByEmailResponse {
-  User user = 1;
+  UserProto user = 1;
 }
 
 // Request/Response messages for GetUserById
@@ -65,15 +65,15 @@ message GetUserByIdRequest {
 }
 
 message GetUserByIdResponse {
-  User user = 1;
+  UserProto user = 1;
 }
 
 // Request/Response messages for SaveUser
 message SaveUserRequest {
-  User user = 1;
+  UserProto user = 1;
 }
 
 message SaveUserResponse {
-  User user = 1;
+  UserProto user = 1;
 }
 

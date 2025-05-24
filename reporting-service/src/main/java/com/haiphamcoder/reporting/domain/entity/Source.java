@@ -1,18 +1,12 @@
 package com.haiphamcoder.reporting.domain.entity;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.haiphamcoder.reporting.shared.converter.JsonNodeStringConverter;
-import com.haiphamcoder.reporting.shared.converter.MapStringConverter;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -51,12 +45,10 @@ public class Source {
     private Integer connectorType;
 
     @Column(name = "mapping", nullable = true)
-    @Convert(converter = JsonNodeStringConverter.class)
-    private JsonNode mapping;
+    private String mapping;
 
     @Column(name = "config", nullable = true)
-    @Convert(converter = MapStringConverter.class)
-    private Map<String, Object> config;
+    private String config;
 
     @Column(name = "table_name", nullable = true)
     private String tableName;
@@ -79,7 +71,7 @@ public class Source {
 
     @Column(name = "last_sync_time", nullable = true)
     @JsonProperty("last_sync_time")
-    private Timestamp lastSyncTime;
+    private LocalDateTime lastSyncTime;
 
     @Column(name = "created_at", nullable = false)
     @JsonProperty("created_at")

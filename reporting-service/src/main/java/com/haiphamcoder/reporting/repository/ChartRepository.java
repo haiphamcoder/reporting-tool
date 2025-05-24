@@ -14,4 +14,7 @@ public interface ChartRepository {
     Long getTotalChartByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     List<Long> getChartCountByLast30Days(Long userId);
+
+    Optional<Chart> updateChart(Chart chart);
+    
 }

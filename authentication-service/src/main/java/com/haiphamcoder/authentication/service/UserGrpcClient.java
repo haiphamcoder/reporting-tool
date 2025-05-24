@@ -23,32 +23,32 @@ public class UserGrpcClient {
     public UserDto getUserByEmail(String email) {
         GetUserByEmailRequest request = GetUserByEmailRequest.newBuilder().setEmail(email).build();
         GetUserByEmailResponse response = userServiceBlockingStub.getUserByEmail(request);
-        User user = response.getUser();
+        UserProto user = response.getUser();
         return convertUserToUserDto(user);
     }
 
     public UserDto getUserById(String id) {
         GetUserByIdRequest request = GetUserByIdRequest.newBuilder().setId(Long.parseLong(id)).build();
         GetUserByIdResponse response = userServiceBlockingStub.getUserById(request);
-        User user = response.getUser();
+        UserProto user = response.getUser();
         return convertUserToUserDto(user);
     }
 
     public UserDto getUserByUsername(String username) {
         GetUserByUsernameRequest request = GetUserByUsernameRequest.newBuilder().setUsername(username).build();
         GetUserByUsernameResponse response = userServiceBlockingStub.getUserByUsername(request);
-        User user = response.getUser();
+        UserProto user = response.getUser();
         return convertUserToUserDto(user);
     }
 
-    public UserDto saveUser(User user) {
+    public UserDto saveUser(UserProto user) {
         SaveUserRequest request = SaveUserRequest.newBuilder().setUser(user).build();
         SaveUserResponse response = userServiceBlockingStub.saveUser(request);
         UserDto userDto = convertUserToUserDto(response.getUser());
         return userDto;
     }
 
-    private UserDto convertUserToUserDto(User user) {
+    private UserDto convertUserToUserDto(UserProto user) {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())

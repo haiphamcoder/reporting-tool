@@ -22,7 +22,7 @@ import com.haiphamcoder.authentication.shared.DateTimeUtils;
 import com.haiphamcoder.authentication.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.authentication.shared.StringUtils;
 import com.haiphamcoder.authentication.shared.http.RestAPIResponse;
-import com.haiphamcoder.usermanagement.proto.User;
+import com.haiphamcoder.usermanagement.proto.UserProto;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         @Override
         public UserDto register(RegisterRequest request) {
-                User user = User.newBuilder()
+                UserProto user = UserProto.newBuilder()
                                 .setFirstName(request.getFirstName())
                                 .setLastName(request.getLastName())
                                 .setUsername(request.getUsername())

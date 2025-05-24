@@ -1,7 +1,6 @@
 package com.haiphamcoder.reporting.service.impl;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
@@ -115,18 +115,25 @@ public class SourceServiceImpl implements SourceService {
         if (hasWritePermission(userId, sourceId)) {
             Optional<Source> source = sourceRepository.getSourceById(sourceId);
             if (source.isPresent()) {
-                Map<String, Object> config = source.get().getConfig();
-                if (config == null) {
-                    config = new HashMap<>();
+                String config = source.get().getConfig();
+                ObjectNode objectNode = null;
+                if (StringUtils.isNullOrEmpty(config)) {
+                    objectNode = MapperUtils.objectMapper.createObjectNode();
+                } else {
+                    try {
+                        objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Invalid config");
+                    }
                 }
-                Integer connectorType = source.get().getConnectorType();
 
+                Integer connectorType = source.get().getConnectorType();
                 if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV) {
                     try {
                         String filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
-                                connectorType + "/" + fileName.trim().replaceAll("\\s+", "_"));
-                        config.put("file_path", filePath);
-                        source.get().setConfig(config);
+                                connectorType + "/" + fileName.trim().replaceAll("\s+", "_"));
+                        objectNode.put("file_path", filePath);
+                        source.get().setConfig(objectNode.toString());
 
                         return filePath;
                     } catch (IOException e) {
@@ -162,8 +169,8 @@ public class SourceServiceImpl implements SourceService {
         if (hasWritePermission(Long.valueOf(userId), sourceDto.getId())) {
             Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
             if (existingSource.isPresent()) {
-                existingSource.get()
-                        .setMapping(MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class));
+                existingSource.get().setMapping(
+                        MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class).toString());
                 Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
                 if (updatedSource.isPresent()) {
                     // TODO: Submit source to raw data service

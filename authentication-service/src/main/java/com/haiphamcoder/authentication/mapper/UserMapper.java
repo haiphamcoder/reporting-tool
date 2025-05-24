@@ -1,15 +1,15 @@
 package com.haiphamcoder.authentication.mapper;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;
-import com.haiphamcoder.usermanagement.proto.User;
+import com.haiphamcoder.usermanagement.proto.UserProto;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class UserMapper {
 
-    public static User toUser(UserDto userDto) {
-        return User.newBuilder()
+    public static UserProto toUser(UserDto userDto) {
+        return UserProto.newBuilder()
                 .setId(userDto.getId())
                 .setUsername(userDto.getUsername())
                 .setEmail(userDto.getEmail())

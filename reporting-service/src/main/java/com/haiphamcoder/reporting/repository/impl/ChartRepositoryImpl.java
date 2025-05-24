@@ -62,4 +62,9 @@ public class ChartRepositoryImpl implements ChartRepository {
         return result;
     }
 
+    @Override
+    public Optional<Chart> updateChart(Chart chart) {
+        return Optional.of(chartJpaRepository.save(chart));
+    }
+
 }

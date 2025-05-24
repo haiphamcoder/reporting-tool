@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.proto.*;
-import com.haiphamcoder.usermanagement.proto.User;
 import com.haiphamcoder.usermanagement.service.UserService;
 
 import io.grpc.stub.StreamObserver;
@@ -60,7 +59,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         responseObserver.onCompleted();
     }
 
-    private UserDto convertToUserDto(User user) {
+    private UserDto convertToUserDto(UserProto user) {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setUsername(user.getUsername());
@@ -75,8 +74,8 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         return userDto;
     }
 
-    private User convertToUser(UserDto userDto) {
-        User user = User.newBuilder()
+    private UserProto convertToUser(UserDto userDto) {
+        UserProto user = UserProto.newBuilder()
                 .setId(userDto.getId())
                 .setUsername(userDto.getUsername())
                 .setPassword(userDto.getPassword())

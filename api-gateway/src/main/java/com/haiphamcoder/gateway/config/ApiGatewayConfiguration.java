@@ -23,6 +23,15 @@ public class ApiGatewayConfiguration {
                 .route("reporting-service", r -> r.path("/reporting/**")
                         .filters(f -> f.stripPrefix(1))
                         .uri("lb://reporting-service"))
+                .route("data-processing-service", r -> r.path("/data-processing/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://data-processing-service"))
+                .route("storage-service", r -> r.path("/storage/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://storage-service"))
+                .route("integrated-service", r -> r.path("/integrated/**")
+                        .filters(f -> f.stripPrefix(1))
+                        .uri("lb://integrated-service"))
                 .build();
     }
 
