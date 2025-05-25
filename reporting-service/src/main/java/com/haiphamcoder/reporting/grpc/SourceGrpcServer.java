@@ -22,7 +22,7 @@ public class SourceGrpcServer {
     private Server server;
     private final SourceServiceGrpcImpl sourceServiceGrpcImpl;
 
-    @Value("${grpc.server.port:9090}")
+    @Value("${source.grpc.server.port:9091}")
     private int port;
 
     @PostConstruct

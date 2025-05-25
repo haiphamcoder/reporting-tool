@@ -39,19 +39,23 @@ public class Source {
 
     @Column(name = "description", nullable = true)
     @JsonProperty("description")
-    private String description;
+    @Builder.Default
+    private String description = "";
 
     @Column(name = "connector_type", nullable = false)
     private Integer connectorType;
 
     @Column(name = "mapping", nullable = true)
-    private String mapping;
+    @Builder.Default
+    private String mapping = "";
 
     @Column(name = "config", nullable = true)
-    private String config;
+    @Builder.Default
+    private String config = "";
 
     @Column(name = "table_name", nullable = true)
-    private String tableName;
+    @Builder.Default
+    private String tableName = "";
 
     @Column(name = "status", nullable = false)
     private Integer status;
@@ -71,7 +75,8 @@ public class Source {
 
     @Column(name = "last_sync_time", nullable = true)
     @JsonProperty("last_sync_time")
-    private LocalDateTime lastSyncTime;
+    @Builder.Default
+    private LocalDateTime lastSyncTime = LocalDateTime.now();
 
     @Column(name = "created_at", nullable = false)
     @JsonProperty("created_at")

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.config.CommonConstants;
@@ -134,6 +134,7 @@ public class SourceServiceImpl implements SourceService {
                                 connectorType + "/" + fileName.trim().replaceAll("\s+", "_"));
                         objectNode.put("file_path", filePath);
                         source.get().setConfig(objectNode.toString());
+                        sourceRepository.updateSource(source.get());
 
                         return filePath;
                     } catch (IOException e) {
@@ -169,13 +170,17 @@ public class SourceServiceImpl implements SourceService {
         if (hasWritePermission(Long.valueOf(userId), sourceDto.getId())) {
             Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
             if (existingSource.isPresent()) {
-                existingSource.get().setMapping(
-                        MapperUtils.objectMapper.convertValue(sourceDto.getMapping(), JsonNode.class).toString());
+                try {
+                    existingSource.get().setMapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("Invalid mapping format");
+                }
                 Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
                 if (updatedSource.isPresent()) {
-                    // TODO: Submit source to raw data service
+                    return SourceMapper.toDto(updatedSource.get());
+                } else {
+                    throw new RuntimeException("Update source failed");
                 }
-                throw new RuntimeException("Update source failed");
             } else {
                 throw new SourceNotFoundException("Source not found");
             }

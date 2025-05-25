@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,6 +10,7 @@ import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.shared.MapperUtils;
+import com.haiphamcoder.reporting.shared.StringUtils;
 
 import lombok.experimental.UtilityClass;
 
@@ -23,12 +25,14 @@ public class SourceMapper {
                     .description(source.getDescription() != null ? source.getDescription() : null)
                     .connectorType(source.getConnectorType() != null ? source.getConnectorType() : null)
                     .tableName(source.getTableName() != null ? source.getTableName() : null)
-                    .config(source.getConfig() != null
+                    .config(!StringUtils.isNullOrEmpty(source.getConfig())
                             ? MapperUtils.objectMapper.readValue(source.getConfig(), ObjectNode.class)
-                            : null)
-                    .mapping(source.getMapping() != null ? MapperUtils.objectMapper
-                            .readValue(source.getMapping(), new TypeReference<List<Mapping>>() {
-                            }) : null)
+                            : MapperUtils.objectMapper.createObjectNode())
+                    .mapping(!StringUtils.isNullOrEmpty(source.getMapping())
+                            ? MapperUtils.objectMapper
+                                    .readValue(source.getMapping(), new TypeReference<List<Mapping>>() {
+                                    })
+                            : new ArrayList<>())
                     .status(source.getStatus() != null ? source.getStatus() : null)
                     .userId(source.getUserId() != null ? source.getUserId() : null)
                     .isDeleted(source.getIsDeleted() != null ? source.getIsDeleted() : null)

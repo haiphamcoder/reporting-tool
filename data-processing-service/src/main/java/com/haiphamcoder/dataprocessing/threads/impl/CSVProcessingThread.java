@@ -11,8 +11,10 @@ import java.util.concurrent.ExecutorService;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
 import com.haiphamcoder.dataprocessing.threads.AbstractProcessingThread;
+import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.shared.concurrent.ThreadPool;
 import com.haiphamcoder.dataprocessing.shared.processing.CSVFileUtils;
+import com.haiphamcoder.dataprocessing.shared.processing.HeaderNormalizer;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.json.JSONObject;
@@ -23,12 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 public class CSVProcessingThread extends AbstractProcessingThread {
     private final HdfsFileService hdfsFileService;
     private final ExecutorService executorService;
+    private final StorageService storageService;
     private final SourceDto sourceDto;
 
     public CSVProcessingThread(SourceDto sourceDto,
+            StorageService storageService,
             HdfsFileService hdfsFileService) {
         super("csv-processing-thread", false);
         this.hdfsFileService = hdfsFileService;
+        this.storageService = storageService;
         this.sourceDto = sourceDto;
 
         executorService = ThreadPool.builder()
@@ -41,7 +46,7 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     }
 
     protected boolean process() {
-        try (InputStream inputStream = hdfsFileService.streamFile(sourceDto.getConfig().get("file_path").toString())) {
+        try (InputStream inputStream = hdfsFileService.streamFile(sourceDto.getConfig().get("file_path").asText())) {
             try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)) {
                 String[] firstLine = csvReader.readNext();
                 List<String> header = firstLine != null ? Arrays.asList(firstLine) : Collections.emptyList();
@@ -95,14 +100,14 @@ public class CSVProcessingThread extends AbstractProcessingThread {
 
             JSONObject recordJson = new JSONObject();
             for (int i = 0; i < fieldNames.size(); i++) {
-                String fieldName = fieldNames.get(i);
+                String fieldName = HeaderNormalizer.normalize(fieldNames.get(i));
                 String value = record[i];
                 recordJson.put(fieldName, value);
             }
             chunkData.add(recordJson);
         }
 
-        // Send to kafka
+        storageService.batchInsert(sourceDto, chunkData);
 
         log.info("Chunk of {} records processed", records.size());
     }

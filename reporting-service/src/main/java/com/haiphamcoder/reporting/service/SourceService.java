@@ -8,7 +8,7 @@ import com.haiphamcoder.reporting.domain.dto.SourceDto;
 
 public interface SourceService {
 
-    public SourceDto initSource(Long userId,SourceDto sourceDto);
+    public SourceDto initSource(Long userId, SourceDto sourceDto);
 
     public Boolean checkSourceName(Long userId, String sourceName);
 

@@ -24,6 +24,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
     SOURCE_NOT_FOUND(404, "Source not found", HttpStatus.NOT_FOUND),
     SOURCE_CONNECTOR_NOT_FOUND(404, "Source connector not found", HttpStatus.NOT_FOUND),
+    CONNECTOR_TYPE_NOT_SUPPORTED(400, "Connector type not supported", HttpStatus.BAD_REQUEST),
 
     // Business Logic Errors (4xx)
     DUPLICATE_RESOURCE(409, "Resource already exists", HttpStatus.CONFLICT),

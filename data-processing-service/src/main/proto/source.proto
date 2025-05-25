@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.reporting.proto";
+
+package source;
+
+// Source service definition
+service SourceService {
+  
+  // Get source by id
+  rpc GetSourceById(GetSourceByIdRequest) returns (GetSourceByIdResponse) {}
+  
+  // Update source
+  rpc UpdateSource(UpdateSourceRequest) returns (UpdateSourceResponse) {}
+
+}
+
+// Source message definition
+message SourceProto {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  int32 connector_type = 4;
+  string mapping = 5;
+  string config = 6;
+  string table_name = 7;
+  int32 status = 8;
+  int64 user_id = 9;
+  bool is_deleted = 10;
+  bool is_starred = 11;
+  int64 last_sync_time = 12;
+  int64 created_at = 13;
+  int64 modified_at = 14;
+}
+
+// Request/Response messages for GetSourceById
+message GetSourceByIdRequest {
+  int64 id = 1;
+}
+
+message GetSourceByIdResponse {
+  SourceProto source = 1;
+}
+
+// Request/Response messages for UpdateSource
+message UpdateSourceRequest {
+  SourceProto source = 1;
+}
+
+message UpdateSourceResponse {
+  SourceProto source = 1;
+}
+
+

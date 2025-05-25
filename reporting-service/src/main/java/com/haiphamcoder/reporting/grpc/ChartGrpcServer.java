@@ -22,7 +22,7 @@ public class ChartGrpcServer {
     private Server server;
     private final ChartServiceGrpcImpl chartServiceGrpcImpl;
 
-    @Value("${grpc.server.port:9090}")
+    @Value("${chart.grpc.server.port:9092}")
     private int port;
 
     @PostConstruct

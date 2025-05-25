@@ -95,14 +95,14 @@ public class SourceController {
     }
 
     @GetMapping("/history-upload-file")
-    public ResponseEntity<RestAPIResponse<Map<String, String>>> getHistoryUploadFil(
+    public ResponseEntity<RestAPIResponse<Map<String, String>>> getHistoryUploadFile(
             @CookieValue(name = "user-id") Long userId,
             @RequestParam(name = "connector-type", required = true) Integer connectorType) {
         Map<String, String> historyUploadFile = sourceService.getHistoryUploadFile(userId, connectorType);
         return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(historyUploadFile));
     }
 
-    @GetMapping("/confirm-schema")
+    @PostMapping("/confirm-schema")
     public ResponseEntity<Object> confirmSchema(@CookieValue(name = "user-id") Long userId,
             @RequestBody SourceDto sourceDto) {
         try {
