@@ -13,4 +13,6 @@ public interface StorageService {
 
     List<Mapping> createStorageSource(SourceDto sourceDto);
 
+    List<JSONObject> getPreviewData(SourceDto sourceDto, Integer limit);
+
 }

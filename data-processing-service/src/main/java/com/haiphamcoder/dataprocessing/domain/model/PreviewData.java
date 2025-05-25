@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PreviewData {
     @JsonProperty("schema")
-    private List<String> schema;
+    private List<Mapping> schema;
 
     @JsonProperty("records")
     private List<JsonNode> records;

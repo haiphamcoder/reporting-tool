@@ -3,7 +3,13 @@ package com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.read;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
+import org.json.JSONObject;
+
+import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.TidbAdapterImpl;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +41,38 @@ public class TidbReader extends TidbAdapterImpl {
             log.error("Query execution failed! {}", e.getMessage());
             throw e;
         }
+    }
+
+    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer limit)
+            throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ");
+        mappings.forEach(mapping -> {
+            if (mapping.getIsHidden() == false){
+                sql.append(mapping.getFieldMapping() + ",");
+            }
+        });
+        sql.deleteCharAt(sql.length() - 1);
+        sql.append(" FROM ");
+        sql.append(tableName);
+        sql.append(" LIMIT ");
+        sql.append(limit);
+        
+        CustomResultSet resultSet = executeQuery(sql.toString());
+        List<Map<String, Object>> data = resultSet.getRows();
+        List<JSONObject> records = new LinkedList<>();
+        for (Map<String, Object> row : data) {
+            log.info("Row: {}", row);
+            JSONObject record = new JSONObject();
+            for (Mapping mapping : mappings) {
+                if (mapping.getIsHidden() == false) {
+                    record.put(mapping.getFieldMapping(), row.get(mapping.getFieldMapping()));
+                }
+            }
+            records.add(record);
+        }
+        log.info("Records: {}", records);
+        return records;
     }
 
 }

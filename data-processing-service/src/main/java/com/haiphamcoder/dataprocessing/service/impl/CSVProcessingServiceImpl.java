@@ -66,7 +66,12 @@ public class CSVProcessingServiceImpl implements CSVProcessingService {
                 throw new Exception("File error");
             }
 
-            previewData.setSchema(fieldNames);
+            previewData.setSchema(fieldNames.stream().map(fieldName -> Mapping.builder()
+                    .fieldName(fieldName)
+                    .fieldMapping(fieldName)
+                    .fieldType("text")
+                    .build())
+                    .collect(Collectors.toList()));
 
             previewData.setRecords(new LinkedList<>());
             int recordCount = 0;

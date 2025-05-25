@@ -18,3 +18,5 @@ frontend/src/config/api.ts
 
 authentication-service/config/application.properties
 integrated-service/config/application.properties
+
+source_dump.txt

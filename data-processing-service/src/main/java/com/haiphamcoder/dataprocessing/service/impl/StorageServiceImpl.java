@@ -1,5 +1,6 @@
 package com.haiphamcoder.dataprocessing.service.impl;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.service.StorageService;
+import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.read.TidbReader;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.write.TidbWriter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +63,19 @@ public class StorageServiceImpl implements StorageService {
             log.error("Batch inserting failed! {}", e.getMessage());
         }
 
+    }
+
+    @Override
+    public List<JSONObject> getPreviewData(SourceDto sourceDto, Integer limit) {
+        String tableName = sourceDto.getTableName();
+        List<Mapping> mappings = sourceDto.getMapping();
+
+        try (TidbReader tidbReader = new TidbReader(url, username, password)) {
+            return tidbReader.getPreviewData(tableName, mappings, limit);
+        } catch (Exception e) {
+            log.error("Get preview data failed! {}", e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
 }

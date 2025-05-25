@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
+import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
+import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
 import com.haiphamcoder.dataprocessing.shared.http.RestAPIResponse;
 import com.haiphamcoder.dataprocessing.threads.ImportDataSourceManager;
@@ -22,9 +24,10 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/")
 @RequiredArgsConstructor
 public class DataProcessingController {
-    
+
     private final SchemaSourceService schemaSourceService;
     private final ImportDataSourceManager importDataSourceManager;
+    private final RawDataService rawDataService;
 
     @GetMapping("/sources/schema/{id}")
     public ResponseEntity<RestAPIResponse<Object>> getSourceSchema(
@@ -35,7 +38,8 @@ public class DataProcessingController {
             return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(schema));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
         }
     }
 
@@ -48,7 +52,22 @@ public class DataProcessingController {
             return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(isSuccess));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/sources/{id}/preview")
+    public ResponseEntity<RestAPIResponse<Object>> previewSource(
+            @CookieValue(value = "user-id", required = true) Long userId,
+            @PathVariable("id") Long sourceId) {
+        try {
+            PreviewData previewData = rawDataService.previewSource(sourceId);
+            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(previewData));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
         }
     }
 
