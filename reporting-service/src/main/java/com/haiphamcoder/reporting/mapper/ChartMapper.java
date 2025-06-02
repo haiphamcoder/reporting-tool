@@ -18,4 +18,16 @@ public class ChartMapper {
                                 .isDeleted(chart.getIsDeleted())
                                 .build();
         }
+
+        public static Chart toChart(ChartDto chartDto) {
+                return Chart.builder()
+                                .id(chartDto.getId())
+                                .name(chartDto.getName())
+                                .userId(Long.parseLong(chartDto.getUserId()))
+                                .description(chartDto.getDescription())
+                                .config(chartDto.getConfig())
+                                .queryOption(chartDto.getQueryOption())
+                                .isDeleted(chartDto.getIsDeleted())
+                                .build();
+        }
 }
