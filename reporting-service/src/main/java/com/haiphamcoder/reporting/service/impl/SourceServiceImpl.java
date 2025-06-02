@@ -16,10 +16,10 @@ import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
-import com.haiphamcoder.reporting.domain.exception.DuplicateSourceNameException;
-import com.haiphamcoder.reporting.domain.exception.MissingRequiredFieldException;
-import com.haiphamcoder.reporting.domain.exception.PermissionDeniedException;
-import com.haiphamcoder.reporting.domain.exception.SourceNotFoundException;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
+import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
@@ -42,14 +42,14 @@ public class SourceServiceImpl implements SourceService {
     @Override
     public SourceDto initSource(Long userId, SourceDto sourceDto) {
         if (sourceDto.getName() == null) {
-            throw new MissingRequiredFieldException("name");
+            throw new InvalidInputException("name");
         }
         if (sourceRepository.checkSourceName(userId, sourceDto.getName())) {
-            throw new DuplicateSourceNameException("Source name already exists");
+            throw new ResourceAlreadyExistsException("Source name", sourceDto.getName());
         }
 
         if (sourceDto.getConnectorType() == null) {
-            throw new MissingRequiredFieldException("connector_type");
+            throw new InvalidInputException("connector_type");
         }
 
         Source source = Source.builder()
@@ -144,10 +144,10 @@ public class SourceServiceImpl implements SourceService {
                     throw new RuntimeException("Unsupported connector type");
                 }
             } else {
-                throw new SourceNotFoundException("Source not found");
+                throw new ResourceNotFoundException("Source", sourceId);
             }
         } else {
-            throw new PermissionDeniedException("You are not allowed to upload file to this source");
+            throw new ForbiddenException("You are not allowed to upload file to this source");
         }
     }
 
@@ -160,18 +160,19 @@ public class SourceServiceImpl implements SourceService {
     public SourceDto confirmSchema(Long userId, SourceDto sourceDto) {
 
         if (sourceDto.getId() == null) {
-            throw new MissingRequiredFieldException("source_id");
+            throw new InvalidInputException("source_id");
         }
 
         if (sourceDto.getMapping() == null) {
-            throw new MissingRequiredFieldException("mapping");
+            throw new InvalidInputException("mapping");
         }
 
         if (hasWritePermission(Long.valueOf(userId), sourceDto.getId())) {
             Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
             if (existingSource.isPresent()) {
                 try {
-                    existingSource.get().setMapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
+                    existingSource.get()
+                            .setMapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException("Invalid mapping format");
                 }
@@ -182,10 +183,10 @@ public class SourceServiceImpl implements SourceService {
                     throw new RuntimeException("Update source failed");
                 }
             } else {
-                throw new SourceNotFoundException("Source not found");
+                throw new ResourceNotFoundException("Source", sourceDto.getId());
             }
         } else {
-            throw new PermissionDeniedException("You are not allowed to update this source");
+            throw new ForbiddenException("You are not allowed to update this source");
         }
     }
 
