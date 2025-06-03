@@ -13,6 +13,7 @@ import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
 import com.haiphamcoder.authentication.domain.model.CustomUserDetail;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
 import com.haiphamcoder.authentication.domain.model.TokenType;
+import com.haiphamcoder.authentication.domain.model.response.RegisterResponse;
 import com.haiphamcoder.authentication.security.JwtTokenProvider;
 import com.haiphamcoder.authentication.service.AuthenticationService;
 import com.haiphamcoder.authentication.service.RefreshTokenService;
@@ -43,7 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         private static final String COOKIE_REFRESH_TOKEN = "refresh-token";
 
         @Override
-        public UserDto register(RegisterRequest request) {
+        public RegisterResponse register(RegisterRequest request) {
                 try {
                         UserProto user = UserProto.newBuilder()
                                         .setFirstName(request.getFirstName())
@@ -53,7 +54,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         .setEmail(request.getEmail())
                                         .setRole(request.getRole().getName())
                                         .build();
-                        return userGrpcClient.saveUser(user);
+                        UserDto savedUser = userGrpcClient.saveUser(user);
+                        return RegisterResponse.builder()
+                                        .userId(savedUser.getId())
+                                        .username(savedUser.getUsername())
+                                        .email(savedUser.getEmail())
+                                        .firstName(savedUser.getFirstName())
+                                        .role(savedUser.getRole())
+                                        .provider(savedUser.getProvider())
+                                        .lastName(savedUser.getLastName()).build();
                 } catch (Exception e) {
                         log.error("Error saving user", e);
                         throw new RuntimeException("Failed to save user");
@@ -128,6 +137,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         }
                 }
                 return null;
+        }
+
+        @Override
+        public UserDto getUserInfo(Long userId) {
+                try {
+                        return userGrpcClient.getUserById(userId);
+                } catch (Exception e) {
+                        log.error("Error getting user info", e);
+                        throw new RuntimeException("Failed to get user info");
+                }
         }
 
 }

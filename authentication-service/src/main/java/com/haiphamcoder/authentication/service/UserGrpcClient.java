@@ -27,8 +27,8 @@ public class UserGrpcClient {
         return convertUserToUserDto(user);
     }
 
-    public UserDto getUserById(String id) {
-        GetUserByIdRequest request = GetUserByIdRequest.newBuilder().setId(Long.parseLong(id)).build();
+    public UserDto getUserById(Long userId) {
+        GetUserByIdRequest request = GetUserByIdRequest.newBuilder().setId(userId).build();
         GetUserByIdResponse response = userServiceBlockingStub.getUserById(request);
         UserProto user = response.getUser();
         return convertUserToUserDto(user);
