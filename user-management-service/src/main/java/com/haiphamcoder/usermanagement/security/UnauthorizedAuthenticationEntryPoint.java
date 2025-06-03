@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class UnauthorizedAuthenticationEntryPoint implements AuthenticationEntryPoint{
+public class UnauthorizedAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
@@ -27,5 +27,5 @@ public class UnauthorizedAuthenticationEntryPoint implements AuthenticationEntry
                 "You are not authorized to access this resource");
         new ObjectMapper().writeValue(response.getOutputStream(), apiResponse);
     }
-    
+
 }

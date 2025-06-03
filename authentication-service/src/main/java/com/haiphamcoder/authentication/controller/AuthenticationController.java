@@ -12,9 +12,7 @@ import com.haiphamcoder.authentication.service.AuthenticationService;
 import com.haiphamcoder.authentication.domain.dto.UserDto;
 import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
-import com.haiphamcoder.authentication.shared.exception.BaseException;
-import com.haiphamcoder.authentication.shared.http.RestAPIResponse;
-
+import com.haiphamcoder.authentication.shared.http.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,32 +29,16 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<Object>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<Object>> register(@RequestBody RegisterRequest request) {
         UserDto registeredUser = authenticationService.register(request);
-        if (registeredUser == null) {
-            return ResponseEntity.badRequest()
-                    .body(RestAPIResponse.ResponseFactory.createResponse("Register failed"));
-        }
-        return ResponseEntity.ok()
-                .body(RestAPIResponse.ResponseFactory.createResponse("Register successfully"));
+        return ResponseEntity.ok().body(ApiResponse.success(registeredUser, "Register successfully"));
     }
 
     @PostMapping(path = "/authenticate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> authenticate(HttpServletResponse response,
+    public ResponseEntity<ApiResponse<Object>> authenticate(HttpServletResponse response,
             @RequestBody AuthenticationRequest request) {
-        try {
-            RestAPIResponse<String> authenResponse = authenticationService.authenticate(request, response);
-            return ResponseEntity.ok()
-                    .body(authenResponse);
-        } catch (BaseException e) {
-            log.warn("Authentication failed: {}", e.getMessage());
-            RestAPIResponse<Object> apiResponse = RestAPIResponse.ResponseFactory.createResponse(e);
-            return ResponseEntity.status(e.getHttpStatus()).body(apiResponse);
-        } catch (Exception e) {
-            log.error("Error during authentication", e);
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+        boolean authenResponse = authenticationService.authenticate(request, response);
+        return ResponseEntity.ok().body(ApiResponse.success(authenResponse, "Authenticate successfully"));
     }
 
     @GetMapping(path = "/me")

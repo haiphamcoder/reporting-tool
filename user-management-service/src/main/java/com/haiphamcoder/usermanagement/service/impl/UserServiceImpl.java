@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.haiphamcoder.usermanagement.service.UserService;
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.entity.User;
+import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
 
@@ -41,7 +42,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByUsername(String username) {
         Optional<User> user = userRepository.getUserByUsername(username);
         if (user.isEmpty()) {
-            return null;
+            throw new ResourceNotFoundException("User", username);
         }
         return UserMapper.toDto(user.get());
     }
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByEmail(String email) {
         Optional<User> user = userRepository.getUserByEmail(email);
         if (user.isEmpty()) {
-            return null;
+            throw new ResourceNotFoundException("User", email);
         }
         return UserMapper.toDto(user.get());
     }
@@ -59,7 +60,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserById(Long id) {
         Optional<User> user = userRepository.getUserById(id);
         if (user.isEmpty()) {
-            return null;
+            throw new ResourceNotFoundException("User", id);
         }
         return UserMapper.toDto(user.get());
     }

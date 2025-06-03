@@ -3,18 +3,14 @@ package com.haiphamcoder.usermanagement.controller;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.service.UserService;
-import com.haiphamcoder.usermanagement.shared.http.RestAPIResponse;
+import com.haiphamcoder.usermanagement.shared.http.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,41 +20,22 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
     private final UserService userService;
 
-    @GetMapping(path = "/get-all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<List<UserDto>>> getAll() {
-        List<UserDto> users = userService.getAllUsers();
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(users));
-    }
-
-    @GetMapping(path = "/get-all/provider/{provider}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<List<UserDto>>> getAllByProvider(@PathVariable String provider) {
-        List<UserDto> users = userService.getAllUsersByProvider(provider);
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(users));
-    }
-
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<UserDto>> get(@CookieValue(name = "user-id") String userId) {
-        UserDto user = userService.getUserById(Long.parseLong(userId));
-        if (user == null) {
-            return ResponseEntity.badRequest().body(RestAPIResponse.ResponseFactory.createResponse("User not found"));
-        }
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(user));
+    public ResponseEntity<ApiResponse<Object>> getAll() {
+        List<UserDto> users = userService.getAllUsers();
+        return ResponseEntity.ok().body(ApiResponse.success(users, "Get all users successfully"));
     }
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<String>> post(@CookieValue(name = "user-id") String userId) {
-        return ResponseEntity.ok()
-                .body(RestAPIResponse.ResponseFactory.createResponse("POST::user controller"));
+    @GetMapping(path = "/provider/{provider}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Object>> getAllByProvider(@PathVariable String provider) {
+        List<UserDto> users = userService.getAllUsersByProvider(provider);
+        return ResponseEntity.ok().body(ApiResponse.success(users, "Get all users by provider successfully"));
     }
 
-    @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<String>> put(@CookieValue(name = "user-id") String userId) {
-        return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse("PUT::user controller"));
+    @GetMapping(path = "/{user-id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable(name = "user-id", required = true) Long userId) {
+        UserDto user = userService.getUserById(userId);
+        return ResponseEntity.ok().body(ApiResponse.success(user, "Get user by id successfully"));
     }
 
-    @DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RestAPIResponse<String>> delete(@CookieValue(name = "user-id") String userId) {
-        return ResponseEntity.ok()
-                .body(RestAPIResponse.ResponseFactory.createResponse("DELETE::user controller"));
-    }
 }

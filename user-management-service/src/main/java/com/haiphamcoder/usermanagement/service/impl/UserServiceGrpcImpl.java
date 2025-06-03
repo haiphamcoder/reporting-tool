@@ -1,12 +1,16 @@
 package com.haiphamcoder.usermanagement.service.impl;
 
 import java.time.ZoneId;
+
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
+import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.usermanagement.proto.*;
 import com.haiphamcoder.usermanagement.service.UserService;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,32 +24,44 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void getUserByUsername(GetUserByUsernameRequest request,
             StreamObserver<GetUserByUsernameResponse> responseObserver) {
-        UserDto user = userService.getUserByUsername(request.getUsername());
-        GetUserByUsernameResponse response = GetUserByUsernameResponse.newBuilder()
-                .setUser(this.convertToUser(user))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+        try {
+            UserDto user = userService.getUserByUsername(request.getUsername());
+            GetUserByUsernameResponse response = GetUserByUsernameResponse.newBuilder()
+                    .setUser(this.convertToUser(user))
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (ResourceNotFoundException e) {
+            responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription(e.getMessage())));
+        }
     }
 
     @Override
     public void getUserByEmail(GetUserByEmailRequest request, StreamObserver<GetUserByEmailResponse> responseObserver) {
-        UserDto user = userService.getUserByEmail(request.getEmail());
-        GetUserByEmailResponse response = GetUserByEmailResponse.newBuilder()
-                .setUser(this.convertToUser(user))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+        try {
+            UserDto user = userService.getUserByEmail(request.getEmail());
+            GetUserByEmailResponse response = GetUserByEmailResponse.newBuilder()
+                    .setUser(this.convertToUser(user))
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (ResourceNotFoundException e) {
+            responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription(e.getMessage())));
+        }
     }
 
     @Override
     public void getUserById(GetUserByIdRequest request, StreamObserver<GetUserByIdResponse> responseObserver) {
-        UserDto user = userService.getUserById(request.getId());
-        GetUserByIdResponse response = GetUserByIdResponse.newBuilder()
-                .setUser(this.convertToUser(user))
-                .build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+        try {
+            UserDto user = userService.getUserById(request.getId());
+            GetUserByIdResponse response = GetUserByIdResponse.newBuilder()
+                    .setUser(this.convertToUser(user))
+                    .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (ResourceNotFoundException e) {
+            responseObserver.onError(new StatusRuntimeException(Status.NOT_FOUND.withDescription(e.getMessage())));
+        }
     }
 
     @Override
