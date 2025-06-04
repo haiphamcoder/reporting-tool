@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.entity.Connector;
 import com.haiphamcoder.reporting.service.ConnectorService;
-import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
-
+import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,8 +19,8 @@ public class ConnectorController {
     private final ConnectorService connectorService;
 
     @GetMapping
-    public ResponseEntity<RestAPIResponse<List<Connector>>> getAllEnabledConnectors() {
+    public ResponseEntity<ApiResponse<Object>> getAllEnabledConnectors() {
         List<Connector> connectors = connectorService.getAllEnabledConnectors();
-        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(connectors));
+        return ResponseEntity.ok(ApiResponse.success(connectors, "Get all enabled connectors successfully"));
     }
 }

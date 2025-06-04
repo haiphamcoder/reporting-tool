@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.model.StatisticData;
 import com.haiphamcoder.reporting.service.StatisticsService;
-import com.haiphamcoder.reporting.shared.exception.BaseException;
-import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
-
+import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,18 +19,9 @@ public class StatisticsController {
     private final StatisticsService statisticsService;
 
     @GetMapping()
-    public ResponseEntity<Object> getStatistics(@CookieValue(name = "user-id") String userId) {
-        try {
-            StatisticData statisticData = statisticsService.getStatistics(Long.parseLong(userId));
-            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(statisticData));
-        } catch (BaseException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+    public ResponseEntity<ApiResponse<Object>> getStatistics(@CookieValue(name = "user-id") String userId) {
+        StatisticData statisticData = statisticsService.getStatistics(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success(statisticData, "Get statistics successfully"));
     }
 
 }
