@@ -65,8 +65,10 @@ services:
       - .env
     command:
       - --config=/tidb.toml
+      - --path=/data
     volumes:
       - ./database/tidb/tidb.toml:/tidb.toml:ro
+      - ./database/tidb/data:/data
     restart: always
     networks:
       reporting-tool-network:
