@@ -86,7 +86,7 @@ public class SourceServiceImpl implements SourceService {
         if (source.isPresent()) {
             return SourceMapper.toDto(source.get());
         }
-        throw new RuntimeException("Source not found");
+        throw new ResourceNotFoundException("Source", sourceId);
     }
 
     @Override
@@ -107,9 +107,14 @@ public class SourceServiceImpl implements SourceService {
 
     @Override
     public String uploadFile(Long userId, Long sourceId, MultipartFile file) {
+
+        if (file.isEmpty()) {
+            throw new InvalidInputException("file");
+        }
+
         String fileName = file.getOriginalFilename();
         if (StringUtils.isNullOrEmpty(fileName)) {
-            throw new RuntimeException("File name is required");
+            throw new InvalidInputException("file_name");
         }
 
         if (hasWritePermission(userId, sourceId)) {
@@ -123,7 +128,7 @@ public class SourceServiceImpl implements SourceService {
                     try {
                         objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
                     } catch (IOException e) {
-                        throw new RuntimeException("Invalid config");
+                        throw new InvalidInputException("config");
                     }
                 }
 
@@ -197,6 +202,17 @@ public class SourceServiceImpl implements SourceService {
             return sourcePermission.get().getPermission().charAt(1) == 'w';
         }
         return false;
+    }
+
+    @Override
+    public void deleteSource(Long sourceId) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            source.get().setIsDeleted(true);
+            sourceRepository.updateSource(source.get());
+        } else {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
     }
 
 }

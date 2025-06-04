@@ -24,4 +24,6 @@ public interface SourceService {
 
     public SourceDto confirmSchema(Long userId, SourceDto sourceDto);
 
+    public void deleteSource(Long sourceId);
+
 }

@@ -2,7 +2,6 @@ package com.haiphamcoder.dataprocessing.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +14,7 @@ import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
-import com.haiphamcoder.dataprocessing.shared.http.RestAPIResponse;
+import com.haiphamcoder.dataprocessing.shared.http.ApiResponse;
 import com.haiphamcoder.dataprocessing.threads.ImportDataSourceManager;
 
 import lombok.RequiredArgsConstructor;
@@ -30,45 +29,27 @@ public class DataProcessingController {
     private final RawDataService rawDataService;
 
     @GetMapping("/sources/schema/{id}")
-    public ResponseEntity<RestAPIResponse<Object>> getSourceSchema(
+    public ResponseEntity<ApiResponse<Object>> getSourceSchema(
             @CookieValue(value = "user-id", required = true) Long userId,
             @PathVariable("id") Long sourceId) {
-        try {
-            List<Mapping> schema = schemaSourceService.getSchema(sourceId);
-            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(schema));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
-        }
+        List<Mapping> schema = schemaSourceService.getSchema(sourceId);
+        return ResponseEntity.ok().body(ApiResponse.success(schema, "Source schema fetched successfully"));
     }
 
     @PostMapping("/sources/import/{id}")
-    public ResponseEntity<RestAPIResponse<Object>> importSource(
+    public ResponseEntity<ApiResponse<Object>> importSource(
             @CookieValue(value = "user-id", required = true) Long userId,
             @PathVariable("id") Long sourceId) {
-        try {
-            boolean isSuccess = importDataSourceManager.submit(sourceId, true);
-            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(isSuccess));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
-        }
+        boolean isSuccess = importDataSourceManager.submit(sourceId, true);
+        return ResponseEntity.ok().body(ApiResponse.success(isSuccess, "Source imported successfully"));
     }
 
     @GetMapping("/sources/{id}/preview")
-    public ResponseEntity<RestAPIResponse<Object>> previewSource(
+    public ResponseEntity<ApiResponse<Object>> previewSource(
             @CookieValue(value = "user-id", required = true) Long userId,
             @PathVariable("id") Long sourceId) {
-        try {
-            PreviewData previewData = rawDataService.previewSource(sourceId);
-            return ResponseEntity.ok().body(RestAPIResponse.ResponseFactory.createResponse(previewData));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(RestAPIResponse.ResponseFactory.createResponse(e.getMessage()));
-        }
+        PreviewData previewData = rawDataService.previewSource(sourceId);
+        return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
     }
 
 }

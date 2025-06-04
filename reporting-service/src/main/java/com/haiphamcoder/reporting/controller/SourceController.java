@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.service.SourceService;
-import com.haiphamcoder.reporting.shared.exception.BaseException;
+import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -31,71 +31,35 @@ public class SourceController {
     private final SourceService sourceService;
 
     @PostMapping(path = "/init", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> initSource(@CookieValue(name = "user-id") Long userId,
+    public ResponseEntity<ApiResponse<Object>> initSource(@CookieValue(name = "user-id") Long userId,
             @RequestBody SourceDto sourceDto) {
-        try {
-            SourceDto source = sourceService.initSource(userId, sourceDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(source));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+        SourceDto source = sourceService.initSource(userId, sourceDto);
+        return ResponseEntity.ok(ApiResponse.success(source, "Source initialized successfully"));
     }
 
     @GetMapping()
-    public ResponseEntity<Object> getSources(@CookieValue(name = "user-id") Long userId) {
-        try {
-            List<SourceDto> sources = sourceService.getAllSourcesByUserId(userId);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(sources));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+    public ResponseEntity<ApiResponse<List<SourceDto>>> getSources(@CookieValue(name = "user-id") Long userId) {
+        List<SourceDto> sources = sourceService.getAllSourcesByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success(sources, "Sources fetched successfully"));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> createSource(@CookieValue(name = "user-id") Long userId,
+    public ResponseEntity<ApiResponse<Object>> createSource(@CookieValue(name = "user-id") Long userId,
             @RequestBody SourceDto sourceDto) {
-        try {
-            sourceService.createSource(sourceDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Source created successfully"));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+        sourceService.createSource(sourceDto);
+        return ResponseEntity.ok(ApiResponse.success(null, "Source created successfully"));
     }
 
     @PostMapping("/upload-file")
-    public ResponseEntity<Object> uploadFile(@CookieValue(name = "user-id") Long userId,
+    public ResponseEntity<ApiResponse<Object>> uploadFile(@CookieValue(name = "user-id") Long userId,
             @RequestParam(name = "source-id", required = true) Long sourceId,
             @RequestBody MultipartFile file) {
-        try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(RestAPIResponse.ResponseFactory.createResponse("File is empty"));
-            }
-
-            String filePath = sourceService.uploadFile(userId, sourceId, file);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(filePath));
-        } catch (BaseException e) {
-            RestAPIResponse<Object> apiResponse = RestAPIResponse.ResponseFactory.createResponse(e);
-            return ResponseEntity.status(e.getHttpStatus()).body(apiResponse);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+        String filePath = sourceService.uploadFile(userId, sourceId, file);
+        return ResponseEntity.ok(ApiResponse.success(filePath, "File uploaded successfully"));
     }
 
     @GetMapping("/history-upload-file")
-    public ResponseEntity<RestAPIResponse<Map<String, String>>> getHistoryUploadFile(
+    public ResponseEntity<RestAPIResponse<Object>> getHistoryUploadFile(
             @CookieValue(name = "user-id") Long userId,
             @RequestParam(name = "connector-type", required = true) Integer connectorType) {
         Map<String, String> historyUploadFile = sourceService.getHistoryUploadFile(userId, connectorType);
@@ -103,25 +67,17 @@ public class SourceController {
     }
 
     @PostMapping("/confirm-schema")
-    public ResponseEntity<Object> confirmSchema(@CookieValue(name = "user-id") Long userId,
+    public ResponseEntity<ApiResponse<Object>> confirmSchema(@CookieValue(name = "user-id") Long userId,
             @RequestBody SourceDto sourceDto) {
-        try {
-            SourceDto updatedSource = sourceService.confirmSchema(userId, sourceDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(updatedSource));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError()
-                    .body(RestAPIResponse.ResponseFactory.internalServerErrorResponse());
-        }
+        SourceDto updatedSource = sourceService.confirmSchema(userId, sourceDto);
+        return ResponseEntity.ok(ApiResponse.success(updatedSource, "Schema confirmed successfully"));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<RestAPIResponse<String>> deleteSource(@CookieValue(name = "user-id") Long userId,
+    @DeleteMapping("/{source-id}")
+    public ResponseEntity<ApiResponse<Object>> deleteSource(@CookieValue(name = "user-id") Long userId,
             @PathVariable("source-id") Long sourceId) {
-
-        return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Source deleted successfully"));
+        sourceService.deleteSource(sourceId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Source deleted successfully"));
     }
 
 }
