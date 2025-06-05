@@ -1,12 +1,12 @@
 package com.haiphamcoder.reporting.domain.dto;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.haiphamcoder.reporting.domain.model.QueryOption;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +28,7 @@ public class ChartDto {
     private String name;
 
     @JsonProperty("user_id")
-    private String userId;
+    private Long userId;
 
     @JsonProperty("description")
     private String description;
@@ -37,14 +37,14 @@ public class ChartDto {
     private Map<String, Object> config;
 
     @JsonProperty("query_option")
-    private JsonNode queryOption;
-
-    @JsonProperty("reports")
-    private List<String> reportIds;
-
-    @JsonProperty("shared_users")
-    private List<String> sharedUserIds;
+    private QueryOption queryOption;
 
     @JsonProperty("is_deleted")
     private Boolean isDeleted;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
 }

@@ -1,23 +1,14 @@
 package com.haiphamcoder.reporting.domain.entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.haiphamcoder.reporting.shared.converter.JsonNodeStringConverter;
-import com.haiphamcoder.reporting.shared.converter.MapStringConverter;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -56,21 +47,15 @@ public class Chart {
     private String description;
 
     @Column(name = "config", nullable = false)
-    @Convert(converter = MapStringConverter.class)
-    private Map<String, Object> config;
+    private String config;
 
     @Column(name = "query_option", nullable = false)
-    @Convert(converter = JsonNodeStringConverter.class)
-    private JsonNode queryOption;
+    private String queryOption;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default
     @JsonProperty("is_deleted")
     private Boolean isDeleted = false;
-
-    @ManyToMany
-    @JoinTable(name = "chart_report", joinColumns = @JoinColumn(name = "chart_id"), inverseJoinColumns = @JoinColumn(name = "report_id"))
-    private List<Report> reports;
 
     @Column(name = "created_at", nullable = false)
     @JsonProperty("created_at")

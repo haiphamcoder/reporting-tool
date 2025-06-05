@@ -16,5 +16,7 @@ public interface ChartRepository {
     List<Long> getChartCountByLast30Days(Long userId);
 
     Optional<Chart> updateChart(Chart chart);
+
+    Chart save(Chart chart);
     
 }

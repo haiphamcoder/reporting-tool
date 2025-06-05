@@ -43,11 +43,7 @@ public class ChartServiceImpl implements ChartService {
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
-        chart.get().setDescription(chartDto.getDescription());
-        chart.get().setConfig(chartDto.getConfig());
-        chart.get().setQueryOption(chartDto.getQueryOption());
-        chart.get().setIsDeleted(chartDto.getIsDeleted());
-        chartRepository.updateChart(chart.get());
+        chartRepository.updateChart(ChartMapper.toChart(chartDto));
         return ChartMapper.toChartDto(chart.get());
     }
 
@@ -63,9 +59,9 @@ public class ChartServiceImpl implements ChartService {
 
     @Override
     public ChartDto createChart(Long userId, ChartDto chartDto) {
-        chartDto.setUserId(userId.toString());
+        chartDto.setUserId(userId);
         chartDto.setIsDeleted(false);
-        chartRepository.updateChart(ChartMapper.toChart(chartDto));
+        chartRepository.save(ChartMapper.toChart(chartDto));
         return chartDto;
     }
 

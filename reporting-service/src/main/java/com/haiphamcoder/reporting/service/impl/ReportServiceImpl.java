@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
