@@ -1,6 +1,7 @@
 package com.haiphamcoder.reporting.domain.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +15,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -63,6 +67,10 @@ public class Chart {
     @Builder.Default
     @JsonProperty("is_deleted")
     private Boolean isDeleted = false;
+
+    @ManyToMany
+    @JoinTable(name = "chart_report", joinColumns = @JoinColumn(name = "chart_id"), inverseJoinColumns = @JoinColumn(name = "report_id"))
+    private List<Report> reports;
 
     @Column(name = "created_at", nullable = false)
     @JsonProperty("created_at")

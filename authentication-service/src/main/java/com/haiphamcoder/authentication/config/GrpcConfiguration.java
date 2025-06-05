@@ -16,7 +16,7 @@ public class GrpcConfiguration {
     private int userManagementServicePort;
 
     @Bean
-    public ManagedChannel userManagementServiceChannel() {
+    ManagedChannel userManagementServiceChannel() {
         return ManagedChannelBuilder.forAddress(userManagementServiceHost, userManagementServicePort)
                 .usePlaintext()
                 .build();

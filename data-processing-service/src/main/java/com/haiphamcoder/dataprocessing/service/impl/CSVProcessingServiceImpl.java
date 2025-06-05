@@ -10,12 +10,14 @@ import java.util.stream.Collectors;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.service.CSVProcessingService;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 import com.haiphamcoder.dataprocessing.shared.MapperUtils;
+import com.haiphamcoder.dataprocessing.shared.StringUtils;
 import com.haiphamcoder.dataprocessing.shared.TidbDataTypeDetector;
 import com.haiphamcoder.dataprocessing.shared.processing.CSVFileUtils;
 import com.haiphamcoder.dataprocessing.shared.processing.HeaderNormalizer;
@@ -99,17 +101,20 @@ public class CSVProcessingServiceImpl implements CSVProcessingService {
     public List<Mapping> getSchema(SourceDto source) {
         log.info("Source: {}", source);
 
-        if (source.getConfig() == null) {
+        ObjectNode config = source.getConfig();
+
+        if (config == null) {
             throw new RuntimeException("Source config is null");
         }
 
-        if (source.getConfig().get("file_path") == null) {
+        log.info("Config: {}", config);
+
+        String filePath = config.get("file_path").asText();
+        if (StringUtils.isNullOrEmpty(filePath)) {
             throw new RuntimeException("File path is null");
         }
 
         char delimiter = ',';
-        String filePath = source.getConfig().get("file_path").asText();
-
         try (CSVReader csvReader = CSVFileUtils.createCSVReader(hdfsFileService.streamFile(filePath), delimiter)) {
             String[] fieldNameArray = csvReader.readNext();
             List<String> fieldNames = new LinkedList<>();

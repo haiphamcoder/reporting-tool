@@ -19,6 +19,12 @@ service ChartService {
 // Chart message definition
 message ChartProto {
   int64 id = 1;
+  string name = 2;
+  int64 user_id = 3;
+  string description = 4;
+  string config = 5;
+  string query_option = 6;
+  bool is_deleted = 7;
 }
 
 // Request/Response messages for GetChartById

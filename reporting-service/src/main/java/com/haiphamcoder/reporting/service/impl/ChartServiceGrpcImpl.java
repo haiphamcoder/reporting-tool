@@ -1,10 +1,14 @@
 package com.haiphamcoder.reporting.service.impl;
 
+import java.util.Map;
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.reporting.domain.entity.Chart;
+import com.haiphamcoder.reporting.domain.entity.Chart.ChartBuilder;
 import com.haiphamcoder.reporting.proto.ChartProto;
 import com.haiphamcoder.reporting.proto.ChartServiceGrpc;
 import com.haiphamcoder.reporting.proto.GetChartByIdRequest;
@@ -12,6 +16,8 @@ import com.haiphamcoder.reporting.proto.GetChartByIdResponse;
 import com.haiphamcoder.reporting.proto.UpdateChartRequest;
 import com.haiphamcoder.reporting.proto.UpdateChartResponse;
 import com.haiphamcoder.reporting.repository.ChartRepository;
+import com.haiphamcoder.reporting.shared.MapperUtils;
+import com.haiphamcoder.reporting.shared.StringUtils;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -56,14 +62,54 @@ public class ChartServiceGrpcImpl extends ChartServiceGrpc.ChartServiceImplBase 
     }
 
     private ChartProto convertToChartProto(Chart chart) {
-        return ChartProto.newBuilder()
-                .setId(chart.getId())
-                .build();
+        try {
+            ChartProto.Builder builder = ChartProto.newBuilder();
+            builder.setId(chart.getId());
+            if (!StringUtils.isNullOrEmpty(chart.getName())) {
+                builder.setName(chart.getName());
+            }
+            builder.setUserId(chart.getUserId());
+            if (!StringUtils.isNullOrEmpty(chart.getDescription())) {
+                builder.setDescription(chart.getDescription());
+            }
+            if (chart.getConfig() != null && !chart.getConfig().isEmpty()) {
+                builder.setConfig(MapperUtils.objectMapper.writeValueAsString(chart.getConfig()));
+            }
+            if (chart.getQueryOption() != null && !chart.getQueryOption().isNull()) {
+                builder.setQueryOption(MapperUtils.objectMapper.writeValueAsString(chart.getQueryOption()));
+            }
+            builder.setIsDeleted(chart.getIsDeleted());
+            return builder.build();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private Chart convertToChart(ChartProto chartProto) {
-        return Chart.builder()
-                .id(chartProto.getId())
-                .build();
+        try {
+            ChartBuilder builder = Chart.builder();
+            builder.id(chartProto.getId());
+            if (!StringUtils.isNullOrEmpty(chartProto.getName())) {
+                builder.name(chartProto.getName());
+            }
+            builder.userId(chartProto.getUserId());
+            if (!StringUtils.isNullOrEmpty(chartProto.getDescription())) {
+                builder.description(chartProto.getDescription());
+            }
+            if (chartProto.getConfig() != null && !chartProto.getConfig().isEmpty()) {
+                builder.config(MapperUtils.objectMapper.readValue(chartProto.getConfig(),
+                        new TypeReference<Map<String, Object>>() {
+                        }));
+            }
+            if (chartProto.getQueryOption() != null && !chartProto.getQueryOption().isEmpty()) {
+                builder.queryOption(MapperUtils.objectMapper.readValue(chartProto.getQueryOption(), JsonNode.class));
+            }
+            builder.isDeleted(chartProto.getIsDeleted());
+            return builder.build();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

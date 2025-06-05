@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.entity.Source;
+import com.haiphamcoder.reporting.domain.entity.Source.SourceBuilder;
 import com.haiphamcoder.reporting.proto.GetSourceByIdRequest;
 import com.haiphamcoder.reporting.proto.GetSourceByIdResponse;
 import com.haiphamcoder.reporting.proto.SourceProto;
@@ -15,6 +16,7 @@ import com.haiphamcoder.reporting.proto.SourceServiceGrpc;
 import com.haiphamcoder.reporting.proto.UpdateSourceRequest;
 import com.haiphamcoder.reporting.proto.UpdateSourceResponse;
 import com.haiphamcoder.reporting.repository.SourceRepository;
+import com.haiphamcoder.reporting.shared.StringUtils;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -59,41 +61,60 @@ public class SourceServiceGrpcImpl extends SourceServiceGrpc.SourceServiceImplBa
     }
 
     private SourceProto convertToSourceProto(Source source) {
-        return SourceProto.newBuilder()
-                .setId(source.getId())
-                .setName(source.getName())
-                .setDescription(source.getDescription())
-                .setConnectorType(source.getConnectorType())
-                .setMapping(source.getMapping())
-                .setConfig(source.getConfig())
-                .setTableName(source.getTableName())
-                .setStatus(source.getStatus())
-                .setUserId(source.getUserId())
-                .setIsDeleted(source.getIsDeleted())
-                .setIsStarred(source.getIsStarred())
-                .setLastSyncTime(source.getLastSyncTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .setCreatedAt(source.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .setModifiedAt(source.getModifiedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
-                .build();
+
+        SourceProto.Builder builder = SourceProto.newBuilder();
+        builder.setId(source.getId());
+        if (!StringUtils.isNullOrEmpty(source.getName())) {
+            builder.setName(source.getName());
+        }
+        if (!StringUtils.isNullOrEmpty(source.getDescription())) {
+            builder.setDescription(source.getDescription());
+        }
+        builder.setConnectorType(source.getConnectorType());
+        if (source.getMapping() != null && !source.getMapping().isEmpty()) {
+            builder.setMapping(source.getMapping());
+        }
+        if (source.getConfig() != null && !source.getConfig().isEmpty()) {
+            builder.setConfig(source.getConfig());
+        }
+        if (!StringUtils.isNullOrEmpty(source.getTableName())) {
+            builder.setTableName(source.getTableName());
+        }
+        builder.setStatus(source.getStatus());
+        builder.setUserId(source.getUserId());
+        builder.setIsDeleted(source.getIsDeleted());
+        builder.setIsStarred(source.getIsStarred());
+        builder.setLastSyncTime(source.getLastSyncTime().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        return builder.build();
     }
 
     private Source convertToSource(SourceProto sourceProto) {
-        return Source.builder()
-                .id(sourceProto.getId())
-                .name(sourceProto.getName())
-                .description(sourceProto.getDescription())
-                .connectorType(sourceProto.getConnectorType())
-                .mapping(sourceProto.getMapping())
-                .config(sourceProto.getConfig())
-                .tableName(sourceProto.getTableName())
-                .status(sourceProto.getStatus())
-                .userId(sourceProto.getUserId())
-                .isDeleted(sourceProto.getIsDeleted())
-                .isStarred(sourceProto.getIsStarred())
-                .lastSyncTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(sourceProto.getLastSyncTime()), ZoneId.systemDefault()))
-                .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(sourceProto.getCreatedAt()), ZoneId.systemDefault()))
-                .modifiedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(sourceProto.getModifiedAt()), ZoneId.systemDefault()))
-                .build();
+
+        SourceBuilder builder = Source.builder();
+        builder.id(sourceProto.getId());
+        if (!StringUtils.isNullOrEmpty(sourceProto.getName())) {
+            builder.name(sourceProto.getName());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceProto.getDescription())) {
+            builder.description(sourceProto.getDescription());
+        }
+        builder.connectorType(sourceProto.getConnectorType());
+        if (!StringUtils.isNullOrEmpty(sourceProto.getMapping())) {
+            builder.mapping(sourceProto.getMapping());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceProto.getConfig())) {
+            builder.config(sourceProto.getConfig());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceProto.getTableName())) {
+            builder.tableName(sourceProto.getTableName());
+        }
+        builder.status(sourceProto.getStatus());
+        builder.userId(sourceProto.getUserId());
+        builder.isDeleted(sourceProto.getIsDeleted());
+        builder.isStarred(sourceProto.getIsStarred());
+        builder.lastSyncTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(sourceProto.getLastSyncTime()),
+                ZoneId.systemDefault()));
+        return builder.build();
     }
 
 }

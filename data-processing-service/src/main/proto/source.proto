@@ -30,8 +30,6 @@ message SourceProto {
   bool is_deleted = 10;
   bool is_starred = 11;
   int64 last_sync_time = 12;
-  int64 created_at = 13;
-  int64 modified_at = 14;
 }
 
 // Request/Response messages for GetSourceById
