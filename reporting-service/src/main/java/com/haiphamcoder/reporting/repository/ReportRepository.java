@@ -14,4 +14,9 @@ public interface ReportRepository {
     Long getTotalReportByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     List<Long> getReportCountByLast30Days(Long userId);
+
+    Optional<Report> updateReport(Report report);
+
+    Optional<Report> createReport(Report report);
+
 }

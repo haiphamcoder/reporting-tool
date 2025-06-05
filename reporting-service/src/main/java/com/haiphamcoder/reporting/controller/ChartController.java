@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.service.ChartService;
-import com.haiphamcoder.reporting.shared.exception.BaseException;
-import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
-
+import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -28,73 +26,38 @@ public class ChartController {
     private final ChartService chartService;
 
     @GetMapping
-    public ResponseEntity<Object> getAll(@CookieValue(name = "user-id") String userId) {
-        try {
-            List<ChartDto> charts = chartService.getAllChartsByUserId(Long.parseLong(userId));
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(charts));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId) {
+        List<ChartDto> charts = chartService.getAllChartsByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success(charts, "Charts fetched successfully"));
     }
 
     @GetMapping("/{chart-id}")
-    public ResponseEntity<Object> getById(@CookieValue(name = "user-id") String userId,
-            @PathVariable("chart-id") String chartId) {
-        try {
-            ChartDto chart = null;
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(chart));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> getById(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId) {
+        ChartDto chart = chartService.getChartById(userId, chartId);
+        return ResponseEntity.ok(ApiResponse.success(chart, "Chart fetched successfully"));
     }
 
     @PostMapping
-    public ResponseEntity<Object> create(@CookieValue(name = "user-id") String userId,
+    public ResponseEntity<Object> create(@CookieValue(name = "user-id") Long userId,
             @RequestBody ChartDto chartDto) {
-        try {
-            ChartDto createdChart = chartService.createChart(Long.parseLong(userId), chartDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(createdChart));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+        ChartDto createdChart = chartService.createChart(userId, chartDto);
+        return ResponseEntity.ok(ApiResponse.success(createdChart, "Chart created successfully"));
     }
 
     @PutMapping("/{chart-id}")
-    public ResponseEntity<Object> update(@CookieValue(name = "user-id") String userId,
-            @PathVariable("chart-id") String chartId,
+    public ResponseEntity<ApiResponse<Object>> update(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId,
             @RequestBody ChartDto chartDto) {
-        try {
-            ChartDto updatedChart = chartService.updateChart(Long.parseLong(userId), Long.parseLong(chartId), chartDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(updatedChart));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+        ChartDto updatedChart = chartService.updateChart(userId, chartId, chartDto);
+        return ResponseEntity.ok(ApiResponse.success(updatedChart, "Chart updated successfully"));
     }
 
     @DeleteMapping("/{chart-id}")
-    public ResponseEntity<Object> delete(@CookieValue(name = "user-id") String userId,
-            @PathVariable("chart-id") String chartId) {
-        try {
-            chartService.deleteChart(Long.parseLong(userId), Long.parseLong(chartId));
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Chart deleted successfully"));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> delete(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId) {
+        chartService.deleteChart(userId, chartId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Chart deleted successfully"));
     }
 
 }

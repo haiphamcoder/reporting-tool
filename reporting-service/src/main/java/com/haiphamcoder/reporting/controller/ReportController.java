@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.service.ReportService;
-import com.haiphamcoder.reporting.shared.exception.BaseException;
-import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
-
+import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -28,73 +26,38 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping
-    public ResponseEntity<Object> getAll(@CookieValue(name = "user-id") String userId) {
-        try {
-            List<ReportDto> reports = reportService.getAllReportsByUserId(Long.parseLong(userId));
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(reports));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId) {
+        List<ReportDto> reports = reportService.getAllReportsByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success(reports, "Reports fetched successfully"));
     }
 
     @GetMapping("/{report-id}")
-    public ResponseEntity<Object> getById(@CookieValue(name = "user-id") String userId,
-            @PathVariable("report-id") String reportId) {
-        try {
-            ReportDto report = reportService.getReportById(Long.parseLong(userId), Long.parseLong(reportId));
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(report));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> getById(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId) {
+        ReportDto report = reportService.getReportById(userId, reportId);
+        return ResponseEntity.ok(ApiResponse.success(report, "Report fetched successfully"));
     }
 
     @PutMapping("/{report-id}")
-    public ResponseEntity<Object> update(@CookieValue(name = "user-id") String userId,
-            @PathVariable("report-id") String reportId,
+    public ResponseEntity<ApiResponse<Object>> update(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId,
             @RequestBody ReportDto reportDto) {
-        try {
-            ReportDto updatedReport = reportService.updateReport(Long.parseLong(userId), Long.parseLong(reportId), reportDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(updatedReport));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+        ReportDto updatedReport = reportService.updateReport(userId, reportId, reportDto);
+        return ResponseEntity.ok(ApiResponse.success(updatedReport, "Report updated successfully"));
     }
 
     @DeleteMapping("/{report-id}")
-    public ResponseEntity<Object> delete(@CookieValue(name = "user-id") String userId,
-            @PathVariable("report-id") String reportId) {
-        try {
-            reportService.deleteReport(Long.parseLong(userId), Long.parseLong(reportId));
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse("Report deleted successfully"));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+    public ResponseEntity<ApiResponse<Object>> delete(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId) {
+        reportService.deleteReport(userId, reportId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Report deleted successfully"));
     }
 
     @PostMapping
-    public ResponseEntity<Object> create(@CookieValue(name = "user-id") String userId,
+    public ResponseEntity<ApiResponse<Object>> create(@CookieValue(name = "user-id") Long userId,
             @RequestBody ReportDto reportDto) {
-        try {
-            ReportDto createdReport = reportService.createReport(Long.parseLong(userId), reportDto);
-            return ResponseEntity.ok(RestAPIResponse.ResponseFactory.createResponse(createdReport));
-        } catch (BaseException e) {
-            return ResponseEntity.status(e.getHttpStatus()).body(RestAPIResponse.ResponseFactory.createResponse(e));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(RestAPIResponse.ResponseFactory.createResponse(e));
-        }
+        ReportDto createdReport = reportService.createReport(userId, reportDto);
+        return ResponseEntity.ok(ApiResponse.success(createdReport, "Report created successfully"));
     }
 
 }

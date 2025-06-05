@@ -1,12 +1,14 @@
 package com.haiphamcoder.reporting.service.impl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.entity.Report;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
@@ -28,26 +30,43 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportDto getReportById(Long userId, Long reportId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getReportById'");
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        return ReportMapper.toReportDto(report.get());
     }
 
     @Override
     public ReportDto updateReport(Long userId, Long reportId, ReportDto reportDto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateReport'");
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        report.get().setDescription(reportDto.getDescription());
+        report.get().setConfig(reportDto.getConfig());
+        report.get().setIsDeleted(reportDto.getIsDeleted());
+        reportRepository.updateReport(report.get());
+        return ReportMapper.toReportDto(report.get());
     }
 
     @Override
     public void deleteReport(Long userId, Long reportId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteReport'");
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        report.get().setIsDeleted(true);
+        reportRepository.updateReport(report.get());
     }
 
     @Override
     public ReportDto createReport(Long userId, ReportDto reportDto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createReport'");
+        Report report = ReportMapper.toEntity(reportDto);
+        report.setUserId(userId);
+        report.setIsDeleted(false);
+        reportRepository.createReport(report);
+        return ReportMapper.toReportDto(report);
     }
 
 }

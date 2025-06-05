@@ -62,5 +62,15 @@ public class ReportRepositoryImpl implements ReportRepository {
         Collections.reverse(result);
         return result;
     }
-    
+
+    @Override
+    public Optional<Report> updateReport(Report report) {
+        return Optional.of(reportJpaRepository.save(report));
+    }
+
+    @Override
+    public Optional<Report> createReport(Report report) {
+        return Optional.of(reportJpaRepository.save(report));
+    }
+
 }
