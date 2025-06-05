@@ -60,4 +60,12 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(createdReport, "Report created successfully"));
     }
 
+    @PostMapping("/{report-id}/charts/{chart-id}")
+    public ResponseEntity<ApiResponse<Object>> addChartToReport(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId,
+            @PathVariable("chart-id") Long chartId) {
+        reportService.addChartToReport(userId, reportId, chartId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Chart added to report successfully"));
+    }
+
 }

@@ -6,10 +6,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.entity.Chart;
+import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
+import com.haiphamcoder.reporting.repository.ChartReportRepository;
+import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
 
@@ -21,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
+    private final ChartRepository chartRepository;
+    private final ChartReportRepository chartReportRepository;
 
     @Override
     public List<ReportDto> getAllReportsByUserId(Long userId) {
@@ -67,6 +74,22 @@ public class ReportServiceImpl implements ReportService {
         report.setIsDeleted(false);
         reportRepository.createReport(report);
         return ReportMapper.toReportDto(report);
+    }
+
+    @Override
+    public void addChartToReport(Long userId, Long reportId, Long chartId) {
+        Optional<Report> existingReport = reportRepository.getReportById(reportId);
+        if (existingReport.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        Optional<Chart> existingChart = chartRepository.getChartById(chartId);
+        if (existingChart.isEmpty()) {
+            throw new ResourceNotFoundException("Chart", chartId);
+        }
+        ChartReport chartReport = new ChartReport();
+        chartReport.setReportId(reportId);
+        chartReport.setChartId(chartId);
+        chartReportRepository.save(chartReport);
     }
 
 }

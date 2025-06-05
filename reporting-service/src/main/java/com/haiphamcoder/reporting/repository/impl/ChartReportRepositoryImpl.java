@@ -29,4 +29,9 @@ public class ChartReportRepositoryImpl implements ChartReportRepository {
         return chartReportJpaRepository.findByChartIdAndReportId(chartId, reportId);
     }
 
+    @Override
+    public void save(ChartReport chartReport) {
+        chartReportJpaRepository.save(chartReport);
+    }
+
 }

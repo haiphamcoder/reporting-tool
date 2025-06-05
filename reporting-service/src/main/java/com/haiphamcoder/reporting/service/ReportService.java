@@ -16,4 +16,6 @@ public interface ReportService {
 
     ReportDto createReport(Long userId, ReportDto reportDto);
 
+    void addChartToReport(Long userId, Long reportId, Long chartId);
+
 }
