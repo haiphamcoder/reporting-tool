@@ -99,20 +99,23 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
         const password = data.get('password');
         
         try {
-            const response = fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTHENTICATE}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                }),
-                credentials: 'include',
-            });
+            // Comment out actual API call for now
+            // const response = fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTHENTICATE}`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({
+            //         username: username,
+            //         password: password,
+            //     }),
+            //     credentials: 'include',
+            // });
 
-            if ((await response).status === 200) {
-                await checkAuth();
+            // Mock authentication logic
+            if (username === 'admin' && password === 'admin') {
+                // Mock successful login
+                // await checkAuth();
                 navigate('/dashboard');
             } else {
                 setErrorDialogOpen(true);

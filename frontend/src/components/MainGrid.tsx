@@ -10,12 +10,40 @@ import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
 import AddSourceDialog from './AddSourceDialog';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const sourcesColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 200 },
-  { field: 'type', headerName: 'Type', width: 150 },
-  { field: 'schedule', headerName: 'Schedule', width: 150 },
-  { field: 'lastRun', headerName: 'Last Run', width: 180 },
+  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+  {
+    field: 'actions',
+    headerName: '',
+    flex: 0.5,
+    minWidth: 120,
+    sortable: false,
+    renderCell: () => (
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="flex-end"
+        alignItems="center"
+        sx={{ height: '100%', width: '100%' }}
+      >
+        <IconButton color="primary" size="small">
+          <EditIcon />
+        </IconButton>
+        <IconButton color="error" size="small">
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
 ];
 
 const sourcesRows = [
@@ -25,10 +53,34 @@ const sourcesRows = [
 ];
 
 const chartsColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 200 },
-  { field: 'type', headerName: 'Type', width: 150 },
-  { field: 'schedule', headerName: 'Schedule', width: 150 },
-  { field: 'lastRun', headerName: 'Last Run', width: 180 },
+  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+  {
+    field: 'actions',
+    headerName: '',
+    flex: 0.5,
+    minWidth: 120,
+    sortable: false,
+    renderCell: () => (
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="flex-end"
+        alignItems="center"
+        sx={{ height: '100%', width: '100%' }}
+      >
+        <IconButton color="primary" size="small">
+          <EditIcon />
+        </IconButton>
+        <IconButton color="error" size="small">
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
 ];
 
 const chartsRows = [
@@ -38,10 +90,34 @@ const chartsRows = [
 ];
 
 const reportsColumns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 200 },
-  { field: 'type', headerName: 'Type', width: 150 },
-  { field: 'schedule', headerName: 'Schedule', width: 150 },
-  { field: 'lastRun', headerName: 'Last Run', width: 180 },
+  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+  {
+    field: 'actions',
+    headerName: '',
+    flex: 0.5,
+    minWidth: 120,
+    sortable: false,
+    renderCell: () => (
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="flex-end"
+        alignItems="center"
+        sx={{ height: '100%', width: '100%' }}
+      >
+        <IconButton color="primary" size="small">
+          <EditIcon />
+        </IconButton>
+        <IconButton color="error" size="small">
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
 ];
 
 const reportsRows = [
@@ -146,10 +222,13 @@ export default function MainGrid() {
       case 'sources':
         return (
           <Stack gap={2}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Sources
+            </Typography>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" component="h2" gutterBottom>
-                Sources
-              </Typography>
+              <IconButton color="primary" size="small">
+                <RefreshIcon />
+              </IconButton>
               <Button variant="contained" color="primary" onClick={handleOpenAddSource}>
                 Add Source
               </Button>
@@ -157,6 +236,11 @@ export default function MainGrid() {
             <CustomizedDataGrid
               rows={sourcesRows}
               columns={sourcesColumns}
+              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+              autoHeight
+              disableColumnMenu
+              disableRowSelectionOnClick
+              columnBufferPx={2}
             />
             <AddSourceDialog
               open={addSourceOpen}
@@ -171,10 +255,13 @@ export default function MainGrid() {
       case 'charts':
         return (
           <Stack gap={2}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Charts
+            </Typography>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" component="h1" gutterBottom>
-                Charts
-              </Typography>
+              <IconButton color="primary" size="small">
+                <RefreshIcon />
+              </IconButton>
               <Button variant="contained" color="primary">
                 Add Chart
               </Button>
@@ -182,16 +269,24 @@ export default function MainGrid() {
             <CustomizedDataGrid
               rows={chartsRows}
               columns={chartsColumns}
+              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+              autoHeight
+              disableColumnMenu
+              disableRowSelectionOnClick
+              columnBufferPx={2}
             />
           </Stack>
         );
       case 'reports':
         return (
           <Stack gap={2}>
+            <Typography variant="h6" component="h2" gutterBottom>
+              Reports
+            </Typography>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" component="h1" gutterBottom>
-                Reports
-              </Typography>
+              <IconButton color="primary" size="small">
+                <RefreshIcon />
+              </IconButton>
               <Button variant="contained" color="primary">
                 Add Report
               </Button>
@@ -199,6 +294,11 @@ export default function MainGrid() {
             <CustomizedDataGrid
               rows={reportsRows}
               columns={reportsColumns}
+              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+              autoHeight
+              disableColumnMenu
+              disableRowSelectionOnClick
+              columnBufferPx={2}
             />
           </Stack>
         );

@@ -26,15 +26,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const checkAuth = async () => {
         try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH_INFO}`, { method: "GET", credentials: "include" });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.user_id) {
-                    setUserId(data.user_id);
-                } else {
-                    setUserId(null);
-                }
-            }
+            // Comment out actual API call for now
+            // const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH_INFO}`, { method: "GET", credentials: "include" });
+            // if (response.ok) {
+            //     const data = await response.json();
+            //     if (data.user_id) {
+            //         setUserId(data.user_id);
+            //     } else {
+            //         setUserId(null);
+            //     }
+            // }
+
+            // Mock authentication check
+            setUserId("mock-user-id-123");
+            
         } catch (error) {
             console.error("Error checking authentication status", error);
             setError("Not connected to the server! Please try again later.");
