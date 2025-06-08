@@ -14,37 +14,13 @@ import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RefreshIcon from '@mui/icons-material/Refresh';
-
-const sourcesColumns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-  {
-    field: 'actions',
-    headerName: '',
-    flex: 0.5,
-    minWidth: 120,
-    sortable: false,
-    renderCell: () => (
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{ height: '100%', width: '100%' }}
-      >
-        <IconButton color="primary" size="small">
-          <EditIcon />
-        </IconButton>
-        <IconButton color="error" size="small">
-          <DeleteIcon />
-        </IconButton>
-      </Stack>
-    ),
-  },
-];
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import MenuItem from '@mui/material/MenuItem';
 
 const sourcesRows = [
   { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -52,72 +28,10 @@ const sourcesRows = [
   { id: 3, name: 'Source 3', type: 'Type 3', schedule: 'Monthly', lastRun: '2023-01-03' },
 ];
 
-const chartsColumns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-  {
-    field: 'actions',
-    headerName: '',
-    flex: 0.5,
-    minWidth: 120,
-    sortable: false,
-    renderCell: () => (
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{ height: '100%', width: '100%' }}
-      >
-        <IconButton color="primary" size="small">
-          <EditIcon />
-        </IconButton>
-        <IconButton color="error" size="small">
-          <DeleteIcon />
-        </IconButton>
-      </Stack>
-    ),
-  },
-];
-
 const chartsRows = [
   { id: 1, name: 'Chart 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
   { id: 2, name: 'Chart 2', type: 'Type 2', schedule: 'Weekly', lastRun: '2023-01-02' },
   { id: 3, name: 'Chart 3', type: 'Type 3', schedule: 'Monthly', lastRun: '2023-01-03' },
-];
-
-const reportsColumns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-  { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-  { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-  { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-  {
-    field: 'actions',
-    headerName: '',
-    flex: 0.5,
-    minWidth: 120,
-    sortable: false,
-    renderCell: () => (
-      <Stack
-        direction="row"
-        spacing={1}
-        justifyContent="flex-end"
-        alignItems="center"
-        sx={{ height: '100%', width: '100%' }}
-      >
-        <IconButton color="primary" size="small">
-          <EditIcon />
-        </IconButton>
-        <IconButton color="error" size="small">
-          <DeleteIcon />
-        </IconButton>
-      </Stack>
-    ),
-  },
 ];
 
 const reportsRows = [
@@ -128,11 +42,59 @@ const reportsRows = [
 
 export default function MainGrid() {
   const { currentContent } = useContent();
-
-  // Dialog state and connector logic
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState<any>(null);
   const [addSourceOpen, setAddSourceOpen] = useState(false);
   const [connectors, setConnectors] = useState<any[]>([]);
   const [loadingConnectors, setLoadingConnectors] = useState(false);
+
+  const handleRowDoubleClick = (params: any) => {
+    setSelectedItem(params.row);
+    setShowDetails(true);
+  };
+
+  const handleBackToList = () => {
+    setShowDetails(false);
+    setSelectedItem(null);
+  };
+
+  const handleEditClick = (row: any) => {
+    setEditForm(row);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setEditDialogOpen(false);
+    setEditForm(null);
+  };
+
+  const handleEditSave = () => {
+    // TODO: Implement save logic
+    console.log('Saving edited data:', editForm);
+    handleEditClose();
+  };
+
+  const handleEditFormChange = (field: string, value: any) => {
+    setEditForm((prev: any) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleOpenAddSource = () => {
+    setAddSourceOpen(true);
+  };
+
+  const handleCloseAddSource = () => {
+    setAddSourceOpen(false);
+  };
+
+  const handleAddSourceNext = (data: { sourceName: string; connector: any; file?: File | null }) => {
+    console.log(data.connector);
+    setAddSourceOpen(false);
+  };
 
   useEffect(() => {
     if (addSourceOpen) {
@@ -151,18 +113,208 @@ export default function MainGrid() {
     }
   }, [addSourceOpen]);
 
-  const handleOpenAddSource = () => {
-    setAddSourceOpen(true);
+  const sourcesColumns: GridColDef[] = [
+    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+    {
+      field: 'actions',
+      headerName: '',
+      flex: 0.5,
+      minWidth: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ height: '100%', width: '100%' }}
+        >
+          <IconButton 
+            color="primary" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(params.row);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
+
+  const chartsColumns: GridColDef[] = [
+    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+    {
+      field: 'actions',
+      headerName: '',
+      flex: 0.5,
+      minWidth: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ height: '100%', width: '100%' }}
+        >
+          <IconButton 
+            color="primary" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(params.row);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
+
+  const reportsColumns: GridColDef[] = [
+    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
+    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
+    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
+    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
+    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
+    {
+      field: 'actions',
+      headerName: '',
+      flex: 0.5,
+      minWidth: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          alignItems="center"
+          sx={{ height: '100%', width: '100%' }}
+        >
+          <IconButton 
+            color="primary" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditClick(params.row);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton color="error" size="small">
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
+
+  const renderEditDialog = () => {
+    if (!editForm) return null;
+
+    return (
+      <Dialog open={editDialogOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit {currentContent?.charAt(0).toUpperCase() + currentContent?.slice(1)}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <TextField
+              label="Name"
+              value={editForm.name}
+              onChange={(e) => handleEditFormChange('name', e.target.value)}
+              fullWidth
+            />
+            <TextField
+              select
+              label="Type"
+              value={editForm.type}
+              onChange={(e) => handleEditFormChange('type', e.target.value)}
+              fullWidth
+            >
+              <MenuItem value="Type 1">Type 1</MenuItem>
+              <MenuItem value="Type 2">Type 2</MenuItem>
+              <MenuItem value="Type 3">Type 3</MenuItem>
+            </TextField>
+            <TextField
+              select
+              label="Schedule"
+              value={editForm.schedule}
+              onChange={(e) => handleEditFormChange('schedule', e.target.value)}
+              fullWidth
+            >
+              <MenuItem value="Daily">Daily</MenuItem>
+              <MenuItem value="Weekly">Weekly</MenuItem>
+              <MenuItem value="Monthly">Monthly</MenuItem>
+            </TextField>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditClose}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+    );
   };
-  const handleCloseAddSource = () => {
-    setAddSourceOpen(false);
-  };
-  const handleAddSourceNext = (data: { sourceName: string; connector: any; file?: File | null }) => {
-    console.log(data.connector);
-    setAddSourceOpen(false);
+
+  const renderDetails = () => {
+    if (!selectedItem) return null;
+
+    return (
+      <Stack gap={2}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <IconButton onClick={handleBackToList} size="small">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h6" component="h2">
+            {selectedItem.name}
+          </Typography>
+        </Stack>
+        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle2" color="text.secondary">ID</Typography>
+              <Typography variant="body1">{selectedItem.id}</Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle2" color="text.secondary">Type</Typography>
+              <Typography variant="body1">{selectedItem.type}</Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle2" color="text.secondary">Schedule</Typography>
+              <Typography variant="body1">{selectedItem.schedule}</Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle2" color="text.secondary">Last Run</Typography>
+              <Typography variant="body1">{selectedItem.lastRun}</Typography>
+            </Grid>
+          </Grid>
+        </Box>
+      </Stack>
+    );
   };
 
   const renderContent = () => {
+    if (showDetails) {
+      return renderDetails();
+    }
+
     switch (currentContent) {
       case 'home':
         return (
@@ -241,6 +393,7 @@ export default function MainGrid() {
               disableColumnMenu
               disableRowSelectionOnClick
               columnBufferPx={2}
+              onRowDoubleClick={handleRowDoubleClick}
             />
             <AddSourceDialog
               open={addSourceOpen}
@@ -274,6 +427,7 @@ export default function MainGrid() {
               disableColumnMenu
               disableRowSelectionOnClick
               columnBufferPx={2}
+              onRowDoubleClick={handleRowDoubleClick}
             />
           </Stack>
         );
@@ -299,6 +453,7 @@ export default function MainGrid() {
               disableColumnMenu
               disableRowSelectionOnClick
               columnBufferPx={2}
+              onRowDoubleClick={handleRowDoubleClick}
             />
           </Stack>
         );
@@ -343,6 +498,8 @@ export default function MainGrid() {
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {renderContent()}
+      {renderEditDialog()}
     </Box>
   );
 }
+
