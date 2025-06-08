@@ -9,7 +9,6 @@ import StatCard from './StatCard';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
-import AddSourceDialog from './AddSourceDialog';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,6 +20,13 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import MenuItem from '@mui/material/MenuItem';
+import AddIcon from '@mui/icons-material/Add';
+import TableContainer from '@mui/material/TableContainer';
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
 
 const sourcesRows = [
   { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -59,6 +65,22 @@ export default function MainGrid() {
     chartType: '',
     dataSource: '',
     description: '',
+    connectorType: '',
+    connectionConfig: {},
+    schemaMapping: {},
+    previewData: null,
+    selectedFile: null,
+    mode: 'normal',
+    displayType: 'chart',
+    selectedChartType: '',
+    sources: [],
+    query: {
+      filters: [],
+      groupBy: [],
+      sortBy: [],
+      joins: [],
+    },
+    sqlQuery: '',
   });
   const [addStep, setAddStep] = useState(1);
 
@@ -149,7 +171,62 @@ export default function MainGrid() {
       chartType: '',
       dataSource: '',
       description: '',
+      connectorType: '',
+      connectionConfig: {},
+      schemaMapping: {},
+      previewData: null,
+      selectedFile: null,
+      mode: 'normal',
+      displayType: 'chart',
+      selectedChartType: '',
+      sources: [],
+      query: {
+        filters: [],
+        groupBy: [],
+        sortBy: [],
+        joins: [],
+      },
+      sqlQuery: '',
     });
+  };
+
+  const handleAddNext = () => {
+    if (currentContent === 'sources') {
+      if (addStep === 1) {
+        // Validate step 1
+        if (!addForm.name || !addForm.connectorType) return;
+        setAddStep(2);
+      } else if (addStep === 2) {
+        // Validate step 2 based on connector type
+        if (addForm.connectorType === 'csv' || addForm.connectorType === 'excel') {
+          // TODO: Validate file upload
+          setAddStep(3);
+        } else if (addForm.connectorType === 'mysql') {
+          const { host, port, database, username, password } = addForm.connectionConfig;
+          if (!host || !port || !database || !username || !password) return;
+          setAddStep(3);
+        } else if (addForm.connectorType === 'gsheet') {
+          if (!addForm.connectionConfig.url) return;
+          setAddStep(3);
+        }
+      } else if (addStep === 3) {
+        // TODO: Implement save logic
+        console.log('Saving source:', addForm);
+        handleAddClose();
+      }
+    } else if (currentContent === 'charts') {
+      if (addStep === 1) {
+        setAddStep(2);
+      } else {
+        // TODO: Implement save logic
+        console.log('Saving chart:', addForm);
+        handleAddClose();
+      }
+    }
+  };
+
+  const handleAddBack = () => {
+    setAddStep(addStep - 1);
   };
 
   const handleAddClose = () => {
@@ -162,27 +239,54 @@ export default function MainGrid() {
       chartType: '',
       dataSource: '',
       description: '',
+      connectorType: '',
+      connectionConfig: {},
+      schemaMapping: {},
+      previewData: null,
+      selectedFile: null,
+      mode: 'normal',
+      displayType: 'chart',
+      selectedChartType: '',
+      sources: [],
+      query: {
+        filters: [],
+        groupBy: [],
+        sortBy: [],
+        joins: [],
+      },
+      sqlQuery: '',
     });
-  };
-
-  const handleAddNext = () => {
-    if (addStep < 2) {
-      setAddStep(2);
-    } else {
-      // TODO: Implement save logic
-      console.log('Saving new item:', addForm);
-      handleAddClose();
-    }
-  };
-
-  const handleAddBack = () => {
-    setAddStep(1);
   };
 
   const handleAddFormChange = (field: string, value: any) => {
     setAddForm((prev: any) => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAddForm((prev: any) => ({
+        ...prev,
+        selectedFile: file,
+        connectionConfig: {
+          ...prev.connectionConfig,
+          fileName: file.name,
+        }
+      }));
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setAddForm((prev: any) => ({
+      ...prev,
+      selectedFile: null,
+      connectionConfig: {
+        ...prev.connectionConfig,
+        fileName: null,
+      }
     }));
   };
 
@@ -407,122 +511,579 @@ export default function MainGrid() {
 
   const renderAddDialog = () => {
     const getStepContent = () => {
-      if (currentContent === 'charts') {
-        return addStep === 1 ? (
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Chart Name
-              </Typography>
-              <TextField
-                value={addForm.name}
-                onChange={(e) => handleAddFormChange('name', e.target.value)}
-                fullWidth
-                required
-                placeholder="Enter chart name"
-              />
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Chart Type
-              </Typography>
-              <TextField
-                select
-                value={addForm.chartType}
-                onChange={(e) => handleAddFormChange('chartType', e.target.value)}
-                fullWidth
-                required
-              >
-                <MenuItem value="line">Line Chart</MenuItem>
-                <MenuItem value="bar">Bar Chart</MenuItem>
-                <MenuItem value="pie">Pie Chart</MenuItem>
-                <MenuItem value="area">Area Chart</MenuItem>
-                <MenuItem value="scatter">Scatter Plot</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Data Source
-              </Typography>
-              <TextField
-                select
-                value={addForm.dataSource}
-                onChange={(e) => handleAddFormChange('dataSource', e.target.value)}
-                fullWidth
-                required
-              >
-                {sourcesData.map((source) => (
-                  <MenuItem key={source.id} value={source.id}>
-                    {source.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-          </Stack>
-        ) : (
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Schedule
-              </Typography>
-              <TextField
-                select
-                value={addForm.schedule}
-                onChange={(e) => handleAddFormChange('schedule', e.target.value)}
-                fullWidth
-                required
-              >
-                <MenuItem value="Daily">Daily</MenuItem>
-                <MenuItem value="Weekly">Weekly</MenuItem>
-                <MenuItem value="Monthly">Monthly</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Description
-              </Typography>
-              <TextField
-                value={addForm.description}
-                onChange={(e) => handleAddFormChange('description', e.target.value)}
-                fullWidth
-                multiline
-                rows={3}
-                placeholder="Enter chart description"
-              />
-            </Box>
-            <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Preview
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" color="text.secondary">Chart Name</Typography>
-                  <Typography variant="body1">{addForm.name}</Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" color="text.secondary">Chart Type</Typography>
-                  <Typography variant="body1">{addForm.chartType}</Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" color="text.secondary">Data Source</Typography>
-                  <Typography variant="body1">
-                    {sourcesData.find(s => s.id === addForm.dataSource)?.name || 'Not selected'}
+      if (currentContent === 'sources') {
+        switch (addStep) {
+          case 1:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Source Name
                   </Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" color="text.secondary">Schedule</Typography>
-                  <Typography variant="body1">{addForm.schedule}</Typography>
-                </Grid>
-                {addForm.description && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle2" color="text.secondary">Description</Typography>
-                    <Typography variant="body1">{addForm.description}</Typography>
-                  </Grid>
+                  <TextField
+                    value={addForm.name}
+                    onChange={(e) => handleAddFormChange('name', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="Enter source name"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Connector Type
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.connectorType}
+                    onChange={(e) => handleAddFormChange('connectorType', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="csv">CSV File</MenuItem>
+                    <MenuItem value="excel">Excel File</MenuItem>
+                    <MenuItem value="mysql">MySQL Database</MenuItem>
+                    <MenuItem value="gsheet">Google Sheet</MenuItem>
+                  </TextField>
+                </Box>
+              </Stack>
+            );
+          case 2:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                {addForm.connectorType === 'csv' || addForm.connectorType === 'excel' ? (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Upload File
+                    </Typography>
+                    {!addForm.selectedFile ? (
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        fullWidth
+                      >
+                        Choose File
+                        <input
+                          type="file"
+                          hidden
+                          accept={addForm.connectorType === 'csv' ? '.csv' : '.xlsx,.xls'}
+                          onChange={handleFileChange}
+                        />
+                      </Button>
+                    ) : (
+                      <Box sx={{ 
+                        p: 2, 
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                            {addForm.selectedFile.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            ({(addForm.selectedFile.size / 1024).toFixed(2)} KB)
+                          </Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            onClick={handleRemoveFile}
+                            color="error"
+                          >
+                            Remove
+                          </Button>
+                          <Button
+                            size="small"
+                            component="label"
+                            variant="outlined"
+                          >
+                            Change
+                            <input
+                              type="file"
+                              hidden
+                              accept={addForm.connectorType === 'csv' ? '.csv' : '.xlsx,.xls'}
+                              onChange={handleFileChange}
+                            />
+                          </Button>
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+                ) : addForm.connectorType === 'mysql' ? (
+                  <>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Host
+                      </Typography>
+                      <TextField
+                        value={addForm.connectionConfig.host || ''}
+                        onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, host: e.target.value })}
+                        fullWidth
+                        required
+                        placeholder="Enter host"
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Port
+                      </Typography>
+                      <TextField
+                        value={addForm.connectionConfig.port || ''}
+                        onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, port: e.target.value })}
+                        fullWidth
+                        required
+                        placeholder="Enter port"
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Database
+                      </Typography>
+                      <TextField
+                        value={addForm.connectionConfig.database || ''}
+                        onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, database: e.target.value })}
+                        fullWidth
+                        required
+                        placeholder="Enter database name"
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Username
+                      </Typography>
+                      <TextField
+                        value={addForm.connectionConfig.username || ''}
+                        onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, username: e.target.value })}
+                        fullWidth
+                        required
+                        placeholder="Enter username"
+                      />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Password
+                      </Typography>
+                      <TextField
+                        type="password"
+                        value={addForm.connectionConfig.password || ''}
+                        onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, password: e.target.value })}
+                        fullWidth
+                        required
+                        placeholder="Enter password"
+                      />
+                    </Box>
+                  </>
+                ) : addForm.connectorType === 'gsheet' ? (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Google Sheet URL
+                    </Typography>
+                    <TextField
+                      value={addForm.connectionConfig.url || ''}
+                      onChange={(e) => handleAddFormChange('connectionConfig', { ...addForm.connectionConfig, url: e.target.value })}
+                      fullWidth
+                      required
+                      placeholder="Enter Google Sheet URL"
+                    />
+                  </Box>
+                ) : null}
+              </Stack>
+            );
+          case 3:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Schema Mapping
+                  </Typography>
+                  {addForm.previewData && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Preview Data
+                      </Typography>
+                      <Box sx={{ maxHeight: 200, overflow: 'auto' }}>
+                        {/* TODO: Add data preview table */}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </Stack>
+            );
+          default:
+            return null;
+        }
+      } else if (currentContent === 'charts') {
+        switch (addStep) {
+          case 1:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Chart Name
+                  </Typography>
+                  <TextField
+                    value={addForm.name}
+                    onChange={(e) => handleAddFormChange('name', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="Enter chart name"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Display Type
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.displayType}
+                    onChange={(e) => handleAddFormChange('displayType', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="chart">Chart</MenuItem>
+                    <MenuItem value="table">Table</MenuItem>
+                  </TextField>
+                </Box>
+                {addForm.displayType === 'chart' && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Chart Type
+                    </Typography>
+                    <TextField
+                      select
+                      value={addForm.selectedChartType}
+                      onChange={(e) => handleAddFormChange('selectedChartType', e.target.value)}
+                      fullWidth
+                      required
+                    >
+                      <MenuItem value="line">Line Chart</MenuItem>
+                      <MenuItem value="bar">Bar Chart</MenuItem>
+                      <MenuItem value="pie">Pie Chart</MenuItem>
+                      <MenuItem value="area">Area Chart</MenuItem>
+                    </TextField>
+                  </Box>
                 )}
-              </Grid>
-            </Box>
-          </Stack>
-        );
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Creation Mode
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.mode}
+                    onChange={(e) => handleAddFormChange('mode', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="normal">Normal (Visual Builder)</MenuItem>
+                    <MenuItem value="advanced">Advanced (SQL Query)</MenuItem>
+                  </TextField>
+                </Box>
+              </Stack>
+            );
+          case 2:
+            return addForm.mode === 'normal' ? (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Data Sources
+                  </Typography>
+                  <TextField
+                    select
+                    SelectProps={{
+                      multiple: true,
+                      value: addForm.sources,
+                      onChange: (e) => handleAddFormChange('sources', e.target.value),
+                    }}
+                    fullWidth
+                    required
+                  >
+                    {sourcesData.map((source) => (
+                      <MenuItem key={source.id} value={source.id}>
+                        {source.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Filters
+                  </Typography>
+                  <Stack spacing={2}>
+                    {addForm.query.filters.map((filter: any, index: number) => (
+                      <Box key={index} sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          select
+                          value={filter.field}
+                          onChange={(e) => {
+                            const newFilters = [...addForm.query.filters];
+                            newFilters[index].field = e.target.value;
+                            handleAddFormChange('query', { ...addForm.query, filters: newFilters });
+                          }}
+                          sx={{ flex: 1 }}
+                        >
+                          {/* TODO: Add field options based on selected sources */}
+                        </TextField>
+                        <TextField
+                          select
+                          value={filter.operator}
+                          onChange={(e) => {
+                            const newFilters = [...addForm.query.filters];
+                            newFilters[index].operator = e.target.value;
+                            handleAddFormChange('query', { ...addForm.query, filters: newFilters });
+                          }}
+                          sx={{ width: 150 }}
+                        >
+                          <MenuItem value="=">=</MenuItem>
+                          <MenuItem value="!=">!=</MenuItem>
+                          <MenuItem value="gt">&gt;</MenuItem>
+                          <MenuItem value="lt">&lt;</MenuItem>
+                          <MenuItem value="gte">&gt;=</MenuItem>
+                          <MenuItem value="lte">&lt;=</MenuItem>
+                          <MenuItem value="like">LIKE</MenuItem>
+                        </TextField>
+                        <TextField
+                          value={filter.value}
+                          onChange={(e) => {
+                            const newFilters = [...addForm.query.filters];
+                            newFilters[index].value = e.target.value;
+                            handleAddFormChange('query', { ...addForm.query, filters: newFilters });
+                          }}
+                          sx={{ flex: 1 }}
+                        />
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            const newFilters = addForm.query.filters.filter((_: any, i: number) => i !== index);
+                            handleAddFormChange('query', { ...addForm.query, filters: newFilters });
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    ))}
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        const newFilters = [...addForm.query.filters, { field: '', operator: '=', value: '' }];
+                        handleAddFormChange('query', { ...addForm.query, filters: newFilters });
+                      }}
+                    >
+                      Add Filter
+                    </Button>
+                  </Stack>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Group By
+                  </Typography>
+                  <TextField
+                    select
+                    SelectProps={{
+                      multiple: true,
+                      value: addForm.query.groupBy,
+                      onChange: (event) => {
+                        const value = event.target.value as string[];
+                        handleAddFormChange('query', { ...addForm.query, groupBy: value });
+                      },
+                    }}
+                    fullWidth
+                  >
+                    {/* TODO: Add field options based on selected sources */}
+                  </TextField>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Sort By
+                  </Typography>
+                  <Stack spacing={2}>
+                    {addForm.query.sortBy.map((sort: any, index: number) => (
+                      <Box key={index} sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          select
+                          value={sort.field}
+                          onChange={(e) => {
+                            const newSortBy = [...addForm.query.sortBy];
+                            newSortBy[index].field = e.target.value;
+                            handleAddFormChange('query', { ...addForm.query, sortBy: newSortBy });
+                          }}
+                          sx={{ flex: 1 }}
+                        >
+                          {/* TODO: Add field options based on selected sources */}
+                        </TextField>
+                        <TextField
+                          select
+                          value={sort.direction}
+                          onChange={(e) => {
+                            const newSortBy = [...addForm.query.sortBy];
+                            newSortBy[index].direction = e.target.value;
+                            handleAddFormChange('query', { ...addForm.query, sortBy: newSortBy });
+                          }}
+                          sx={{ width: 150 }}
+                        >
+                          <MenuItem value="asc">Ascending</MenuItem>
+                          <MenuItem value="desc">Descending</MenuItem>
+                        </TextField>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            const newSortBy = addForm.query.sortBy.filter((_: any, i: number) => i !== index);
+                            handleAddFormChange('query', { ...addForm.query, sortBy: newSortBy });
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    ))}
+                    <Button
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        const newSortBy = [...addForm.query.sortBy, { field: '', direction: 'asc' }];
+                        handleAddFormChange('query', { ...addForm.query, sortBy: newSortBy });
+                      }}
+                    >
+                      Add Sort
+                    </Button>
+                  </Stack>
+                </Box>
+              </Stack>
+            ) : (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    SQL Query
+                  </Typography>
+                  <Box sx={{ 
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    overflow: 'hidden'
+                  }}>
+                    <Box sx={{ 
+                      p: 1, 
+                      bgcolor: 'background.paper',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider'
+                    }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Write your SQL query to fetch data for the chart
+                      </Typography>
+                    </Box>
+                    <TextField
+                      multiline
+                      rows={8}
+                      value={addForm.sqlQuery}
+                      onChange={(e) => handleAddFormChange('sqlQuery', e.target.value)}
+                      fullWidth
+                      required
+                      placeholder="SELECT * FROM your_table WHERE condition"
+                      variant="standard"
+                      InputProps={{
+                        disableUnderline: true,
+                        sx: {
+                          p: 2,
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: 1.5,
+                          '& textarea': {
+                            fontFamily: 'monospace',
+                          }
+                        }
+                      }}
+                    />
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Preview Data
+                  </Typography>
+                  <Box sx={{ 
+                    p: 2, 
+                    bgcolor: 'background.paper', 
+                    borderRadius: 1,
+                    minHeight: 200,
+                    maxHeight: 400,
+                    overflow: 'auto',
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}>
+                    {addForm.previewData ? (
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              {Object.keys(addForm.previewData[0] || {}).map((key) => (
+                                <TableCell key={key}>{key}</TableCell>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {addForm.previewData.map((row: any, index: number) => (
+                              <TableRow key={index}>
+                                {Object.values(row).map((value: any, i: number) => (
+                                  <TableCell key={i}>{value}</TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        color: 'text.secondary'
+                      }}>
+                        <Typography>No preview data available</Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      // TODO: Implement preview functionality
+                      console.log('Preview SQL query:', addForm.sqlQuery);
+                    }}
+                  >
+                    Preview Query
+                  </Button>
+                </Box>
+              </Stack>
+            );
+          case 3:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Preview
+                  </Typography>
+                  <Box sx={{ 
+                    p: 2, 
+                    bgcolor: 'background.paper', 
+                    borderRadius: 1,
+                    minHeight: 300,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {addForm.displayType === 'table' ? (
+                      <Typography>Table Preview</Typography>
+                    ) : (
+                      <Typography>Chart Preview</Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Stack>
+            );
+          default:
+            return null;
+        }
       }
       // ... existing code for other content types ...
     };
@@ -542,19 +1103,30 @@ export default function MainGrid() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleAddClose}>Cancel</Button>
-          {addStep === 2 && (
+          {addStep > 1 && (
             <Button onClick={handleAddBack}>Back</Button>
           )}
           <Button 
             onClick={handleAddNext} 
             variant="contained"
             disabled={
-              currentContent === 'charts' 
-                ? (!addForm.name || !addForm.chartType || !addForm.dataSource || (addStep === 2 && !addForm.schedule))
-                : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule))
+              currentContent === 'sources' 
+                ? (addStep === 1 && (!addForm.name || !addForm.connectorType)) ||
+                  (addStep === 2 && (
+                    (addForm.connectorType === 'csv' || addForm.connectorType === 'excel') && !addForm.selectedFile ||
+                    (addForm.connectorType === 'mysql' && (!addForm.connectionConfig.host || !addForm.connectionConfig.port || !addForm.connectionConfig.database || !addForm.connectionConfig.username || !addForm.connectionConfig.password)) ||
+                    (addForm.connectorType === 'gsheet' && !addForm.connectionConfig.url)
+                  ))
+                : (currentContent === 'charts' 
+                  ? (addStep === 1 && (!addForm.name || !addForm.displayType || (addForm.displayType === 'chart' && !addForm.selectedChartType) || !addForm.mode)) ||
+                    (addStep === 2 && (
+                      (addForm.mode === 'normal' && (!addForm.sources.length || !addForm.query.filters.length)) ||
+                      (addForm.mode === 'advanced' && !addForm.sqlQuery)
+                    ))
+                  : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule)))
             }
           >
-            {addStep === 1 ? 'Next' : 'Create'}
+            {addStep === (currentContent === 'sources' ? 3 : 3) ? 'Create' : 'Next'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -669,7 +1241,7 @@ export default function MainGrid() {
               <IconButton color="primary" size="small">
                 <RefreshIcon />
               </IconButton>
-              <Button variant="contained" color="primary" onClick={handleOpenAddSource}>
+              <Button variant="contained" color="primary" onClick={handleAddClick}>
                 Add Source
               </Button>
             </Stack>
@@ -683,14 +1255,7 @@ export default function MainGrid() {
               columnBufferPx={2}
               onRowDoubleClick={handleRowDoubleClick}
             />
-            <AddSourceDialog
-              open={addSourceOpen}
-              onClose={handleCloseAddSource}
-              onNext={handleAddSourceNext}
-              connectors={connectors}
-              loadingConnectors={loadingConnectors}
-              disableCustomTheme={false}
-            />
+            {renderAddDialog()}
           </Stack>
         );
       case 'charts':
