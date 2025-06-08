@@ -27,6 +27,8 @@ import TableHead from '@mui/material/TableHead';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 
 const sourcesRows = [
   { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -81,6 +83,19 @@ export default function MainGrid() {
       joins: [],
     },
     sqlQuery: '',
+    recipients: [],
+    format: 'pdf',
+    charts: [],
+    emailSubject: '',
+    emailBody: '',
+    advancedSettings: {
+      includeDataTable: true,
+      includeChart: true,
+      pageSize: 'A4',
+      orientation: 'portrait',
+      header: '',
+      footer: '',
+    }
   });
   const [addStep, setAddStep] = useState(1);
 
@@ -187,39 +202,51 @@ export default function MainGrid() {
         joins: [],
       },
       sqlQuery: '',
+      recipients: [],
+      format: 'pdf',
+      charts: [],
+      emailSubject: '',
+      emailBody: '',
+      advancedSettings: {
+        includeDataTable: true,
+        includeChart: true,
+        pageSize: 'A4',
+        orientation: 'portrait',
+        header: '',
+        footer: '',
+      }
     });
   };
 
   const handleAddNext = () => {
     if (currentContent === 'sources') {
       if (addStep === 1) {
-        // Validate step 1
-        if (!addForm.name || !addForm.connectorType) return;
         setAddStep(2);
       } else if (addStep === 2) {
-        // Validate step 2 based on connector type
-        if (addForm.connectorType === 'csv' || addForm.connectorType === 'excel') {
-          // TODO: Validate file upload
-          setAddStep(3);
-        } else if (addForm.connectorType === 'mysql') {
-          const { host, port, database, username, password } = addForm.connectionConfig;
-          if (!host || !port || !database || !username || !password) return;
-          setAddStep(3);
-        } else if (addForm.connectorType === 'gsheet') {
-          if (!addForm.connectionConfig.url) return;
-          setAddStep(3);
-        }
+        setAddStep(3);
       } else if (addStep === 3) {
-        // TODO: Implement save logic
-        console.log('Saving source:', addForm);
+        // Handle source creation
+        console.log('Creating source:', addForm);
         handleAddClose();
       }
     } else if (currentContent === 'charts') {
       if (addStep === 1) {
         setAddStep(2);
-      } else {
-        // TODO: Implement save logic
-        console.log('Saving chart:', addForm);
+      } else if (addStep === 2) {
+        setAddStep(3);
+      } else if (addStep === 3) {
+        // Handle chart creation
+        console.log('Creating chart:', addForm);
+        handleAddClose();
+      }
+    } else if (currentContent === 'reports') {
+      if (addStep === 1) {
+        setAddStep(2);
+      } else if (addStep === 2) {
+        setAddStep(3);
+      } else if (addStep === 3) {
+        // Handle report creation
+        console.log('Creating report:', addForm);
         handleAddClose();
       }
     }
@@ -255,6 +282,19 @@ export default function MainGrid() {
         joins: [],
       },
       sqlQuery: '',
+      recipients: [],
+      format: 'pdf',
+      charts: [],
+      emailSubject: '',
+      emailBody: '',
+      advancedSettings: {
+        includeDataTable: true,
+        includeChart: true,
+        pageSize: 'A4',
+        orientation: 'portrait',
+        header: '',
+        footer: '',
+      }
     });
   };
 
@@ -1084,8 +1124,257 @@ export default function MainGrid() {
           default:
             return null;
         }
+      } else if (currentContent === 'reports') {
+        switch (addStep) {
+          case 1:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Report Name
+                  </Typography>
+                  <TextField
+                    value={addForm.name}
+                    onChange={(e) => handleAddFormChange('name', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="Enter report name"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Report Type
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.type}
+                    onChange={(e) => handleAddFormChange('type', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="daily">Daily Report</MenuItem>
+                    <MenuItem value="weekly">Weekly Report</MenuItem>
+                    <MenuItem value="monthly">Monthly Report</MenuItem>
+                    <MenuItem value="custom">Custom Report</MenuItem>
+                  </TextField>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Schedule
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.schedule}
+                    onChange={(e) => handleAddFormChange('schedule', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="daily">Daily</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="custom">Custom</MenuItem>
+                  </TextField>
+                </Box>
+                {addForm.schedule === 'custom' && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Custom Schedule
+                    </Typography>
+                    <TextField
+                      value={addForm.customSchedule}
+                      onChange={(e) => handleAddFormChange('customSchedule', e.target.value)}
+                      fullWidth
+                      placeholder="Enter cron expression (e.g. 0 9 * * *)"
+                      helperText="Use cron expression format"
+                    />
+                  </Box>
+                )}
+              </Stack>
+            );
+          case 2:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Description
+                  </Typography>
+                  <TextField
+                    multiline
+                    rows={3}
+                    value={addForm.description}
+                    onChange={(e) => handleAddFormChange('description', e.target.value)}
+                    fullWidth
+                    placeholder="Enter report description"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Recipients
+                  </Typography>
+                  <TextField
+                    select
+                    SelectProps={{
+                      multiple: true,
+                      value: addForm.recipients,
+                      onChange: (e) => handleAddFormChange('recipients', e.target.value),
+                    }}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="user1@example.com">user1@example.com</MenuItem>
+                    <MenuItem value="user2@example.com">user2@example.com</MenuItem>
+                    <MenuItem value="user3@example.com">user3@example.com</MenuItem>
+                  </TextField>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Format
+                  </Typography>
+                  <TextField
+                    select
+                    value={addForm.format}
+                    onChange={(e) => handleAddFormChange('format', e.target.value)}
+                    fullWidth
+                    required
+                  >
+                    <MenuItem value="pdf">PDF</MenuItem>
+                    <MenuItem value="excel">Excel</MenuItem>
+                    <MenuItem value="csv">CSV</MenuItem>
+                  </TextField>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Charts to Include
+                  </Typography>
+                  <TextField
+                    select
+                    SelectProps={{
+                      multiple: true,
+                      value: addForm.charts,
+                      onChange: (e) => handleAddFormChange('charts', e.target.value),
+                    }}
+                    fullWidth
+                    required
+                  >
+                    {chartsData.map((chart) => (
+                      <MenuItem key={chart.id} value={chart.id}>
+                        {chart.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
+              </Stack>
+            );
+          case 3:
+            return (
+              <Stack spacing={3} sx={{ mt: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Email Settings
+                  </Typography>
+                  <TextField
+                    value={addForm.emailSubject}
+                    onChange={(e) => handleAddFormChange('emailSubject', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="Enter email subject"
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    multiline
+                    rows={4}
+                    value={addForm.emailBody}
+                    onChange={(e) => handleAddFormChange('emailBody', e.target.value)}
+                    fullWidth
+                    required
+                    placeholder="Enter email body"
+                  />
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Advanced Settings
+                  </Typography>
+                  <Stack spacing={2}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={addForm.advancedSettings.includeDataTable}
+                          onChange={(e) => handleAddFormChange('advancedSettings', {
+                            ...addForm.advancedSettings,
+                            includeDataTable: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Include Data Table"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={addForm.advancedSettings.includeChart}
+                          onChange={(e) => handleAddFormChange('advancedSettings', {
+                            ...addForm.advancedSettings,
+                            includeChart: e.target.checked
+                          })}
+                        />
+                      }
+                      label="Include Chart"
+                    />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        select
+                        label="Page Size"
+                        value={addForm.advancedSettings.pageSize}
+                        onChange={(e) => handleAddFormChange('advancedSettings', {
+                          ...addForm.advancedSettings,
+                          pageSize: e.target.value
+                        })}
+                        sx={{ flex: 1 }}
+                      >
+                        <MenuItem value="A4">A4</MenuItem>
+                        <MenuItem value="A3">A3</MenuItem>
+                        <MenuItem value="Letter">Letter</MenuItem>
+                      </TextField>
+                      <TextField
+                        select
+                        label="Orientation"
+                        value={addForm.advancedSettings.orientation}
+                        onChange={(e) => handleAddFormChange('advancedSettings', {
+                          ...addForm.advancedSettings,
+                          orientation: e.target.value
+                        })}
+                        sx={{ flex: 1 }}
+                      >
+                        <MenuItem value="portrait">Portrait</MenuItem>
+                        <MenuItem value="landscape">Landscape</MenuItem>
+                      </TextField>
+                    </Box>
+                    <TextField
+                      value={addForm.advancedSettings.header}
+                      onChange={(e) => handleAddFormChange('advancedSettings', {
+                        ...addForm.advancedSettings,
+                        header: e.target.value
+                      })}
+                      fullWidth
+                      placeholder="Enter header text"
+                    />
+                    <TextField
+                      value={addForm.advancedSettings.footer}
+                      onChange={(e) => handleAddFormChange('advancedSettings', {
+                        ...addForm.advancedSettings,
+                        footer: e.target.value
+                      })}
+                      fullWidth
+                      placeholder="Enter footer text"
+                    />
+                  </Stack>
+                </Box>
+              </Stack>
+            );
+          default:
+            return null;
+        }
       }
-      // ... existing code for other content types ...
+      return null;
     };
 
     return (
@@ -1123,10 +1412,15 @@ export default function MainGrid() {
                       (addForm.mode === 'normal' && (!addForm.sources.length || !addForm.query.filters.length)) ||
                       (addForm.mode === 'advanced' && !addForm.sqlQuery)
                     ))
-                  : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule)))
+                  : (currentContent === 'reports'
+                    ? (addStep === 1 && (!addForm.name || !addForm.type || !addForm.schedule)) ||
+                      (addStep === 2 && (!addForm.recipients.length || !addForm.format || !addForm.charts.length)) ||
+                      (addStep === 3 && (!addForm.emailSubject || !addForm.emailBody))
+                    : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule)))
+                  )
             }
           >
-            {addStep === (currentContent === 'sources' ? 3 : 3) ? 'Create' : 'Next'}
+            {addStep === (currentContent === 'sources' ? 3 : currentContent === 'reports' ? 3 : 3) ? 'Create' : 'Next'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1294,7 +1588,7 @@ export default function MainGrid() {
               <IconButton color="primary" size="small">
                 <RefreshIcon />
               </IconButton>
-              <Button variant="contained" color="primary">
+              <Button variant="contained" color="primary" onClick={handleAddClick}>
                 Add Report
               </Button>
             </Stack>
