@@ -46,9 +46,26 @@ export default function MainGrid() {
   const [showDetails, setShowDetails] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [addSourceOpen, setAddSourceOpen] = useState(false);
   const [connectors, setConnectors] = useState<any[]>([]);
   const [loadingConnectors, setLoadingConnectors] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addForm, setAddForm] = useState<any>({
+    name: '',
+    type: '',
+    schedule: '',
+    chartType: '',
+    dataSource: '',
+    description: '',
+  });
+  const [addStep, setAddStep] = useState(1);
+
+  // Add state for table data
+  const [sourcesData, setSourcesData] = useState(sourcesRows);
+  const [chartsData, setChartsData] = useState(chartsRows);
+  const [reportsData, setReportsData] = useState(reportsRows);
 
   const handleRowDoubleClick = (params: any) => {
     setSelectedItem(params.row);
@@ -94,6 +111,79 @@ export default function MainGrid() {
   const handleAddSourceNext = (data: { sourceName: string; connector: any; file?: File | null }) => {
     console.log(data.connector);
     setAddSourceOpen(false);
+  };
+
+  const handleDeleteClick = (row: any) => {
+    setItemToDelete(row);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteClose = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
+
+  const handleDeleteConfirm = () => {
+    // Remove item from the appropriate table based on currentContent
+    switch (currentContent) {
+      case 'sources':
+        setSourcesData(prev => prev.filter(item => item.id !== itemToDelete.id));
+        break;
+      case 'charts':
+        setChartsData(prev => prev.filter(item => item.id !== itemToDelete.id));
+        break;
+      case 'reports':
+        setReportsData(prev => prev.filter(item => item.id !== itemToDelete.id));
+        break;
+    }
+    handleDeleteClose();
+  };
+
+  const handleAddClick = () => {
+    setAddDialogOpen(true);
+    setAddStep(1);
+    setAddForm({
+      name: '',
+      type: '',
+      schedule: '',
+      chartType: '',
+      dataSource: '',
+      description: '',
+    });
+  };
+
+  const handleAddClose = () => {
+    setAddDialogOpen(false);
+    setAddStep(1);
+    setAddForm({
+      name: '',
+      type: '',
+      schedule: '',
+      chartType: '',
+      dataSource: '',
+      description: '',
+    });
+  };
+
+  const handleAddNext = () => {
+    if (addStep < 2) {
+      setAddStep(2);
+    } else {
+      // TODO: Implement save logic
+      console.log('Saving new item:', addForm);
+      handleAddClose();
+    }
+  };
+
+  const handleAddBack = () => {
+    setAddStep(1);
+  };
+
+  const handleAddFormChange = (field: string, value: any) => {
+    setAddForm((prev: any) => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   useEffect(() => {
@@ -143,7 +233,14 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton 
+            color="error" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteClick(params.row);
+            }}
+          >
             <DeleteIcon />
           </IconButton>
         </Stack>
@@ -181,7 +278,14 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton 
+            color="error" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteClick(params.row);
+            }}
+          >
             <DeleteIcon />
           </IconButton>
         </Stack>
@@ -219,7 +323,14 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton color="error" size="small">
+          <IconButton 
+            color="error" 
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteClick(params.row);
+            }}
+          >
             <DeleteIcon />
           </IconButton>
         </Stack>
@@ -268,6 +379,183 @@ export default function MainGrid() {
         <DialogActions>
           <Button onClick={handleEditClose}>Cancel</Button>
           <Button onClick={handleEditSave} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  const renderDeleteDialog = () => {
+    if (!itemToDelete) return null;
+
+    return (
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteClose}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete {itemToDelete.name}?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteClose}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  const renderAddDialog = () => {
+    const getStepContent = () => {
+      if (currentContent === 'charts') {
+        return addStep === 1 ? (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Chart Name
+              </Typography>
+              <TextField
+                value={addForm.name}
+                onChange={(e) => handleAddFormChange('name', e.target.value)}
+                fullWidth
+                required
+                placeholder="Enter chart name"
+              />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Chart Type
+              </Typography>
+              <TextField
+                select
+                value={addForm.chartType}
+                onChange={(e) => handleAddFormChange('chartType', e.target.value)}
+                fullWidth
+                required
+              >
+                <MenuItem value="line">Line Chart</MenuItem>
+                <MenuItem value="bar">Bar Chart</MenuItem>
+                <MenuItem value="pie">Pie Chart</MenuItem>
+                <MenuItem value="area">Area Chart</MenuItem>
+                <MenuItem value="scatter">Scatter Plot</MenuItem>
+              </TextField>
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Data Source
+              </Typography>
+              <TextField
+                select
+                value={addForm.dataSource}
+                onChange={(e) => handleAddFormChange('dataSource', e.target.value)}
+                fullWidth
+                required
+              >
+                {sourcesData.map((source) => (
+                  <MenuItem key={source.id} value={source.id}>
+                    {source.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+          </Stack>
+        ) : (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Schedule
+              </Typography>
+              <TextField
+                select
+                value={addForm.schedule}
+                onChange={(e) => handleAddFormChange('schedule', e.target.value)}
+                fullWidth
+                required
+              >
+                <MenuItem value="Daily">Daily</MenuItem>
+                <MenuItem value="Weekly">Weekly</MenuItem>
+                <MenuItem value="Monthly">Monthly</MenuItem>
+              </TextField>
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Description
+              </Typography>
+              <TextField
+                value={addForm.description}
+                onChange={(e) => handleAddFormChange('description', e.target.value)}
+                fullWidth
+                multiline
+                rows={3}
+                placeholder="Enter chart description"
+              />
+            </Box>
+            <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Preview
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle2" color="text.secondary">Chart Name</Typography>
+                  <Typography variant="body1">{addForm.name}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle2" color="text.secondary">Chart Type</Typography>
+                  <Typography variant="body1">{addForm.chartType}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle2" color="text.secondary">Data Source</Typography>
+                  <Typography variant="body1">
+                    {sourcesData.find(s => s.id === addForm.dataSource)?.name || 'Not selected'}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="subtitle2" color="text.secondary">Schedule</Typography>
+                  <Typography variant="body1">{addForm.schedule}</Typography>
+                </Grid>
+                {addForm.description && (
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="subtitle2" color="text.secondary">Description</Typography>
+                    <Typography variant="body1">{addForm.description}</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          </Stack>
+        );
+      }
+      // ... existing code for other content types ...
+    };
+
+    return (
+      <Dialog 
+        open={addDialogOpen} 
+        onClose={handleAddClose} 
+        maxWidth="sm" 
+        fullWidth
+      >
+        <DialogTitle>
+          Add {currentContent?.charAt(0).toUpperCase() + currentContent?.slice(1)}
+        </DialogTitle>
+        <DialogContent>
+          {getStepContent()}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAddClose}>Cancel</Button>
+          {addStep === 2 && (
+            <Button onClick={handleAddBack}>Back</Button>
+          )}
+          <Button 
+            onClick={handleAddNext} 
+            variant="contained"
+            disabled={
+              currentContent === 'charts' 
+                ? (!addForm.name || !addForm.chartType || !addForm.dataSource || (addStep === 2 && !addForm.schedule))
+                : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule))
+            }
+          >
+            {addStep === 1 ? 'Next' : 'Create'}
+          </Button>
         </DialogActions>
       </Dialog>
     );
@@ -331,7 +619,7 @@ export default function MainGrid() {
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                   title="Data Sources"
-                  value={sourcesRows.length.toString()}
+                  value={sourcesData.length.toString()}
                   interval=""
                   trend="up"
                   data={[5, 7, 8, 9, 10, 12, 15]}
@@ -340,7 +628,7 @@ export default function MainGrid() {
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                   title="Charts"
-                  value={chartsRows.length.toString()}
+                  value={chartsData.length.toString()}
                   interval=""
                   trend="neutral"
                   data={[3, 4, 5, 6, 7, 8, 9]}
@@ -349,7 +637,7 @@ export default function MainGrid() {
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                   title="Reports"
-                  value={reportsRows.length.toString()}
+                  value={reportsData.length.toString()}
                   interval=""
                   trend="down"
                   data={[8, 7, 6, 5, 4, 3, 2]}
@@ -386,7 +674,7 @@ export default function MainGrid() {
               </Button>
             </Stack>
             <CustomizedDataGrid
-              rows={sourcesRows}
+              rows={sourcesData}
               columns={sourcesColumns}
               sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
               autoHeight
@@ -415,12 +703,12 @@ export default function MainGrid() {
               <IconButton color="primary" size="small">
                 <RefreshIcon />
               </IconButton>
-              <Button variant="contained" color="primary">
+              <Button variant="contained" color="primary" onClick={handleAddClick}>
                 Add Chart
               </Button>
             </Stack>
             <CustomizedDataGrid
-              rows={chartsRows}
+              rows={chartsData}
               columns={chartsColumns}
               sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
               autoHeight
@@ -446,7 +734,7 @@ export default function MainGrid() {
               </Button>
             </Stack>
             <CustomizedDataGrid
-              rows={reportsRows}
+              rows={reportsData}
               columns={reportsColumns}
               sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
               autoHeight
@@ -499,6 +787,8 @@ export default function MainGrid() {
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {renderContent()}
       {renderEditDialog()}
+      {renderDeleteDialog()}
+      {renderAddDialog()}
     </Box>
   );
 }
