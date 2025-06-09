@@ -17,6 +17,9 @@ import ColorSchemeToggle from '../theme/ColorSchemeToggle';
 import CDPLogo from '../assets/logo.svg';
 import MuiCard from '@mui/material/Card';
 import { GoogleIcon } from '../components/CustomIcons';
+import { useNavigate } from 'react-router-dom';
+import { authApi } from '../api/auth/authApi';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -65,6 +68,7 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
+    const navigate = useNavigate();
     const [firstNameError, setFirstNameError] = React.useState(false);
     const [firstNameErrorMessage, setFirstNameErrorMessage] = React.useState('');
     const [lastNameError, setLastNameError] = React.useState(false);
@@ -78,20 +82,36 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
     const [passwordConfirmationError, setPasswordConfirmationError] = React.useState(false);
     const [passwordConfirmationErrorMessage, setPasswordConfirmationErrorMessage] = React.useState('');
     const [agreedToTerms, setAgreedToTerms] = React.useState(false);
+    const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState('');
 
     const handleAgreeToTerms = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAgreedToTerms(event.target.checked);
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
 
-        if (emailError || usernameError || passwordError || passwordConfirmationError || firstNameError || lastNameError) {
-            event.preventDefault();
+        if (!validateInputs() || !agreedToTerms) {
             return;
         }
 
         const data = new FormData(event.currentTarget);
-        console.log(data);
+        const signUpData = {
+            first_name: data.get('firstName') as string,
+            last_name: data.get('lastName') as string,
+            email: data.get('email') as string,
+            username: data.get('username') as string,
+            password: data.get('password') as string,
+        };
+
+        try {
+            await authApi.signUp(signUpData);
+            navigate('/auth/signin');
+        } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to sign up');
+            setErrorDialogOpen(true);
+        }
     };
 
     const validateInputs = () => {
@@ -131,7 +151,7 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
             setEmailErrorMessage('');
         }
 
-        if (!username.value || username.value.length < 6) {
+        if (!username.value || username.value.length < 4) {
             setUsernameError(true);
             setUsernameErrorMessage('Please enter a valid username.');
             isValid = false;
@@ -156,6 +176,12 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
         } else {
             setPasswordConfirmationError(false);
             setPasswordConfirmationErrorMessage('');
+        }
+
+        if (!agreedToTerms) {
+            setErrorMessage('Please agree to the terms and conditions.');
+            setErrorDialogOpen(true);
+            isValid = false;
         }
 
         return isValid;
@@ -331,6 +357,20 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
                     </Typography>
                 </Card>
             </SignUpContainer>
+            <Dialog
+                open={errorDialogOpen}
+                onClose={() => setErrorDialogOpen(false)}
+            >
+                <DialogTitle>Error</DialogTitle>
+                <DialogContent>
+                    <Typography id="error-dialog-description">
+                        {errorMessage}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setErrorDialogOpen(false)}>OK</Button>
+                </DialogActions>
+            </Dialog>
         </AppTheme>
     );
 }

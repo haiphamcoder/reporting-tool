@@ -4,7 +4,7 @@ import { JSX } from 'react';
 import LoadingPage from '../pages/LoadingPage';
 
 export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-    const { isAuthenticated , isLoading } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
     const location = useLocation();
 
     if (isLoading) {

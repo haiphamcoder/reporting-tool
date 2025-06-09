@@ -1,12 +1,12 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { API_CONFIG } from '../config/api';
+import { createContext, useState, useContext, useEffect } from 'react';
+import { authApi } from '../api/auth/authApi';
 import { Alert, Snackbar } from '@mui/material';
 
 interface AuthContextType {
     userId: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    checkAuth: () => Promise<void>;
+    setAuthenticated: (value: boolean) => void;
     logout: () => Promise<void>;
 }
 
@@ -14,55 +14,60 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>({
     userId: null,
     isAuthenticated: false,
-    isLoading: true,
-    checkAuth: async () => { },
+    isLoading: false,
+    setAuthenticated: () => { },
     logout: async () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [userId, setUserId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true); // Set initial loading to true
     const [error, setError] = useState<string | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const checkAuth = async () => {
-        try {
-            // Comment out actual API call for now
-            // const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH_INFO}`, { method: "GET", credentials: "include" });
-            // if (response.ok) {
-            //     const data = await response.json();
-            //     if (data.user_id) {
-            //         setUserId(data.user_id);
-            //     } else {
-            //         setUserId(null);
-            //     }
-            // }
-
-            // Mock authentication check
-            setUserId("mock-user-id-123");
-            
-        } catch (error) {
-            console.error("Error checking authentication status", error);
-            setError("Not connected to the server! Please try again later.");
+    const setAuthenticated = (value: boolean) => {
+        setIsAuthenticated(value);
+        if (value) {
+            setUserId('authenticated'); // Set a dummy value since we don't need the actual userId
+        } else {
             setUserId(null);
         }
-        setIsLoading(false);
-    }
-
-    useEffect(() => {
-        checkAuth();
-    }, []);
+    };
 
     const logout = async () => {
         try {
-            await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGOUT}`, { method: "POST", credentials: "include" });
+            await authApi.logout();
+            setAuthenticated(false);
         } catch (error) {
             console.error("Error logging out", error);
+            setError("Failed to logout. Please try again.");
         }
-        setUserId(null);
     };
 
+    // Check authentication status when component mounts
+    useEffect(() => {
+        const checkAuthStatus = async () => {
+            try {
+                await authApi.getCurrentUser();
+                setAuthenticated(true);
+            } catch (error) {
+                setAuthenticated(false);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        checkAuthStatus();
+    }, []);
+
     return (
-        <AuthContext.Provider value={{ userId, isAuthenticated: !!userId, isLoading, checkAuth, logout }}>
+        <AuthContext.Provider value={{ 
+            userId, 
+            isAuthenticated, 
+            isLoading, 
+            setAuthenticated,
+            logout 
+        }}>
             {children}
 
             {/* Display an error message if one exists */}

@@ -55,7 +55,8 @@ public class SecurityConfiguration {
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http.csrf(csrf -> csrf.disable())
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .cors(cors -> cors.disable())
+                                // .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(unauthorizedAuthenticationEntryPoint))
                                 .authorizeHttpRequests(request -> request
@@ -84,15 +85,15 @@ public class SecurityConfiguration {
                 return http.build();
         }
 
-        @Bean
-        CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
-                configuration.setAllowedMethods(Arrays.asList("*"));
-                configuration.setAllowedHeaders(Arrays.asList("*"));
-                configuration.setAllowCredentials(true);
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration);
-                return source;
-        }
+        // @Bean
+        // CorsConfigurationSource corsConfigurationSource() {
+        //         CorsConfiguration configuration = new CorsConfiguration();
+        //         configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+        //         configuration.setAllowedMethods(Arrays.asList("*"));
+        //         configuration.setAllowedHeaders(Arrays.asList("*"));
+        //         configuration.setAllowCredentials(true);
+        //         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        //         source.registerCorsConfiguration("/**", configuration);
+        //         return source;
+        // }
 }
