@@ -69,15 +69,15 @@ export default function Header() {
           <Avatar
             sizes="small"
             alt="Riley Carter"
-            src={userData? userData.avatar_url : ''}
+            src={userData ? userData.avatar_url : ''}
             sx={{ width: 36, height: 36 }}
           />
           <Box sx={{ mr: 'auto' }}>
             <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-              {userData? `${userData.first_name} ${userData.last_name}` : 'User'}
+              {userData ? `${userData.first_name} ${userData.last_name}` : 'User'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {userData? userData.email : 'user@example.com'}
+              {userData ? userData.email : 'user@example.com'}
             </Typography>
           </Box>
           <OptionsMenu />

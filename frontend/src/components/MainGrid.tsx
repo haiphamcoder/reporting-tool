@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 import { useContent } from '../context/ContentContext';
 import { GridColDef } from '@mui/x-data-grid';
 import CustomizedDataGrid from './CustomizedDataGrid';
-import StatCard from './StatCard';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
@@ -29,6 +28,7 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
+import Statistic from './Statistic';
 
 const sourcesRows = [
   { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -135,6 +135,82 @@ export default function MainGrid() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const getColumns = (): GridColDef[] => {
+    const commonColumns: GridColDef[] = [
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        width: 120,
+        sortable: false,
+        renderCell: (params) => (
+          <Box>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditClick(params.row);
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(params.row);
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        ),
+      },
+    ];
+
+    switch (currentContent) {
+      case 'sources':
+        return [
+          { field: 'name', headerName: 'Name', width: 200 },
+          { field: 'type', headerName: 'Type', width: 150 },
+          { field: 'schedule', headerName: 'Schedule', width: 150 },
+          { field: 'lastRun', headerName: 'Last Run', width: 200 },
+          { field: 'status', headerName: 'Status', width: 120 },
+          ...commonColumns,
+        ];
+      case 'charts':
+        return [
+          { field: 'name', headerName: 'Name', width: 200 },
+          { field: 'type', headerName: 'Type', width: 150 },
+          { field: 'dataSource', headerName: 'Data Source', width: 200 },
+          { field: 'lastUpdated', headerName: 'Last Updated', width: 200 },
+          ...commonColumns,
+        ];
+      case 'reports':
+        return [
+          { field: 'name', headerName: 'Name', width: 200 },
+          { field: 'type', headerName: 'Type', width: 150 },
+          { field: 'schedule', headerName: 'Schedule', width: 150 },
+          { field: 'lastRun', headerName: 'Last Run', width: 200 },
+          ...commonColumns,
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const getRows = () => {
+    switch (currentContent) {
+      case 'sources':
+        return sourcesData;
+      case 'charts':
+        return chartsData;
+      case 'reports':
+        return reportsData;
+      default:
+        return [];
+    }
   };
 
   const handleOpenAddSource = () => {
@@ -367,8 +443,8 @@ export default function MainGrid() {
           alignItems="center"
           sx={{ height: '100%', width: '100%' }}
         >
-          <IconButton 
-            color="primary" 
+          <IconButton
+            color="primary"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -377,8 +453,8 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton 
-            color="error" 
+          <IconButton
+            color="error"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -412,8 +488,8 @@ export default function MainGrid() {
           alignItems="center"
           sx={{ height: '100%', width: '100%' }}
         >
-          <IconButton 
-            color="primary" 
+          <IconButton
+            color="primary"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -422,8 +498,8 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton 
-            color="error" 
+          <IconButton
+            color="error"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -457,8 +533,8 @@ export default function MainGrid() {
           alignItems="center"
           sx={{ height: '100%', width: '100%' }}
         >
-          <IconButton 
-            color="primary" 
+          <IconButton
+            color="primary"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -467,8 +543,8 @@ export default function MainGrid() {
           >
             <EditIcon />
           </IconButton>
-          <IconButton 
-            color="error" 
+          <IconButton
+            color="error"
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -610,8 +686,8 @@ export default function MainGrid() {
                         />
                       </Button>
                     ) : (
-                      <Box sx={{ 
-                        p: 2, 
+                      <Box sx={{
+                        p: 2,
                         border: '1px solid',
                         borderColor: 'divider',
                         borderRadius: 1,
@@ -995,14 +1071,14 @@ export default function MainGrid() {
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     SQL Query
                   </Typography>
-                  <Box sx={{ 
+                  <Box sx={{
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 1,
                     overflow: 'hidden'
                   }}>
-                    <Box sx={{ 
-                      p: 1, 
+                    <Box sx={{
+                      p: 1,
                       bgcolor: 'background.paper',
                       borderBottom: '1px solid',
                       borderColor: 'divider'
@@ -1039,9 +1115,9 @@ export default function MainGrid() {
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     Preview Data
                   </Typography>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'background.paper', 
+                  <Box sx={{
+                    p: 2,
+                    bgcolor: 'background.paper',
                     borderRadius: 1,
                     minHeight: 200,
                     maxHeight: 400,
@@ -1071,9 +1147,9 @@ export default function MainGrid() {
                         </Table>
                       </TableContainer>
                     ) : (
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
                         justifyContent: 'center',
                         height: '100%',
                         color: 'text.secondary'
@@ -1103,9 +1179,9 @@ export default function MainGrid() {
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     Preview
                   </Typography>
-                  <Box sx={{ 
-                    p: 2, 
-                    bgcolor: 'background.paper', 
+                  <Box sx={{
+                    p: 2,
+                    bgcolor: 'background.paper',
                     borderRadius: 1,
                     minHeight: 300,
                     display: 'flex',
@@ -1378,10 +1454,10 @@ export default function MainGrid() {
     };
 
     return (
-      <Dialog 
-        open={addDialogOpen} 
-        onClose={handleAddClose} 
-        maxWidth="sm" 
+      <Dialog
+        open={addDialogOpen}
+        onClose={handleAddClose}
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
@@ -1395,29 +1471,29 @@ export default function MainGrid() {
           {addStep > 1 && (
             <Button onClick={handleAddBack}>Back</Button>
           )}
-          <Button 
-            onClick={handleAddNext} 
+          <Button
+            onClick={handleAddNext}
             variant="contained"
             disabled={
-              currentContent === 'sources' 
+              currentContent === 'sources'
                 ? (addStep === 1 && (!addForm.name || !addForm.connectorType)) ||
-                  (addStep === 2 && (
-                    (addForm.connectorType === 'csv' || addForm.connectorType === 'excel') && !addForm.selectedFile ||
-                    (addForm.connectorType === 'mysql' && (!addForm.connectionConfig.host || !addForm.connectionConfig.port || !addForm.connectionConfig.database || !addForm.connectionConfig.username || !addForm.connectionConfig.password)) ||
-                    (addForm.connectorType === 'gsheet' && !addForm.connectionConfig.url)
-                  ))
-                : (currentContent === 'charts' 
+                (addStep === 2 && (
+                  (addForm.connectorType === 'csv' || addForm.connectorType === 'excel') && !addForm.selectedFile ||
+                  (addForm.connectorType === 'mysql' && (!addForm.connectionConfig.host || !addForm.connectionConfig.port || !addForm.connectionConfig.database || !addForm.connectionConfig.username || !addForm.connectionConfig.password)) ||
+                  (addForm.connectorType === 'gsheet' && !addForm.connectionConfig.url)
+                ))
+                : (currentContent === 'charts'
                   ? (addStep === 1 && (!addForm.name || !addForm.displayType || (addForm.displayType === 'chart' && !addForm.selectedChartType) || !addForm.mode)) ||
-                    (addStep === 2 && (
-                      (addForm.mode === 'normal' && (!addForm.sources.length || !addForm.query.filters.length)) ||
-                      (addForm.mode === 'advanced' && !addForm.sqlQuery)
-                    ))
+                  (addStep === 2 && (
+                    (addForm.mode === 'normal' && (!addForm.sources.length || !addForm.query.filters.length)) ||
+                    (addForm.mode === 'advanced' && !addForm.sqlQuery)
+                  ))
                   : (currentContent === 'reports'
                     ? (addStep === 1 && (!addForm.name || !addForm.type || !addForm.schedule)) ||
-                      (addStep === 2 && (!addForm.recipients.length || !addForm.format || !addForm.charts.length)) ||
-                      (addStep === 3 && (!addForm.emailSubject || !addForm.emailBody))
+                    (addStep === 2 && (!addForm.recipients.length || !addForm.format || !addForm.charts.length)) ||
+                    (addStep === 3 && (!addForm.emailSubject || !addForm.emailBody))
                     : (!addForm.name || !addForm.type || (addStep === 2 && !addForm.schedule)))
-                  )
+                )
             }
           >
             {addStep === (currentContent === 'sources' ? 3 : currentContent === 'reports' ? 3 : 3) ? 'Create' : 'Next'}
@@ -1473,53 +1549,28 @@ export default function MainGrid() {
       case 'home':
         return (
           <>
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+            <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
               Overview
             </Typography>
-            <Grid
-              container
-              spacing={2}
-              columns={12}
-              sx={{ mb: (theme) => theme.spacing(2) }}
-            >
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <StatCard
-                  title="Data Sources"
-                  value={sourcesData.length.toString()}
-                  interval=""
-                  trend="up"
-                  data={[5, 7, 8, 9, 10, 12, 15]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <StatCard
-                  title="Charts"
-                  value={chartsData.length.toString()}
-                  interval=""
-                  trend="neutral"
-                  data={[3, 4, 5, 6, 7, 8, 9]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <StatCard
-                  title="Reports"
-                  value={reportsData.length.toString()}
-                  interval=""
-                  trend="down"
-                  data={[8, 7, 6, 5, 4, 3, 2]}
-                />
-              </Grid>
-            </Grid>
-            <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
+            <Statistic
+              sourcesData={sourcesData}
+              chartsData={chartsData}
+              reportsData={reportsData}
+            />
+            <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
               Details
             </Typography>
             <Grid container spacing={2} columns={12}>
               <Grid size={{ xs: 12, lg: 9 }}>
-                {/* Add your home details here */}
+                <Typography variant="body1">
+                  Welcome to the home page.
+                </Typography>
               </Grid>
               <Grid size={{ xs: 12, lg: 3 }}>
                 <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-                  {/* Add your home sidebar content here */}
+                  <Typography variant="body1">
+                    Welcome to the home page.
+                  </Typography>
                 </Stack>
               </Grid>
             </Grid>
@@ -1527,15 +1578,23 @@ export default function MainGrid() {
         );
       case 'sources':
         return (
-          <Stack gap={2}>
-            <Typography variant="h6" component="h2" gutterBottom>
+          <Stack gap={1}>
+            <Typography variant="h4" component="h1" gutterBottom>
               Sources
             </Typography>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <IconButton color="primary" size="small">
-                <RefreshIcon />
-              </IconButton>
-              <Button variant="contained" color="primary" onClick={handleAddClick}>
+            <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
+              <Button
+                variant="contained"
+                startIcon={<RefreshIcon />}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddClick}
+                startIcon={<AddIcon />}
+              >
                 Add Source
               </Button>
             </Stack>
@@ -1612,28 +1671,6 @@ export default function MainGrid() {
             </Typography>
             <Typography variant="body1">
               This is the Settings content.
-            </Typography>
-          </Box>
-        );
-      case 'about':
-        return (
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              About
-            </Typography>
-            <Typography variant="body1">
-              This is the About content.
-            </Typography>
-          </Box>
-        );
-      case 'feedback':
-        return (
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Feedback
-            </Typography>
-            <Typography variant="body1">
-              This is the Feedback content.
             </Typography>
           </Box>
         );

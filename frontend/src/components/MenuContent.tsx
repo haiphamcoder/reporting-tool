@@ -9,8 +9,6 @@ import SourceRoundedIcon from '@mui/icons-material/SourceRounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
-import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
-import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import { useContent } from '../context/ContentContext';
 
 const mainListItems = [
@@ -22,8 +20,6 @@ const mainListItems = [
 
 const secondaryListItems = [
   { text: 'Settings', icon: <SettingsRoundedIcon />, type: 'settings' as const },
-  { text: 'About', icon: <InfoRoundedIcon />, type: 'about' as const },
-  { text: 'Feedback', icon: <HelpRoundedIcon />, type: 'feedback' as const },
 ];
 
 export default function MenuContent() {
@@ -34,7 +30,7 @@ export default function MenuContent() {
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton 
+            <ListItemButton
               selected={currentContent === item.type}
               onClick={() => setCurrentContent(item.type)}
             >
