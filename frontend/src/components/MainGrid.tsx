@@ -3,15 +3,11 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useContent } from '../context/ContentContext';
-import { GridColDef } from '@mui/x-data-grid';
-import CustomizedDataGrid from './CustomizedDataGrid';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
 import IconButton from '@mui/material/IconButton';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -28,7 +24,11 @@ import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
-import Statistic from './Statistic';
+import Settings from './modules/Settings';
+import Home from './modules/Home';
+import Sources from './modules/Sources';
+import Charts from './modules/Charts';
+import Reports from './modules/Reports';
 
 const sourcesRows = [
   { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -56,9 +56,9 @@ export default function MainGrid() {
   const [editForm, setEditForm] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
-  const [addSourceOpen, setAddSourceOpen] = useState(false);
-  const [connectors, setConnectors] = useState<any[]>([]);
-  const [loadingConnectors, setLoadingConnectors] = useState(false);
+  const [addSourceOpen] = useState(false);
+  const [, setConnectors] = useState<any[]>([]);
+  const [, setLoadingConnectors] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addForm, setAddForm] = useState<any>({
     name: '',
@@ -135,95 +135,6 @@ export default function MainGrid() {
       ...prev,
       [field]: value
     }));
-  };
-
-  const getColumns = (): GridColDef[] => {
-    const commonColumns: GridColDef[] = [
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        width: 120,
-        sortable: false,
-        renderCell: (params) => (
-          <Box>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditClick(params.row);
-              }}
-            >
-              <EditIcon />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick(params.row);
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Box>
-        ),
-      },
-    ];
-
-    switch (currentContent) {
-      case 'sources':
-        return [
-          { field: 'name', headerName: 'Name', width: 200 },
-          { field: 'type', headerName: 'Type', width: 150 },
-          { field: 'schedule', headerName: 'Schedule', width: 150 },
-          { field: 'lastRun', headerName: 'Last Run', width: 200 },
-          { field: 'status', headerName: 'Status', width: 120 },
-          ...commonColumns,
-        ];
-      case 'charts':
-        return [
-          { field: 'name', headerName: 'Name', width: 200 },
-          { field: 'type', headerName: 'Type', width: 150 },
-          { field: 'dataSource', headerName: 'Data Source', width: 200 },
-          { field: 'lastUpdated', headerName: 'Last Updated', width: 200 },
-          ...commonColumns,
-        ];
-      case 'reports':
-        return [
-          { field: 'name', headerName: 'Name', width: 200 },
-          { field: 'type', headerName: 'Type', width: 150 },
-          { field: 'schedule', headerName: 'Schedule', width: 150 },
-          { field: 'lastRun', headerName: 'Last Run', width: 200 },
-          ...commonColumns,
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const getRows = () => {
-    switch (currentContent) {
-      case 'sources':
-        return sourcesData;
-      case 'charts':
-        return chartsData;
-      case 'reports':
-        return reportsData;
-      default:
-        return [];
-    }
-  };
-
-  const handleOpenAddSource = () => {
-    setAddSourceOpen(true);
-  };
-
-  const handleCloseAddSource = () => {
-    setAddSourceOpen(false);
-  };
-
-  const handleAddSourceNext = (data: { sourceName: string; connector: any; file?: File | null }) => {
-    console.log(data.connector);
-    setAddSourceOpen(false);
   };
 
   const handleDeleteClick = (row: any) => {
@@ -422,141 +333,6 @@ export default function MainGrid() {
         .catch(() => setLoadingConnectors(false));
     }
   }, [addSourceOpen]);
-
-  const sourcesColumns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-    {
-      field: 'actions',
-      headerName: '',
-      flex: 0.5,
-      minWidth: 120,
-      sortable: false,
-      renderCell: (params) => (
-        <Stack
-          direction="row"
-          spacing={1}
-          justifyContent="flex-end"
-          alignItems="center"
-          sx={{ height: '100%', width: '100%' }}
-        >
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditClick(params.row);
-            }}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(params.row);
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
-
-  const chartsColumns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-    {
-      field: 'actions',
-      headerName: '',
-      flex: 0.5,
-      minWidth: 120,
-      sortable: false,
-      renderCell: (params) => (
-        <Stack
-          direction="row"
-          spacing={1}
-          justifyContent="flex-end"
-          alignItems="center"
-          sx={{ height: '100%', width: '100%' }}
-        >
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditClick(params.row);
-            }}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(params.row);
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
-
-  const reportsColumns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
-    { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-    { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-    { field: 'schedule', headerName: 'Schedule', flex: 1, minWidth: 150 },
-    { field: 'lastRun', headerName: 'Last Run', flex: 1, minWidth: 180 },
-    {
-      field: 'actions',
-      headerName: '',
-      flex: 0.5,
-      minWidth: 120,
-      sortable: false,
-      renderCell: (params) => (
-        <Stack
-          direction="row"
-          spacing={1}
-          justifyContent="flex-end"
-          alignItems="center"
-          sx={{ height: '100%', width: '100%' }}
-        >
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEditClick(params.row);
-            }}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            color="error"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(params.row);
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      ),
-    },
-  ];
 
   const renderEditDialog = () => {
     if (!editForm) return null;
@@ -1548,131 +1324,45 @@ export default function MainGrid() {
     switch (currentContent) {
       case 'home':
         return (
-          <>
-            <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
-              Overview
-            </Typography>
-            <Statistic
-              sourcesData={sourcesData}
-              chartsData={chartsData}
-              reportsData={reportsData}
-            />
-            <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
-              Details
-            </Typography>
-            <Grid container spacing={2} columns={12}>
-              <Grid size={{ xs: 12, lg: 9 }}>
-                <Typography variant="body1">
-                  Welcome to the home page.
-                </Typography>
-              </Grid>
-              <Grid size={{ xs: 12, lg: 3 }}>
-                <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-                  <Typography variant="body1">
-                    Welcome to the home page.
-                  </Typography>
-                </Stack>
-              </Grid>
-            </Grid>
-          </>
+          <Home
+            sourcesData={sourcesData}
+            chartsData={chartsData}
+            reportsData={reportsData}
+          />
         );
       case 'sources':
         return (
-          <Stack gap={1}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Sources
-            </Typography>
-            <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-              <Button
-                variant="contained"
-                startIcon={<RefreshIcon />}
-              >
-                Refresh
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleAddClick}
-                startIcon={<AddIcon />}
-              >
-                Add Source
-              </Button>
-            </Stack>
-            <CustomizedDataGrid
-              rows={sourcesData}
-              columns={sourcesColumns}
-              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
-              autoHeight
-              disableColumnMenu
-              disableRowSelectionOnClick
-              columnBufferPx={2}
-              onRowDoubleClick={handleRowDoubleClick}
-            />
-            {renderAddDialog()}
-          </Stack>
+          <Sources
+            sourcesData={sourcesData}
+            handleEditClick={handleEditClick}
+            handleDeleteClick={handleDeleteClick}
+            handleRowDoubleClick={handleRowDoubleClick}
+            handleAddClick={handleAddClick}
+          />
         );
       case 'charts':
         return (
-          <Stack gap={2}>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Charts
-            </Typography>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <IconButton color="primary" size="small">
-                <RefreshIcon />
-              </IconButton>
-              <Button variant="contained" color="primary" onClick={handleAddClick}>
-                Add Chart
-              </Button>
-            </Stack>
-            <CustomizedDataGrid
-              rows={chartsData}
-              columns={chartsColumns}
-              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
-              autoHeight
-              disableColumnMenu
-              disableRowSelectionOnClick
-              columnBufferPx={2}
-              onRowDoubleClick={handleRowDoubleClick}
-            />
-          </Stack>
+          <Charts
+            chartsData={chartsData}
+            handleEditClick={handleEditClick}
+            handleDeleteClick={handleDeleteClick}
+            handleRowDoubleClick={handleRowDoubleClick}
+            handleAddClick={handleAddClick}
+          />
         );
       case 'reports':
         return (
-          <Stack gap={2}>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Reports
-            </Typography>
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <IconButton color="primary" size="small">
-                <RefreshIcon />
-              </IconButton>
-              <Button variant="contained" color="primary" onClick={handleAddClick}>
-                Add Report
-              </Button>
-            </Stack>
-            <CustomizedDataGrid
-              rows={reportsData}
-              columns={reportsColumns}
-              sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
-              autoHeight
-              disableColumnMenu
-              disableRowSelectionOnClick
-              columnBufferPx={2}
-              onRowDoubleClick={handleRowDoubleClick}
-            />
-          </Stack>
+          <Reports
+            reportsData={reportsData}
+            handleEditClick={handleEditClick}
+            handleDeleteClick={handleDeleteClick}
+            handleRowDoubleClick={handleRowDoubleClick}
+            handleAddClick={handleAddClick}
+          />
         );
       case 'settings':
         return (
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Settings
-            </Typography>
-            <Typography variant="body1">
-              This is the Settings content.
-            </Typography>
-          </Box>
+          <Settings />
         );
       default:
         return null;

@@ -19,7 +19,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                 <StatCard
                     title="Data Sources"
                     value={sourcesData.length.toString()}
-                    interval=""
+                    interval="Last 30 days"
                     trend="up"
                     data={[5, 7, 8, 9, 10, 12, 15]}
                 />
@@ -28,7 +28,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                 <StatCard
                     title="Charts"
                     value={chartsData.length.toString()}
-                    interval=""
+                    interval="Last 30 days"
                     trend="neutral"
                     data={[3, 4, 5, 6, 7, 8, 9]}
                 />
@@ -37,7 +37,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                 <StatCard
                     title="Reports"
                     value={reportsData.length.toString()}
-                    interval=""
+                    interval="Last 30 days"
                     trend="down"
                     data={[8, 7, 6, 5, 4, 3, 2]}
                 />
