@@ -20,7 +20,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                     title="Data Sources"
                     value={sourcesData.length.toString()}
                     interval="Last 30 days"
-                    trend="up"
+                    // trend="up"
                     data={[5, 7, 8, 9, 10, 12, 15]}
                 />
             </Grid>
@@ -29,7 +29,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                     title="Charts"
                     value={chartsData.length.toString()}
                     interval="Last 30 days"
-                    trend="neutral"
+                    // trend="neutral"
                     data={[3, 4, 5, 6, 7, 8, 9]}
                 />
             </Grid>
@@ -38,7 +38,7 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
                     title="Reports"
                     value={reportsData.length.toString()}
                     interval="Last 30 days"
-                    trend="down"
+                    // trend="down"
                     data={[8, 7, 6, 5, 4, 3, 2]}
                 />
             </Grid>
