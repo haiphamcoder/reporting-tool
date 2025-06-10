@@ -7,6 +7,7 @@ export interface UserInfo {
     email: string;
     first_name: string;
     last_name: string;
+    avatar_url: string;
 }
 
 export const authApi = {
@@ -55,7 +56,7 @@ export const authApi = {
             throw new Error('Not authenticated');
         }
 
-        return response.json();
+        return response.json().then(data => data.result);
     },
 
     logout: async (): Promise<void> => {

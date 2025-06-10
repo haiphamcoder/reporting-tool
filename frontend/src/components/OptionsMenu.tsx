@@ -12,6 +12,7 @@ import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import MenuButton from './MenuButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../api/auth/authApi';
 
 const MenuItem = styled(MuiMenuItem)({
   margin: '2px 0',
@@ -30,9 +31,17 @@ export default function OptionsMenu() {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/auth/signin');
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      logout();
+      navigate('/auth/signin');
+    } catch (error) {
+      console.error('Failed to logout:', error);
+      // Still logout locally even if API call fails
+      logout();
+      navigate('/auth/signin');
+    }
   };
 
   return (

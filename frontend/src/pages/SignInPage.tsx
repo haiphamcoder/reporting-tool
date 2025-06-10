@@ -83,6 +83,21 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
     const navigate = useNavigate();
     const { setAuthenticated } = useAuth();
 
+    React.useEffect(() => {
+        const checkCurrentUser = async () => {
+            try {
+                await authApi.getCurrentUser();
+                setAuthenticated(true);
+                navigate('/dashboard');
+            } catch (error) {
+                // Token is invalid or expired, stay on sign in page
+                setAuthenticated(false);
+            }
+        };
+        
+        checkCurrentUser();
+    }, [navigate, setAuthenticated]);
+
     const handleForgotPasswordDialogOpen = () => {
         setForgotPasswordDialogOpen(true);
     };
