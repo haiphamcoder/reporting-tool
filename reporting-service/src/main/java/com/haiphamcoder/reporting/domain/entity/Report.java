@@ -1,15 +1,12 @@
 package com.haiphamcoder.reporting.domain.entity;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haiphamcoder.reporting.shared.converter.MapStringConverter;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -50,8 +47,7 @@ public class Report {
     private String description;
 
     @Column(name = "config", nullable = false)
-    @Convert(converter = MapStringConverter.class)
-    private Map<String, Object> config;
+    private String config;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

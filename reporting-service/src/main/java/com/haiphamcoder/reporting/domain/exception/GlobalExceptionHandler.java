@@ -64,4 +64,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                 message, request.getRequestURI()));
         }
 
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException ex,
+                        HttpServletRequest request) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
+                                                ex.getMessage(), request.getRequestURI()));
+        }
+
 }

@@ -39,9 +39,6 @@ public class StatisticData {
         @JsonProperty("total")
         private Long total;
 
-        @JsonProperty("trend")
-        private String trend;
-
         @JsonProperty("data")
         private List<Long> data;
     }

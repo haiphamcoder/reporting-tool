@@ -32,7 +32,7 @@ public class IntegratedServiceApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		registerBot();
+		// registerBot();
 	}
 
 	private void registerBot() {

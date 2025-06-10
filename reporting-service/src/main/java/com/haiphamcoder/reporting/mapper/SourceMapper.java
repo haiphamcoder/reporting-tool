@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.reporting.domain.entity.Source;
+import com.haiphamcoder.reporting.domain.entity.Source.SourceBuilder;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -46,11 +47,93 @@ public class SourceMapper {
     }
 
     public static Source toEntity(SourceDto sourceDto) {
-        return Source.builder()
-                .id(sourceDto.getId())
-                .name(sourceDto.getName())
-                .description(sourceDto.getDescription())
-                .build();
+        SourceBuilder builder = Source.builder();
+        if (sourceDto.getId() != null) {
+            builder.id(sourceDto.getId());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getName())) {
+            builder.name(sourceDto.getName());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getDescription())) {
+            builder.description(sourceDto.getDescription());
+        }
+        if (sourceDto.getConnectorType() != null) {
+            builder.connectorType(sourceDto.getConnectorType());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getTableName())) {
+            builder.tableName(sourceDto.getTableName());
+        }
+        if (sourceDto.getConfig() != null) {
+            try {
+                builder.config(MapperUtils.objectMapper.writeValueAsString(sourceDto.getConfig()));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (sourceDto.getMapping() != null) {
+            try {
+                builder.mapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (sourceDto.getStatus() != null) {
+            builder.status(sourceDto.getStatus());
+        }
+        if (sourceDto.getUserId() != null) {
+            builder.userId(sourceDto.getUserId());
+        }
+        if (sourceDto.getIsDeleted() != null) {
+            builder.isDeleted(sourceDto.getIsDeleted());
+        }
+        if (sourceDto.getIsStarred() != null) {
+            builder.isStarred(sourceDto.getIsStarred());
+        }
+        if (sourceDto.getLastSyncTime() != null) {
+            builder.lastSyncTime(sourceDto.getLastSyncTime());
+        }
+        return builder.build();
+    }
+
+    public static SourceDto updateSourceDto(Source source, SourceDto sourceDto) {
+        SourceDto result = toDto(source);
+        if (sourceDto.getId() != null) {
+            result.setId(sourceDto.getId());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getName())) {
+            result.setName(sourceDto.getName());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getDescription())) {
+            result.setDescription(sourceDto.getDescription());
+        }
+        if (sourceDto.getConnectorType() != null) {
+            result.setConnectorType(sourceDto.getConnectorType());
+        }
+        if (!StringUtils.isNullOrEmpty(sourceDto.getTableName())) {
+            result.setTableName(sourceDto.getTableName());
+        }
+        if (sourceDto.getConfig() != null) {
+            result.setConfig(sourceDto.getConfig());
+        }
+        if (sourceDto.getMapping() != null) {
+            result.setMapping(sourceDto.getMapping());
+        }
+        if (sourceDto.getStatus() != null) {
+            result.setStatus(sourceDto.getStatus());
+        }
+        if (sourceDto.getUserId() != null) {
+            result.setUserId(sourceDto.getUserId());
+        }
+        if (sourceDto.getIsDeleted() != null) {
+            result.setIsDeleted(sourceDto.getIsDeleted());
+        }
+        if (sourceDto.getIsStarred() != null) {
+            result.setIsStarred(sourceDto.getIsStarred());
+        }
+        if (sourceDto.getLastSyncTime() != null) {
+            result.setLastSyncTime(sourceDto.getLastSyncTime());
+        }
+        return result;
     }
 
 }

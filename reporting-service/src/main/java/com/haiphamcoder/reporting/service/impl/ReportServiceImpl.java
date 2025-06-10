@@ -49,11 +49,12 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        report.get().setDescription(reportDto.getDescription());
-        report.get().setConfig(reportDto.getConfig());
-        report.get().setIsDeleted(reportDto.getIsDeleted());
-        reportRepository.updateReport(report.get());
-        return ReportMapper.toReportDto(report.get());
+        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), reportDto);
+        Optional<Report> updatedReport = reportRepository.updateReport(ReportMapper.toEntity(updatedReportDto));
+        if (updatedReport.isEmpty()) {
+            throw new RuntimeException("Update report failed");
+        }
+        return ReportMapper.toReportDto(updatedReport.get());
     }
 
     @Override

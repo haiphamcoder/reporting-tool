@@ -19,51 +19,36 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
-    private final SourceRepository sourceRepository;
-    private final ChartRepository chartRepository;
-    private final ReportRepository reportRepository;
+        private final SourceRepository sourceRepository;
+        private final ChartRepository chartRepository;
+        private final ReportRepository reportRepository;
 
-    @Override
-    public StatisticData getStatistics(Long userId) {
+        @Override
+        public StatisticData getStatistics(Long userId) {
 
-        Long totalSource = sourceRepository.getTotalSourceByUserIdAndIsDeleted(userId, false);
-        List<Long> sourceCountByLast30Days = sourceRepository.getSourceCountByLast30Days(userId);
-        long lastDaySourceCount = sourceCountByLast30Days.get(29);
-        long secondLastDaySourceCount = sourceCountByLast30Days.get(28);
-        String sourceTrend = lastDaySourceCount > secondLastDaySourceCount ? "up"
-                : (lastDaySourceCount < secondLastDaySourceCount ? "down" : "stable");
+                Long totalSource = sourceRepository.getTotalSourceByUserIdAndIsDeleted(userId, false);
+                List<Long> sourceCountByLast30Days = sourceRepository.getSourceCountByLast30Days(userId);
 
-        Long totalChart = chartRepository.getTotalChartByUserIdAndIsDeleted(userId, false);
-        List<Long> chartCountByLast30Days = chartRepository.getChartCountByLast30Days(userId);
-        long lastDayChartCount = chartCountByLast30Days.get(29);
-        long secondLastDayChartCount = chartCountByLast30Days.get(28);
-        String chartTrend = lastDayChartCount > secondLastDayChartCount ? "up"
-                : (lastDayChartCount < secondLastDayChartCount ? "down" : "stable");
+                Long totalChart = chartRepository.getTotalChartByUserIdAndIsDeleted(userId, false);
+                List<Long> chartCountByLast30Days = chartRepository.getChartCountByLast30Days(userId);
 
-        Long totalReport = reportRepository.getTotalReportByUserIdAndIsDeleted(userId, false);
-        List<Long> reportCountByLast30Days = reportRepository.getReportCountByLast30Days(userId);
-        long lastDayReportCount = reportCountByLast30Days.get(29);
-        long secondLastDayReportCount = reportCountByLast30Days.get(28);
-        String reportTrend = lastDayReportCount > secondLastDayReportCount ? "up"
-                : (lastDayReportCount < secondLastDayReportCount ? "down" : "stable");
+                Long totalReport = reportRepository.getTotalReportByUserIdAndIsDeleted(userId, false);
+                List<Long> reportCountByLast30Days = reportRepository.getReportCountByLast30Days(userId);
 
-        return StatisticData.builder()
-                .sourceStatistic(StatisticItem.builder()
-                        .total(totalSource)
-                        .trend(sourceTrend)
-                        .data(sourceCountByLast30Days)
-                        .build())
-                .chartStatistic(StatisticItem.builder()
-                        .total(totalChart)
-                        .trend(chartTrend)
-                        .data(chartCountByLast30Days)
-                        .build())
-                .reportStatistic(StatisticItem.builder()
-                        .total(totalReport)
-                        .trend(reportTrend)
-                        .data(reportCountByLast30Days)
-                        .build())
-                .build();
-    }
+                return StatisticData.builder()
+                                .sourceStatistic(StatisticItem.builder()
+                                                .total(totalSource)
+                                                .data(sourceCountByLast30Days)
+                                                .build())
+                                .chartStatistic(StatisticItem.builder()
+                                                .total(totalChart)
+                                                .data(chartCountByLast30Days)
+                                                .build())
+                                .reportStatistic(StatisticItem.builder()
+                                                .total(totalReport)
+                                                .data(reportCountByLast30Days)
+                                                .build())
+                                .build();
+        }
 
 }

@@ -1,9 +1,7 @@
 package com.haiphamcoder.reporting.mapper;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.ChartDtoBuilder;
 import com.haiphamcoder.reporting.domain.entity.Chart;
@@ -23,9 +21,9 @@ public class ChartMapper {
                         builder.name(chart.getName());
                         builder.userId(chart.getUserId());
                         builder.description(chart.getDescription());
-                        builder.config(MapperUtils.objectMapper.readValue(chart.getConfig(),
-                                        new TypeReference<Map<String, Object>>() {
-                                        }));
+                        builder.config(!StringUtils.isNullOrEmpty(chart.getConfig())
+                                        ? MapperUtils.objectMapper.readValue(chart.getConfig(), ObjectNode.class)
+                                        : MapperUtils.objectMapper.createObjectNode());
                         builder.queryOption(
                                         MapperUtils.objectMapper.readValue(chart.getQueryOption(), QueryOption.class));
                         builder.isDeleted(chart.getIsDeleted());
@@ -48,17 +46,51 @@ public class ChartMapper {
                         if (!StringUtils.isNullOrEmpty(chartDto.getDescription())) {
                                 builder.description(chartDto.getDescription());
                         }
-                        if (chartDto.getConfig() != null && !chartDto.getConfig().isEmpty()) {
+                        if (chartDto.getConfig() != null) {
                                 builder.config(MapperUtils.objectMapper.writeValueAsString(chartDto.getConfig()));
                         }
                         if (chartDto.getQueryOption() != null) {
                                 builder.queryOption(
                                                 MapperUtils.objectMapper.writeValueAsString(chartDto.getQueryOption()));
                         }
-                        builder.isDeleted(chartDto.getIsDeleted());
+                        if (chartDto.getIsDeleted() != null) {
+                                builder.isDeleted(chartDto.getIsDeleted());
+                        }
+                        if (chartDto.getCreatedAt() != null) {
+                                builder.createdAt(chartDto.getCreatedAt());
+                        }
+                        if (chartDto.getModifiedAt() != null) {
+                                builder.modifiedAt(chartDto.getModifiedAt());
+                        }
                         return builder.build();
                 } catch (JsonProcessingException e) {
                         throw new RuntimeException(e);
                 }
+        }
+
+        public static ChartDto updateChartDto(Chart chart, ChartDto chartDto) {
+                ChartDto result = toChartDto(chart);
+                if (chartDto.getId() != null) {
+                        result.setId(chartDto.getId());
+                }
+                if (!StringUtils.isNullOrEmpty(chartDto.getName())) {
+                        result.setName(chartDto.getName());
+                }
+                if (!StringUtils.isNullOrEmpty(chartDto.getDescription())) {
+                        result.setDescription(chartDto.getDescription());
+                }
+                if (chartDto.getConfig() != null) {
+                        result.setConfig(chartDto.getConfig());
+                }
+                if (chartDto.getQueryOption() != null) {
+                        result.setQueryOption(chartDto.getQueryOption());
+                }
+                if (chartDto.getIsDeleted() != null) {
+                        result.setIsDeleted(chartDto.getIsDeleted());
+                }
+                if (chartDto.getUserId() != null) {
+                        result.setUserId(chartDto.getUserId());
+                }
+                return result;
         }
 }

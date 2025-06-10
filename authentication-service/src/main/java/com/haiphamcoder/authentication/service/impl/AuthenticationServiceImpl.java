@@ -13,6 +13,7 @@ import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
 import com.haiphamcoder.authentication.domain.model.CustomUserDetail;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
 import com.haiphamcoder.authentication.domain.model.TokenType;
+import com.haiphamcoder.authentication.domain.model.response.GetUserInforResponse;
 import com.haiphamcoder.authentication.domain.model.response.RegisterResponse;
 import com.haiphamcoder.authentication.security.JwtTokenProvider;
 import com.haiphamcoder.authentication.service.AuthenticationService;
@@ -140,9 +141,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         @Override
-        public UserDto getUserInfo(Long userId) {
+        public GetUserInforResponse getUserInfo(Long userId) {
                 try {
-                        return userGrpcClient.getUserById(userId);
+                        UserDto user = userGrpcClient.getUserById(userId);
+                        return GetUserInforResponse.builder()
+                                        .userId(user.getId())
+                                        .username(user.getUsername())
+                                        .email(user.getEmail())
+                                        .firstName(user.getFirstName())
+                                        .lastName(user.getLastName())
+                                        .role(user.getRole())
+                                        .provider(user.getProvider())
+                                        .build();
                 } catch (Exception e) {
                         log.error("Error getting user info", e);
                         throw new RuntimeException("Failed to get user info");

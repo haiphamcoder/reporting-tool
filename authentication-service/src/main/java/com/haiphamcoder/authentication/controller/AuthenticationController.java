@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.authentication.service.AuthenticationService;
-import com.haiphamcoder.authentication.domain.dto.UserDto;
 import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
+import com.haiphamcoder.authentication.domain.model.response.GetUserInforResponse;
 import com.haiphamcoder.authentication.domain.model.response.RegisterResponse;
 import com.haiphamcoder.authentication.shared.http.ApiResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,7 +42,7 @@ public class AuthenticationController {
 
     @GetMapping(path = "/me")
     public ResponseEntity<ApiResponse<Object>> getUserInfo(@CookieValue(name = "user-id") Long userId) {
-        UserDto userInfo = authenticationService.getUserInfo(userId);
+        GetUserInforResponse userInfo = authenticationService.getUserInfo(userId);
         return ResponseEntity.ok().body(ApiResponse.success(userInfo, "Get user info successfully"));
     }
 

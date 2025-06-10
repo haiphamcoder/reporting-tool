@@ -1,11 +1,11 @@
 package com.haiphamcoder.reporting.domain.dto;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 
 import lombok.AllArgsConstructor;
@@ -34,7 +34,7 @@ public class ChartDto {
     private String description;
 
     @JsonProperty("config")
-    private Map<String, Object> config;
+    private ObjectNode config;
 
     @JsonProperty("query_option")
     private QueryOption queryOption;

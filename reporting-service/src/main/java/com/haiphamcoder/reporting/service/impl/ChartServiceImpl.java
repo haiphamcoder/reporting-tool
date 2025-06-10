@@ -6,12 +6,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
+import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.service.ChartService;
+import com.haiphamcoder.reporting.shared.MapperUtils;
+import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
+import com.haiphamcoder.reporting.shared.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +48,17 @@ public class ChartServiceImpl implements ChartService {
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
-        chartRepository.updateChart(ChartMapper.toChart(chartDto));
-        return ChartMapper.toChartDto(chart.get());
+        try {
+            log.info("chart: {}", MapperUtils.objectMapper.writeValueAsString(chart.get()));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        ChartDto updatedChartDto = ChartMapper.updateChartDto(chart.get(), chartDto);
+        Chart updatedChart = chartRepository.save(ChartMapper.toChart(updatedChartDto));
+        if (updatedChart == null) {
+            throw new RuntimeException("Update chart failed");
+        }
+        return ChartMapper.toChartDto(updatedChart);
     }
 
     @Override
@@ -59,10 +73,19 @@ public class ChartServiceImpl implements ChartService {
 
     @Override
     public ChartDto createChart(Long userId, ChartDto chartDto) {
-        chartDto.setUserId(userId);
-        chartDto.setIsDeleted(false);
-        chartRepository.save(ChartMapper.toChart(chartDto));
-        return chartDto;
+        if (StringUtils.isNullOrEmpty(chartDto.getName())) {
+            throw new InvalidInputException("name");
+        }
+
+        Chart chart = ChartMapper.toChart(chartDto);
+        chart.setId(SnowflakeIdGenerator.getInstance().generateId());
+        chart.setUserId(userId);
+
+        Chart savedChart = chartRepository.save(chart);
+        if (savedChart == null) {
+            throw new RuntimeException("Create chart failed");
+        }
+        return ChartMapper.toChartDto(savedChart);
     }
 
 }

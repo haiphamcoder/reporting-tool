@@ -1,7 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -87,8 +86,6 @@ public class SourceRepositoryImpl implements SourceRepository {
             result.add(count);
         }
 
-        // reverse the list
-        Collections.reverse(result);
         return result;
     }
 

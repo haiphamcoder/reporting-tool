@@ -43,13 +43,6 @@ public class SourceController {
         return ResponseEntity.ok(ApiResponse.success(sources, "Sources fetched successfully"));
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApiResponse<Object>> createSource(@CookieValue(name = "user-id") Long userId,
-            @RequestBody SourceDto sourceDto) {
-        sourceService.createSource(sourceDto);
-        return ResponseEntity.ok(ApiResponse.success(null, "Source created successfully"));
-    }
-
     @PostMapping("/upload-file")
     public ResponseEntity<ApiResponse<Object>> uploadFile(@CookieValue(name = "user-id") Long userId,
             @RequestParam(name = "source-id", required = true) Long sourceId,
