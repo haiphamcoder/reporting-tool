@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,10 +43,12 @@ public class ChartReport {
 
     @Column(name = "created_at", nullable = false)
     @JsonProperty("created_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalDateTime createdAt;
 
     @Column(name = "modified_at", nullable = false)
     @JsonProperty("modified_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private LocalDateTime modifiedAt;
 
     @PrePersist

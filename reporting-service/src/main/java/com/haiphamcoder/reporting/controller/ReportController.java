@@ -39,7 +39,6 @@ public class ReportController {
                         .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
-                        .owner(report.getUserId().toString())
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())

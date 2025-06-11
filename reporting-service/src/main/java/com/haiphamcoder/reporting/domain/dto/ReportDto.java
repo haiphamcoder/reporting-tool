@@ -37,7 +37,7 @@ public class ReportDto {
     private ObjectNode config;
 
     @JsonProperty("charts")
-    private List<String> chartIds;
+    private List<ChartDto> charts;
 
     @JsonProperty("shared_users")
     private List<String> sharedUserIds;

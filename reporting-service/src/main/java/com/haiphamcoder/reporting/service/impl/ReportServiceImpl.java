@@ -12,6 +12,7 @@ import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
@@ -43,7 +44,11 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        return ReportMapper.toReportDto(report.get());
+        ReportDto reportDto = ReportMapper.toReportDto(report.get());
+        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
+        List<Chart> charts = chartReports.stream().map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).collect(Collectors.toList());
+        reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList()));
+        return reportDto;
     }
 
     @Override

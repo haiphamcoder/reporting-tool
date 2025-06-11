@@ -50,7 +50,6 @@ public class SourceController {
                         .id(source.getId())
                         .name(source.getName())
                         .description(source.getDescription())
-                        .owner(source.getUserId().toString())
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
                         .build())

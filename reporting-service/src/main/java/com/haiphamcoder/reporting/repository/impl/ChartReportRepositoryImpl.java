@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 interface ChartReportJpaRepository extends JpaRepository<ChartReport, ChartReportComposeKey> {
     Optional<ChartReport> findByChartIdAndReportId(Long chartId, Long reportId);
+
+    List<ChartReport> findByReportId(Long reportId);
 }
 
 @Component
@@ -32,6 +35,11 @@ public class ChartReportRepositoryImpl implements ChartReportRepository {
     @Override
     public void save(ChartReport chartReport) {
         chartReportJpaRepository.save(chartReport);
+    }
+
+    @Override
+    public List<ChartReport> getChartReportsByReportId(Long reportId) {
+        return chartReportJpaRepository.findByReportId(reportId);
     }
 
 }

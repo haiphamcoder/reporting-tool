@@ -44,9 +44,6 @@ public class GetAllReportsResponse {
         @JsonProperty("description")
         private String description;
 
-        @JsonProperty("owner")
-        private String owner;
-
         @JsonProperty("created_at")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;

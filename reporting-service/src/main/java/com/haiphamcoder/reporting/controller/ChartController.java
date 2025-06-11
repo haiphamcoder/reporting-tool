@@ -39,7 +39,6 @@ public class ChartController {
                         .id(chart.getId())
                         .name(chart.getName())
                         .description(chart.getDescription())
-                        .owner(chart.getUserId().toString())
                         .createdAt(chart.getCreatedAt())
                         .updatedAt(chart.getModifiedAt())
                         .build())
