@@ -60,6 +60,12 @@ public class SourceDto {
     @JsonProperty("last_sync_time")
     private LocalDateTime lastSyncTime;
 
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
+
     @Data
     @Builder
     @NoArgsConstructor

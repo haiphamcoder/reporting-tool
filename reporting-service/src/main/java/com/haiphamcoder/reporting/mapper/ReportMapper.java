@@ -27,6 +27,8 @@ public class ReportMapper {
                         throw new RuntimeException(e);
                 }
                 builder.isDeleted(report.getIsDeleted());
+                builder.createdAt(report.getCreatedAt());
+                builder.modifiedAt(report.getModifiedAt());
                 return builder.build();
         }
 
@@ -50,6 +52,12 @@ public class ReportMapper {
                 }
                 if (reportDto.getIsDeleted() != null) {
                         builder.isDeleted(reportDto.getIsDeleted());
+                }
+                if (reportDto.getCreatedAt() != null) {
+                        builder.createdAt(reportDto.getCreatedAt());
+                }
+                if (reportDto.getModifiedAt() != null) {
+                        builder.modifiedAt(reportDto.getModifiedAt());
                 }
                 return builder.build();
         }

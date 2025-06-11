@@ -1,6 +1,7 @@
 package com.haiphamcoder.reporting.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -11,9 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.model.response.GetAllReportsResponse;
+import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
 import com.haiphamcoder.reporting.service.ReportService;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +30,27 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId) {
+    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId,
+            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
         List<ReportDto> reports = reportService.getAllReportsByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.success(reports, "Reports fetched successfully"));
+        GetAllReportsResponse response = GetAllReportsResponse.builder()
+                .data(reports.stream().map(report -> GetAllReportsResponse.Record.builder()
+                        .id(report.getId())
+                        .name(report.getName())
+                        .description(report.getDescription())
+                        .owner(report.getUserId().toString())
+                        .createdAt(report.getCreatedAt())
+                        .updatedAt(report.getModifiedAt())
+                        .build())
+                        .collect(Collectors.toList()))
+                .metadata(MetadataResponse.builder()
+                        .total(reports.size())
+                        .page(page)
+                        .limit(limit)
+                        .build())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response, "Reports fetched successfully"));
     }
 
     @GetMapping("/{report-id}")

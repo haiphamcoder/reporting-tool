@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
+import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
 import com.haiphamcoder.reporting.service.SourceService;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
@@ -14,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,9 +41,27 @@ public class SourceController {
     }
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<SourceDto>>> getSources(@CookieValue(name = "user-id") Long userId) {
+    public ResponseEntity<ApiResponse<Object>> getSources(@CookieValue(name = "user-id") Long userId,
+            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
         List<SourceDto> sources = sourceService.getAllSourcesByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.success(sources, "Sources fetched successfully"));
+        GetAllSourcesResponse response = GetAllSourcesResponse.builder()
+                .data(sources.stream().map(source -> GetAllSourcesResponse.Record.builder()
+                        .id(source.getId())
+                        .name(source.getName())
+                        .description(source.getDescription())
+                        .owner(source.getUserId().toString())
+                        .createdAt(source.getCreatedAt())
+                        .updatedAt(source.getModifiedAt())
+                        .build())
+                        .collect(Collectors.toList()))
+                .metadata(MetadataResponse.builder()
+                        .total(sources.size())
+                        .page(page)
+                        .limit(limit)
+                        .build())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
     }
 
     @PostMapping("/upload-file")

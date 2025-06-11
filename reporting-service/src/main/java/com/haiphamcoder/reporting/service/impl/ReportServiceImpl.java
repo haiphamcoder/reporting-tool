@@ -10,12 +10,15 @@ import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
+import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
+import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
+import com.haiphamcoder.reporting.shared.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,11 +72,19 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportDto createReport(Long userId, ReportDto reportDto) {
+        if (StringUtils.isNullOrEmpty(reportDto.getName())) {
+            throw new InvalidInputException("name");
+        }
+
         Report report = ReportMapper.toEntity(reportDto);
+        report.setId(SnowflakeIdGenerator.getInstance().generateId());
         report.setUserId(userId);
-        report.setIsDeleted(false);
-        reportRepository.createReport(report);
-        return ReportMapper.toReportDto(report);
+
+        Optional<Report> savedReport = reportRepository.createReport(report);
+        if (savedReport.isEmpty()) {
+            throw new RuntimeException("Create report failed");
+        }
+        return ReportMapper.toReportDto(savedReport.get());
     }
 
     @Override

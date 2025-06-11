@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.domain.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -43,4 +44,10 @@ public class ReportDto {
 
     @JsonProperty("is_deleted")
     private Boolean isDeleted;
+
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
+    @JsonProperty("modified_at")
+    private LocalDateTime modifiedAt;
 }

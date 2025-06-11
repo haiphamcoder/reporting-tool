@@ -39,6 +39,8 @@ public class SourceMapper {
                     .isDeleted(source.getIsDeleted() != null ? source.getIsDeleted() : null)
                     .isStarred(source.getIsStarred() != null ? source.getIsStarred() : null)
                     .lastSyncTime(source.getLastSyncTime() != null ? source.getLastSyncTime() : null)
+                    .createdAt(source.getCreatedAt() != null ? source.getCreatedAt() : null)
+                    .modifiedAt(source.getModifiedAt() != null ? source.getModifiedAt() : null)
                     .build();
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -91,6 +93,12 @@ public class SourceMapper {
         }
         if (sourceDto.getLastSyncTime() != null) {
             builder.lastSyncTime(sourceDto.getLastSyncTime());
+        }
+        if (sourceDto.getCreatedAt() != null) {
+            builder.createdAt(sourceDto.getCreatedAt());
+        }
+        if (sourceDto.getModifiedAt() != null) {
+            builder.modifiedAt(sourceDto.getModifiedAt());
         }
         return builder.build();
     }

@@ -1,6 +1,7 @@
 package com.haiphamcoder.reporting.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -11,9 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.model.response.GetAllChartsResponse;
+import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
 import com.haiphamcoder.reporting.service.ChartService;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +30,27 @@ public class ChartController {
     private final ChartService chartService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId) {
+    public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId,
+            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
         List<ChartDto> charts = chartService.getAllChartsByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.success(charts, "Charts fetched successfully"));
+        GetAllChartsResponse response = GetAllChartsResponse.builder()
+                .data(charts.stream().map(chart -> GetAllChartsResponse.Record.builder()
+                        .id(chart.getId())
+                        .name(chart.getName())
+                        .description(chart.getDescription())
+                        .owner(chart.getUserId().toString())
+                        .createdAt(chart.getCreatedAt())
+                        .updatedAt(chart.getModifiedAt())
+                        .build())
+                        .collect(Collectors.toList()))
+                .metadata(MetadataResponse.builder()
+                        .total(charts.size())
+                        .page(page)
+                        .limit(limit)
+                        .build())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(response, "Charts fetched successfully"));
     }
 
     @GetMapping("/{chart-id}")
