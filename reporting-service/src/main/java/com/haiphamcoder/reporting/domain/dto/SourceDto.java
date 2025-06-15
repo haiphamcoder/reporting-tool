@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 public class SourceDto {
 
     @JsonProperty("id")
-    private Long id;
+    private String id;
 
     @JsonProperty("name")
     private String name;
@@ -46,10 +46,7 @@ public class SourceDto {
     private Integer status;
 
     @JsonProperty("user_id")
-    private Long userId;
-
-    @JsonProperty("folder_id")
-    private Long folderId;
+    private String userId;
 
     @JsonProperty("is_deleted")
     private Boolean isDeleted;

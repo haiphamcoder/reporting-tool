@@ -185,8 +185,8 @@ public class SourceServiceImpl implements SourceService {
             throw new InvalidInputException("mapping");
         }
 
-        if (hasWritePermission(Long.valueOf(userId), sourceDto.getId())) {
-            Optional<Source> existingSource = sourceRepository.getSourceById(sourceDto.getId());
+        if (hasWritePermission(userId, Long.parseLong(sourceDto.getId()))) {
+            Optional<Source> existingSource = sourceRepository.getSourceById(Long.parseLong(sourceDto.getId()));
             if (existingSource.isPresent()) {
                 try {
                     existingSource.get()

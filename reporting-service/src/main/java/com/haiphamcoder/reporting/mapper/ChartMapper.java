@@ -17,9 +17,9 @@ public class ChartMapper {
         public static ChartDto toChartDto(Chart chart) {
                 try {
                         ChartDtoBuilder builder = ChartDto.builder();
-                        builder.id(chart.getId());
+                        builder.id(chart.getId() != null ? chart.getId().toString() : null);
                         builder.name(chart.getName());
-                        builder.userId(chart.getUserId());
+                        builder.userId(chart.getUserId() != null ? chart.getUserId().toString() : null);
                         builder.description(chart.getDescription());
                         builder.config(!StringUtils.isNullOrEmpty(chart.getConfig())
                                         ? MapperUtils.objectMapper.readValue(chart.getConfig(), ObjectNode.class)
@@ -38,11 +38,11 @@ public class ChartMapper {
         public static Chart toChart(ChartDto chartDto) {
                 try {
                         ChartBuilder builder = Chart.builder();
-                        builder.id(chartDto.getId());
+                        builder.id(chartDto.getId() != null ? Long.parseLong(chartDto.getId()) : null);
                         if (!StringUtils.isNullOrEmpty(chartDto.getName())) {
                                 builder.name(chartDto.getName());
                         }
-                        builder.userId(chartDto.getUserId());
+                        builder.userId(chartDto.getUserId() != null ? Long.parseLong(chartDto.getUserId()) : null);
                         if (!StringUtils.isNullOrEmpty(chartDto.getDescription())) {
                                 builder.description(chartDto.getDescription());
                         }

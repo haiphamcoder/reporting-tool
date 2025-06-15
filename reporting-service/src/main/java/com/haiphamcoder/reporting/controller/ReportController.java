@@ -37,7 +37,7 @@ public class ReportController {
         Pair<List<ReportDto>, Metadata> reports = reportService.getAllReportsByUserId(userId, page, limit);
         GetAllReportsResponse response = GetAllReportsResponse.builder()
                 .data(reports.getFirst().stream().map(report -> GetAllReportsResponse.Record.builder()
-                        .id(report.getId())
+                        .id(report.getId().toString())
                         .name(report.getName())
                         .description(report.getDescription())
                         .createdAt(report.getCreatedAt())

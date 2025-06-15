@@ -37,7 +37,7 @@ public class ChartController {
         Pair<List<ChartDto>, Metadata> charts = chartService.getAllChartsByUserId(userId, page, limit);
         GetAllChartsResponse response = GetAllChartsResponse.builder()
                 .data(charts.getFirst().stream().map(chart -> GetAllChartsResponse.Record.builder()
-                        .id(chart.getId())
+                        .id(chart.getId().toString())
                         .name(chart.getName())
                         .description(chart.getDescription())
                         .createdAt(chart.getCreatedAt())

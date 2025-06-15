@@ -50,7 +50,7 @@ public class SourceController {
         Pair<List<SourceDto>, Metadata> sources = sourceService.getAllSourcesByUserId(userId, page, limit);
         GetAllSourcesResponse response = GetAllSourcesResponse.builder()
                 .data(sources.getFirst().stream().map(source -> GetAllSourcesResponse.Record.builder()
-                        .id(source.getId())
+                        .id(source.getId().toString())
                         .name(source.getName())
                         .description(source.getDescription())
                         .type(source.getConnectorType())

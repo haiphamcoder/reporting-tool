@@ -21,7 +21,7 @@ public class SourceMapper {
     public static SourceDto toDto(Source source) {
         try {
             return SourceDto.builder()
-                    .id(source.getId() != null ? source.getId() : null)
+                    .id(source.getId() != null ? source.getId().toString() : null)
                     .name(source.getName() != null ? source.getName() : null)
                     .description(source.getDescription() != null ? source.getDescription() : null)
                     .connectorType(source.getConnectorType() != null ? source.getConnectorType() : null)
@@ -35,7 +35,7 @@ public class SourceMapper {
                                     })
                             : new ArrayList<>())
                     .status(source.getStatus() != null ? source.getStatus() : null)
-                    .userId(source.getUserId() != null ? source.getUserId() : null)
+                    .userId(source.getUserId() != null ? source.getUserId().toString() : null)
                     .isDeleted(source.getIsDeleted() != null ? source.getIsDeleted() : null)
                     .isStarred(source.getIsStarred() != null ? source.getIsStarred() : null)
                     .lastSyncTime(source.getLastSyncTime() != null ? source.getLastSyncTime() : null)
@@ -50,8 +50,8 @@ public class SourceMapper {
 
     public static Source toEntity(SourceDto sourceDto) {
         SourceBuilder builder = Source.builder();
-        if (sourceDto.getId() != null) {
-            builder.id(sourceDto.getId());
+        if (!StringUtils.isNullOrEmpty(sourceDto.getId())) {
+            builder.id(Long.parseLong(sourceDto.getId()));
         }
         if (!StringUtils.isNullOrEmpty(sourceDto.getName())) {
             builder.name(sourceDto.getName());
@@ -82,8 +82,8 @@ public class SourceMapper {
         if (sourceDto.getStatus() != null) {
             builder.status(sourceDto.getStatus());
         }
-        if (sourceDto.getUserId() != null) {
-            builder.userId(sourceDto.getUserId());
+        if (!StringUtils.isNullOrEmpty(sourceDto.getUserId())) {
+            builder.userId(Long.parseLong(sourceDto.getUserId()));
         }
         if (sourceDto.getIsDeleted() != null) {
             builder.isDeleted(sourceDto.getIsDeleted());

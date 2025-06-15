@@ -15,9 +15,9 @@ import lombok.experimental.UtilityClass;
 public class ReportMapper {
         public static ReportDto toReportDto(Report report) {
                 ReportDtoBuilder builder = ReportDto.builder();
-                builder.id(report.getId());
+                builder.id(report.getId() != null ? report.getId().toString() : null);
                 builder.name(report.getName());
-                builder.userId(report.getUserId().toString());
+                builder.userId(report.getUserId() != null ? report.getUserId().toString() : null);
                 builder.description(report.getDescription());
                 try {
                         builder.config(!StringUtils.isNullOrEmpty(report.getConfig())
@@ -34,8 +34,8 @@ public class ReportMapper {
 
         public static Report toEntity(ReportDto reportDto) {
                 ReportBuilder builder = Report.builder();
-                if (reportDto.getId() != null) {
-                        builder.id(reportDto.getId());
+                if (!StringUtils.isNullOrEmpty(reportDto.getId())) {
+                        builder.id(Long.parseLong(reportDto.getId()));
                 }
                 if (reportDto.getName() != null) {
                         builder.name(reportDto.getName());
