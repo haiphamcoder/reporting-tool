@@ -25,7 +25,7 @@ public class GetAllReportsResponse {
     private List<Record> data;
 
     @JsonProperty("metadata")
-    private MetadataResponse metadata;
+    private Metadata metadata;
 
     @Data
     @Builder
@@ -43,6 +43,12 @@ public class GetAllReportsResponse {
 
         @JsonProperty("description")
         private String description;
+
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("status")
+        private String status;
 
         @JsonProperty("created_at")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

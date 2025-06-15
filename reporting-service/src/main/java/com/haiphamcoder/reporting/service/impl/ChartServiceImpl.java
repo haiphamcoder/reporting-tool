@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,10 +12,12 @@ import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.service.ChartService;
 import com.haiphamcoder.reporting.shared.MapperUtils;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -28,9 +31,16 @@ public class ChartServiceImpl implements ChartService {
     private final ChartRepository chartRepository;
 
     @Override
-    public List<ChartDto> getAllChartsByUserId(Long userId) {
-        List<Chart> charts = chartRepository.getAllChartsByUserId(userId);
-        return charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList());
+    public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, Integer page, Integer limit) {
+        Page<Chart> charts = chartRepository.getAllChartsByUserId(userId, page, limit);
+        return new Pair<>(charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList()),
+                Metadata.builder()
+                        .totalElements(charts.getTotalElements())
+                        .numberOfElements(charts.getNumberOfElements())
+                        .totalPages(charts.getTotalPages())
+                        .currentPage(charts.getNumber())
+                        .pageSize(charts.getSize())
+                        .build());
     }
 
     @Override

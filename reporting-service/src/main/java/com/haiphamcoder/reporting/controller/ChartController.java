@@ -17,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.model.response.GetAllChartsResponse;
-import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.ChartService;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -31,11 +32,11 @@ public class ChartController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        List<ChartDto> charts = chartService.getAllChartsByUserId(userId);
+        Pair<List<ChartDto>, Metadata> charts = chartService.getAllChartsByUserId(userId, page, limit);
         GetAllChartsResponse response = GetAllChartsResponse.builder()
-                .data(charts.stream().map(chart -> GetAllChartsResponse.Record.builder()
+                .data(charts.getFirst().stream().map(chart -> GetAllChartsResponse.Record.builder()
                         .id(chart.getId())
                         .name(chart.getName())
                         .description(chart.getDescription())
@@ -43,11 +44,7 @@ public class ChartController {
                         .updatedAt(chart.getModifiedAt())
                         .build())
                         .collect(Collectors.toList()))
-                .metadata(MetadataResponse.builder()
-                        .total(charts.size())
-                        .page(page)
-                        .limit(limit)
-                        .build())
+                .metadata(charts.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Charts fetched successfully"));
     }

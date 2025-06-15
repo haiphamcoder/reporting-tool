@@ -25,7 +25,7 @@ public class GetAllChartsResponse {
     private List<Record> data;
 
     @JsonProperty("metadata")
-    private MetadataResponse metadata;
+    private Metadata metadata;
 
     @Data
     @Builder

@@ -5,10 +5,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
-import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.SourceService;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import com.haiphamcoder.reporting.shared.http.RestAPIResponse;
 
@@ -42,23 +44,21 @@ public class SourceController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse<Object>> getSources(@CookieValue(name = "user-id") Long userId,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        List<SourceDto> sources = sourceService.getAllSourcesByUserId(userId);
+        Pair<List<SourceDto>, Metadata> sources = sourceService.getAllSourcesByUserId(userId, page, limit);
         GetAllSourcesResponse response = GetAllSourcesResponse.builder()
-                .data(sources.stream().map(source -> GetAllSourcesResponse.Record.builder()
+                .data(sources.getFirst().stream().map(source -> GetAllSourcesResponse.Record.builder()
                         .id(source.getId())
                         .name(source.getName())
                         .description(source.getDescription())
+                        .type(source.getConnectorType())
+                        .status(CommonConstants.SOURCE_STATUS_MAP.get(source.getStatus()))
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
                         .build())
                         .collect(Collectors.toList()))
-                .metadata(MetadataResponse.builder()
-                        .total(sources.size())
-                        .page(page)
-                        .limit(limit)
-                        .build())
+                .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
     }

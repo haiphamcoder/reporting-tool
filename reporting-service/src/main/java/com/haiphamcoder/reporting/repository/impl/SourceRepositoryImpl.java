@@ -5,6 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Repository
 interface SourceJpaRepository extends JpaRepository<Source, Long> {
-    List<Source> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+    Page<Source> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
 
     Optional<Source> findByIdAndUserId(Long id, Long userId);
 
@@ -50,8 +53,8 @@ public class SourceRepositoryImpl implements SourceRepository {
     }
 
     @Override
-    public List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted) {
-        return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted);
+    public Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Integer page, Integer limit) {
+        return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
     }
 
     @Override

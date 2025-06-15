@@ -2,9 +2,12 @@ package com.haiphamcoder.reporting.service;
 
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
+import com.haiphamcoder.reporting.shared.Pair;
 
 public interface SourceService {
 
@@ -14,7 +17,7 @@ public interface SourceService {
 
     public SourceDto getSourceById(Long sourceId);
 
-    public List<SourceDto> getAllSourcesByUserId(Long userId);
+    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, Integer page, Integer limit);
 
     public SourceDto createSource(SourceDto sourceDto);
 

@@ -5,6 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 interface ReportJpaRepository extends JpaRepository<Report, Long> {
-    List<Report> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+    Page<Report> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
@@ -38,8 +41,8 @@ public class ReportRepositoryImpl implements ReportRepository {
     }
 
     @Override
-    public List<Report> getReportsByUserId(Long userId) {
-        return reportJpaRepository.findAllByUserIdAndIsDeleted(userId, false);
+    public Page<Report> getReportsByUserId(Long userId, Integer page, Integer limit) {
+        return reportJpaRepository.findAllByUserIdAndIsDeleted(userId, false, PageRequest.of(page, limit));
     }
 
     @Override

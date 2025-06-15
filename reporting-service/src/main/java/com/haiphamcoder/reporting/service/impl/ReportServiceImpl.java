@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
@@ -12,12 +13,14 @@ import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -33,9 +36,16 @@ public class ReportServiceImpl implements ReportService {
     private final ChartReportRepository chartReportRepository;
 
     @Override
-    public List<ReportDto> getAllReportsByUserId(Long userId) {
-        List<Report> reports = reportRepository.getReportsByUserId(userId);
-        return reports.stream().map(ReportMapper::toReportDto).collect(Collectors.toList());
+    public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, Integer page, Integer limit) {
+        Page<Report> reports = reportRepository.getReportsByUserId(userId, page, limit);
+        return new Pair<>(reports.stream().map(ReportMapper::toReportDto).collect(Collectors.toList()),
+                Metadata.builder()
+                        .totalElements(reports.getTotalElements())
+                        .numberOfElements(reports.getNumberOfElements())
+                        .totalPages(reports.getTotalPages())
+                        .currentPage(reports.getNumber())
+                        .pageSize(reports.getSize())
+                        .build());
     }
 
     @Override

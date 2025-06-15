@@ -3,6 +3,8 @@ package com.haiphamcoder.reporting.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+
 import com.haiphamcoder.reporting.domain.entity.Source;
 
 public interface SourceRepository {
@@ -11,10 +13,10 @@ public interface SourceRepository {
 
     Boolean checkSourceName(Long userId, String sourceName);
 
-    List<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+    Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Integer page, Integer limit);
 
-    default List<Source> getAllSourcesByUserId(Long userId) {
-        return getAllSourcesByUserIdAndIsDeleted(userId, false);
+    default Page<Source> getAllSourcesByUserId(Long userId, Integer page, Integer limit) {
+        return getAllSourcesByUserIdAndIsDeleted(userId, false, page, limit);
     }
 
     Optional<Source> deleteSourceById(Long id);

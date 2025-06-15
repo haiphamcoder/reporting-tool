@@ -17,8 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.model.response.GetAllReportsResponse;
-import com.haiphamcoder.reporting.domain.model.response.MetadataResponse;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.ReportService;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.http.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -31,11 +32,11 @@ public class ReportController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId,
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        List<ReportDto> reports = reportService.getAllReportsByUserId(userId);
+        Pair<List<ReportDto>, Metadata> reports = reportService.getAllReportsByUserId(userId, page, limit);
         GetAllReportsResponse response = GetAllReportsResponse.builder()
-                .data(reports.stream().map(report -> GetAllReportsResponse.Record.builder()
+                .data(reports.getFirst().stream().map(report -> GetAllReportsResponse.Record.builder()
                         .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
@@ -43,11 +44,7 @@ public class ReportController {
                         .updatedAt(report.getModifiedAt())
                         .build())
                         .collect(Collectors.toList()))
-                .metadata(MetadataResponse.builder()
-                        .total(reports.size())
-                        .page(page)
-                        .limit(limit)
-                        .build())
+                .metadata(reports.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Reports fetched successfully"));
     }

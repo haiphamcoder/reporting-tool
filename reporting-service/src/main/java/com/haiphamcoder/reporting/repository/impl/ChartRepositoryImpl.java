@@ -5,6 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 interface ChartJpaRepository extends JpaRepository<Chart, Long> {
-    List<Chart> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
+    Page<Chart> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
@@ -32,8 +35,8 @@ public class ChartRepositoryImpl implements ChartRepository {
     private final ChartJpaRepository chartJpaRepository;
 
     @Override
-    public List<Chart> getAllChartsByUserId(Long userId) {
-        return chartJpaRepository.findAllByUserIdAndIsDeleted(userId, false);
+    public Page<Chart> getAllChartsByUserId(Long userId, Integer page, Integer limit) {
+        return chartJpaRepository.findAllByUserIdAndIsDeleted(userId, false, PageRequest.of(page, limit));
     }
 
     @Override

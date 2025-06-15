@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,11 +21,13 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenExce
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
 import com.haiphamcoder.reporting.service.SourceService;
 import com.haiphamcoder.reporting.shared.MapperUtils;
+import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -90,10 +93,18 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public List<SourceDto> getAllSourcesByUserId(Long userId) {
-        return sourceRepository.getAllSourcesByUserId(userId).stream()
+    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, Integer page, Integer limit) {
+        Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, page, limit);
+        return new Pair<>(sources.stream()
                 .map(SourceMapper::toDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()),
+                Metadata.builder()
+                        .totalElements(sources.getTotalElements())
+                        .numberOfElements(sources.getNumberOfElements())
+                        .totalPages(sources.getTotalPages())
+                        .currentPage(sources.getNumber())
+                        .pageSize(sources.getSize())
+                        .build());
     }
 
     @Override

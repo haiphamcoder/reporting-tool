@@ -3,11 +3,13 @@ package com.haiphamcoder.reporting.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+
 import com.haiphamcoder.reporting.domain.entity.Chart;
 
 public interface ChartRepository {
 
-    List<Chart> getAllChartsByUserId(Long userId);
+    Page<Chart> getAllChartsByUserId(Long userId, Integer page, Integer limit);
     
     Optional<Chart> getChartById(Long id);
 

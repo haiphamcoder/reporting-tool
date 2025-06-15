@@ -1,5 +1,7 @@
 package com.haiphamcoder.reporting.config;
 
+import java.util.Map;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -26,6 +28,20 @@ public class CommonConstants {
     public static final int SOURCE_STATUS_PROCESSING = 3;
     public static final int SOURCE_STATUS_READY = 4;
     public static final int SOURCE_STATUS_FAILED = -1;
+
+    public static final String SOURCE_STATUS_INIT_STRING = "init";
+    public static final String SOURCE_STATUS_PREPARED_STRING = "prepared";
+    public static final String SOURCE_STATUS_PROCESSING_STRING = "processing";
+    public static final String SOURCE_STATUS_READY_STRING = "ready";
+    public static final String SOURCE_STATUS_FAILED_STRING = "failed";
+
+    public static final Map<Integer, String> SOURCE_STATUS_MAP = Map.of(
+        SOURCE_STATUS_INIT, SOURCE_STATUS_INIT_STRING,
+        SOURCE_STATUS_PREPARED, SOURCE_STATUS_PREPARED_STRING,
+        SOURCE_STATUS_PROCESSING, SOURCE_STATUS_PROCESSING_STRING,
+        SOURCE_STATUS_READY, SOURCE_STATUS_READY_STRING,
+        SOURCE_STATUS_FAILED, SOURCE_STATUS_FAILED_STRING
+    );
 
     // Source Permission
     public static final String SOURCE_PERMISSION_NONE = "---";

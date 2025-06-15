@@ -3,10 +3,12 @@ package com.haiphamcoder.reporting.service;
 import java.util.List;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.model.response.Metadata;
+import com.haiphamcoder.reporting.shared.Pair;
 
 public interface ChartService {
 
-    List<ChartDto> getAllChartsByUserId(Long userId);
+    Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, Integer page, Integer limit);
 
     ChartDto getChartById(Long userId,Long chartId);
 
