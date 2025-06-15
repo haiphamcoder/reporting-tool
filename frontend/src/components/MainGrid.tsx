@@ -30,9 +30,10 @@ import Sources from './modules/Sources';
 import Charts from './modules/Charts';
 import Reports from './modules/Reports';
 import { GridPaginationModel } from '@mui/x-data-grid';
+import SourceDetail from './modules/SourceDetail';
 
 interface Source {
-    id: number;
+    id: string;
     name: string;
     description: string;
     type: number;
@@ -151,9 +152,14 @@ export default function MainGrid() {
       console.log('API Response:', data);
       
       if (data.success) {
-        console.log('Setting sources data:', data.result.sources);
+        // Convert all IDs to strings to preserve precision
+        const processedSources = data.result.sources.map((source: any) => ({
+          ...source,
+          id: source.id.toString()
+        }));
+        console.log('Setting sources data:', processedSources);
         console.log('Setting metadata:', data.result.metadata);
-        setSourcesData(data.result.sources);
+        setSourcesData(processedSources);
         setSourcesMetadata(data.result.metadata);
       } else {
         console.error('API returned error:', data.message);
@@ -185,9 +191,50 @@ export default function MainGrid() {
     }
   }, [currentContent]);
 
-  const handleRowDoubleClick = (params: any) => {
-    setSelectedItem(params.row);
-    setShowDetails(true);
+  const handleRowDoubleClick = async (params: any) => {
+    try {
+      // Convert id to string to ensure precision
+      const sourceId = params.row.id.toString();
+      console.log('Fetching source with ID:', sourceId);
+      console.log('Full row data:', params.row);
+      
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceId}`;
+      console.log('API URL:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response data:', data);
+
+      if (data.success) {
+        // Ensure id is treated as string in the response
+        const sourceData = {
+          ...data.result,
+          id: data.result.id.toString()
+        };
+        console.log('Processed source data:', sourceData);
+        setSelectedItem(sourceData);
+        setShowDetails(true);
+      } else {
+        console.error('API returned error:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching source details:', error);
+    }
   };
 
   const handleBackToList = () => {
@@ -1369,36 +1416,10 @@ export default function MainGrid() {
     if (!selectedItem) return null;
 
     return (
-      <Stack gap={2}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <IconButton onClick={handleBackToList} size="small">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h6" component="h2">
-            {selectedItem.name}
-          </Typography>
-        </Stack>
-        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle2" color="text.secondary">ID</Typography>
-              <Typography variant="body1">{selectedItem.id}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle2" color="text.secondary">Type</Typography>
-              <Typography variant="body1">{selectedItem.type}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle2" color="text.secondary">Schedule</Typography>
-              <Typography variant="body1">{selectedItem.schedule}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="subtitle2" color="text.secondary">Last Run</Typography>
-              <Typography variant="body1">{selectedItem.lastRun}</Typography>
-            </Grid>
-          </Grid>
-        </Box>
-      </Stack>
+      <SourceDetail
+        source={selectedItem}
+        onBack={handleBackToList}
+      />
     );
   };
 
@@ -1423,6 +1444,7 @@ export default function MainGrid() {
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
                 <Typography>Loading...</Typography>
               </Box>
+              // <LoadingPage />
             ) : (
               <Sources
                 sourcesData={sourcesData}
