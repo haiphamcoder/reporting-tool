@@ -4,66 +4,116 @@ import Button from '@mui/material/Button';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import CustomizedDataGrid from '../CustomizedDataGrid';
-import { GridColDef } from '@mui/x-data-grid';
+import { GridColDef, GridPaginationModel, GridRowParams, GridRenderCellParams } from '@mui/x-data-grid';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import connectorCsvIcon from '../../assets/connector-csv.png';
 
-interface SourcesProps {
-    sourcesData: any[];
-    handleEditClick: (row: any) => void;
-    handleDeleteClick: (row: any) => void;
-    handleRowDoubleClick: (row: any) => void;
-    handleAddClick: () => void;
+interface Source {
+    name: string;
+    description: string;
+    type: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
 }
 
-export default function Sources({ sourcesData, handleEditClick, handleDeleteClick, handleRowDoubleClick, handleAddClick }: SourcesProps) {
+interface SourcesMetadata {
+    total_elements: number;
+    number_of_elements: number;
+    total_pages: number;
+    current_page: number;
+    page_size: number;
+}
+
+interface SourcesProps {
+    sourcesData: Source[];
+    metadata: SourcesMetadata;
+    onPageChange: (model: GridPaginationModel) => void;
+    handleEditClick: (row: Source) => void;
+    handleDeleteClick: (row: Source) => void;
+    handleRowDoubleClick: (params: GridRowParams<Source>) => void;
+    handleAddClick: () => void;
+    handleRefresh: () => void;
+}
+
+export default function Sources({
+    sourcesData,
+    metadata,
+    onPageChange,
+    handleEditClick,
+    handleDeleteClick,
+    handleRowDoubleClick,
+    handleAddClick,
+    handleRefresh
+}: SourcesProps) {
+    console.log('Sources component received data:', { sourcesData, metadata });
 
     const sourcesColumns: GridColDef[] = [
-        { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },
         { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
         { field: 'description', headerName: 'Description', flex: 1, minWidth: 200 },
-        { field: 'type', headerName: 'Type', flex: 1, minWidth: 150 },
-        { field: 'owner', headerName: 'Owner', flex: 1, minWidth: 150 },
-        { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
-        { field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180 },
+        {
+            field: 'type',
+            headerName: 'Type',
+            flex: 1,
+            minWidth: 150,
+            renderCell: (params: GridRenderCellParams<Source>) => {
+                if (params.row?.type === 1) {
+                    return (
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
+                            <img src={connectorCsvIcon} alt="CSV" style={{ width: 24, height: 24 }} />
+                            <Typography>CSV</Typography>
+                        </Stack>
+                    );
+                }
+                return params.row?.type || '';
+            }
+        },
         { field: 'status', headerName: 'Status', flex: 1, minWidth: 150 },
+        { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
+        {
+            field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180
+        },
         {
             field: 'actions',
             headerName: 'Actions',
             flex: 0.5,
             minWidth: 120,
             sortable: false,
-            renderCell: (params) => (
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    justifyContent="flex-end"
-                    alignItems="center"
-                    sx={{ height: '100%', width: '100%' }}
-                >
-                    <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditClick(params.row);
-                        }}
+            renderCell: (params: GridRenderCellParams<Source>) => {
+                if (!params.row) return null;
+                return (
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        sx={{ height: '100%', width: '100%' }}
                     >
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton
-                        color="error"
-                        size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(params.row);
-                        }}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            ),
+                        <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(params.row);
+                            }}
+                        >
+                            <EditIcon />
+                        </IconButton>
+                        <IconButton
+                            color="error"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(params.row);
+                            }}
+                        >
+                            <DeleteIcon />
+                        </IconButton>
+                    </Stack>
+                );
+            },
         },
     ];
 
@@ -76,6 +126,7 @@ export default function Sources({ sourcesData, handleEditClick, handleDeleteClic
                 <Button
                     variant="contained"
                     startIcon={<RefreshIcon />}
+                    onClick={handleRefresh}
                 >
                     Refresh
                 </Button>
@@ -96,6 +147,14 @@ export default function Sources({ sourcesData, handleEditClick, handleDeleteClic
                 disableRowSelectionOnClick
                 columnBufferPx={2}
                 onRowDoubleClick={handleRowDoubleClick}
+                paginationMode="server"
+                rowCount={metadata.total_elements}
+                pageSizeOptions={[10, 25, 50]}
+                paginationModel={{
+                    page: metadata.current_page,
+                    pageSize: metadata.page_size
+                }}
+                onPaginationModelChange={onPageChange}
             />
         </Stack>
     );

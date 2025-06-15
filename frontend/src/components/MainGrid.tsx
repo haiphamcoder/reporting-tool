@@ -29,12 +29,25 @@ import Home from './modules/Home';
 import Sources from './modules/Sources';
 import Charts from './modules/Charts';
 import Reports from './modules/Reports';
+import { GridPaginationModel } from '@mui/x-data-grid';
 
-const sourcesRows = [
-  { id: 1, name: 'Source 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
-  { id: 2, name: 'Source 2', type: 'Type 2', schedule: 'Weekly', lastRun: '2023-01-02' },
-  { id: 3, name: 'Source 3', type: 'Type 3', schedule: 'Monthly', lastRun: '2023-01-03' },
-];
+interface Source {
+    id: number;
+    name: string;
+    description: string;
+    type: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface SourcesMetadata {
+    total_elements: number;
+    number_of_elements: number;
+    total_pages: number;
+    current_page: number;
+    page_size: number;
+}
 
 const chartsRows = [
   { id: 1, name: 'Chart 1', type: 'Type 1', schedule: 'Daily', lastRun: '2023-01-01' },
@@ -100,9 +113,77 @@ export default function MainGrid() {
   const [addStep, setAddStep] = useState(1);
 
   // Add state for table data
-  const [sourcesData, setSourcesData] = useState(sourcesRows);
+  const [sourcesData, setSourcesData] = useState<Source[]>([]);
+  const [sourcesMetadata, setSourcesMetadata] = useState<SourcesMetadata>({
+    total_elements: 0,
+    number_of_elements: 0,
+    total_pages: 0,
+    current_page: 0,
+    page_size: 10
+  });
   const [chartsData, setChartsData] = useState(chartsRows);
   const [reportsData, setReportsData] = useState(reportsRows);
+  const [loading, setLoading] = useState(false);
+
+  const fetchSources = async (page: number = 0, pageSize: number = 10) => {
+    try {
+      setLoading(true);
+      console.log('Fetching sources with page:', page, 'pageSize:', pageSize);
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?page=${page}&size=${pageSize}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError("Response was not JSON");
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      if (data.success) {
+        console.log('Setting sources data:', data.result.sources);
+        console.log('Setting metadata:', data.result.metadata);
+        setSourcesData(data.result.sources);
+        setSourcesMetadata(data.result.metadata);
+      } else {
+        console.error('API returned error:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+      // Set empty data on error
+      setSourcesData([]);
+      setSourcesMetadata({
+        total_elements: 0,
+        number_of_elements: 0,
+        total_pages: 0,
+        current_page: 0,
+        page_size: pageSize
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePageChange = (model: GridPaginationModel) => {
+    console.log('Page change:', model);
+    fetchSources(model.page, model.pageSize);
+  };
+
+  useEffect(() => {
+    if (currentContent === 'sources') {
+      fetchSources();
+    }
+  }, [currentContent]);
 
   const handleRowDoubleClick = (params: any) => {
     setSelectedItem(params.row);
@@ -147,18 +228,19 @@ export default function MainGrid() {
     setItemToDelete(null);
   };
 
-  const handleDeleteConfirm = () => {
-    // Remove item from the appropriate table based on currentContent
-    switch (currentContent) {
-      case 'sources':
-        setSourcesData(prev => prev.filter(item => item.id !== itemToDelete.id));
-        break;
-      case 'charts':
-        setChartsData(prev => prev.filter(item => item.id !== itemToDelete.id));
-        break;
-      case 'reports':
-        setReportsData(prev => prev.filter(item => item.id !== itemToDelete.id));
-        break;
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${itemToDelete.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Refresh the sources list after successful deletion
+        fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+      }
+    } catch (error) {
+      console.error('Error deleting source:', error);
     }
     handleDeleteClose();
   };
@@ -203,6 +285,10 @@ export default function MainGrid() {
         footer: '',
       }
     });
+  };
+
+  const handleRefresh = () => {
+    fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
   };
 
   const handleAddNext = () => {
@@ -1332,13 +1418,24 @@ export default function MainGrid() {
         );
       case 'sources':
         return (
-          <Sources
-            sourcesData={sourcesData}
-            handleEditClick={handleEditClick}
-            handleDeleteClick={handleDeleteClick}
-            handleRowDoubleClick={handleRowDoubleClick}
-            handleAddClick={handleAddClick}
-          />
+          <Box sx={{ width: '100%' }}>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <Typography>Loading...</Typography>
+              </Box>
+            ) : (
+              <Sources
+                sourcesData={sourcesData}
+                metadata={sourcesMetadata}
+                onPageChange={handlePageChange}
+                handleEditClick={handleEditClick}
+                handleDeleteClick={handleDeleteClick}
+                handleRowDoubleClick={handleRowDoubleClick}
+                handleAddClick={handleAddClick}
+                handleRefresh={handleRefresh}
+              />
+            )}
+          </Box>
         );
       case 'charts':
         return (

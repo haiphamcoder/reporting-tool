@@ -11,5 +11,7 @@ export const API_CONFIG = {
         USER: '/api/v1/user',
         STATISTICS: '/api/v1/statistics',
         CONNECTOR: '/api/v1/connector',
+        SOURCES: '/reporting/sources',
+        SOURCE_DETAILS: '/reporting/sources/:id',
     }
 } as const;
