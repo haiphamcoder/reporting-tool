@@ -21,6 +21,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenExce
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
@@ -43,22 +44,23 @@ public class SourceServiceImpl implements SourceService {
     private final HdfsFileService hdfsFileService;
 
     @Override
-    public SourceDto initSource(Long userId, SourceDto sourceDto) {
-        if (sourceDto.getName() == null) {
+    public SourceDto initSource(Long userId, InitSourceRequest request) {
+        if (request.getName() == null) {
             throw new InvalidInputException("name");
-        }
-        if (sourceRepository.checkSourceName(userId, sourceDto.getName())) {
-            throw new ResourceAlreadyExistsException("Source name", sourceDto.getName());
+        }   
+        if (sourceRepository.checkSourceName(userId, request.getName())) {
+            throw new ResourceAlreadyExistsException("Source name", request.getName());
         }
 
-        if (sourceDto.getConnectorType() == null) {
+        if (request.getConnectorType() == null) {
             throw new InvalidInputException("connector_type");
         }
 
         Source source = Source.builder()
                 .id(SnowflakeIdGenerator.getInstance().generateId())
-                .name(sourceDto.getName())
-                .connectorType(sourceDto.getConnectorType())
+                .name(request.getName())
+                .description(request.getDescription())
+                .connectorType(request.getConnectorType())
                 .tableName("data_" + userId + "_" + System.currentTimeMillis())
                 .userId(userId)
                 .status(CommonConstants.SOURCE_STATUS_INIT)

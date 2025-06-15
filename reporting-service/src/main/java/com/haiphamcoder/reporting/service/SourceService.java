@@ -6,12 +6,13 @@ import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.shared.Pair;
 
 public interface SourceService {
 
-    public SourceDto initSource(Long userId, SourceDto sourceDto);
+    public SourceDto initSource(Long userId, InitSourceRequest sourceDto);
 
     public Boolean checkSourceName(Long userId, String sourceName);
 

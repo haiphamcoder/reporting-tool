@@ -21,10 +21,10 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SourceDto {
 
-    @JsonProperty("source_id")
+    @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("source_name")
+    @JsonProperty("name")
     private String name;
 
     @JsonProperty("description")

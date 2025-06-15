@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.SourceService;
@@ -37,7 +38,7 @@ public class SourceController {
 
     @PostMapping(path = "/init", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Object>> initSource(@CookieValue(name = "user-id") Long userId,
-            @RequestBody SourceDto sourceDto) {
+            @RequestBody InitSourceRequest sourceDto) {
         SourceDto source = sourceService.initSource(userId, sourceDto);
         return ResponseEntity.ok(ApiResponse.success(source, "Source initialized successfully"));
     }
@@ -61,6 +62,13 @@ public class SourceController {
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
+    }
+
+    @GetMapping("/{source-id}")
+    public ResponseEntity<ApiResponse<Object>> getSourceById(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId) {
+        SourceDto source = sourceService.getSourceById(sourceId);
+        return ResponseEntity.ok(ApiResponse.success(source, "Source fetched successfully"));
     }
 
     @PostMapping("/upload-file")
