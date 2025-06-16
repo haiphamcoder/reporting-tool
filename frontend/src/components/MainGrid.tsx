@@ -30,6 +30,7 @@ import Reports from './modules/Reports';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import SourceDetail from './modules/SourceDetail';
 import SourcePreview from './modules/SourcePreview';
+import SourceEdit from './modules/SourceEdit';
 
 interface Source {
     id: string;
@@ -75,7 +76,7 @@ export default function MainGrid() {
   const { currentContent } = useContent();
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
@@ -284,25 +285,39 @@ export default function MainGrid() {
 
   const handleEditClick = (row: any) => {
     setEditForm(row);
-    setEditDialogOpen(true);
+    setShowEdit(true);
   };
 
   const handleEditClose = () => {
-    setEditDialogOpen(false);
+    setShowEdit(false);
     setEditForm(null);
   };
 
-  const handleEditSave = () => {
-    // TODO: Implement save logic
-    console.log('Saving edited data:', editForm);
-    handleEditClose();
-  };
+  const handleEditSave = async (updatedSource: any) => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${updatedSource.id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedSource),
+      });
 
-  const handleEditFormChange = (field: string, value: any) => {
-    setEditForm((prev: any) => ({
-      ...prev,
-      [field]: value
-    }));
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Refresh the sources list after successful update
+        fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+        handleEditClose();
+      }
+    } catch (error) {
+      console.error('Error updating source:', error);
+    }
   };
 
   const handleDeleteClick = (row: any) => {
@@ -506,52 +521,6 @@ export default function MainGrid() {
         .catch(() => setLoadingConnectors(false));
     }
   }, [addSourceOpen]);
-
-  const renderEditDialog = () => {
-    if (!editForm) return null;
-
-    return (
-      <Dialog open={editDialogOpen} onClose={handleEditClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit {currentContent?.charAt(0).toUpperCase() + currentContent?.slice(1)}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            <TextField
-              label="Name"
-              value={editForm.name}
-              onChange={(e) => handleEditFormChange('name', e.target.value)}
-              fullWidth
-            />
-            <TextField
-              select
-              label="Type"
-              value={editForm.type}
-              onChange={(e) => handleEditFormChange('type', e.target.value)}
-              fullWidth
-            >
-              <MenuItem value="Type 1">Type 1</MenuItem>
-              <MenuItem value="Type 2">Type 2</MenuItem>
-              <MenuItem value="Type 3">Type 3</MenuItem>
-            </TextField>
-            <TextField
-              select
-              label="Schedule"
-              value={editForm.schedule}
-              onChange={(e) => handleEditFormChange('schedule', e.target.value)}
-              fullWidth
-            >
-              <MenuItem value="Daily">Daily</MenuItem>
-              <MenuItem value="Weekly">Weekly</MenuItem>
-              <MenuItem value="Monthly">Monthly</MenuItem>
-            </TextField>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleEditClose}>Cancel</Button>
-          <Button onClick={handleEditSave} variant="contained">Save</Button>
-        </DialogActions>
-      </Dialog>
-    );
-  };
 
   const renderDeleteDialog = () => {
     if (!itemToDelete) return null;
@@ -1470,6 +1439,16 @@ export default function MainGrid() {
   };
 
   const renderContent = () => {
+    if (showEdit && editForm) {
+      return (
+        <SourceEdit
+          source={editForm}
+          onBack={handleEditClose}
+          onSave={handleEditSave}
+        />
+      );
+    }
+
     if (showDetails) {
       return renderDetails();
     }
@@ -1537,7 +1516,6 @@ export default function MainGrid() {
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {renderContent()}
-      {renderEditDialog()}
       {renderDeleteDialog()}
       {renderAddDialog()}
     </Box>
