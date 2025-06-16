@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
@@ -47,8 +48,10 @@ public class DataProcessingController {
     @GetMapping("/sources/{id}/preview")
     public ResponseEntity<ApiResponse<Object>> previewSource(
             @CookieValue(value = "user-id", required = true) Long userId,
-            @PathVariable("id") Long sourceId) {
-        PreviewData previewData = rawDataService.previewSource(sourceId);
+            @PathVariable("id") Long sourceId,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+        PreviewData previewData = rawDataService.previewSource(sourceId, page, limit);
         return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
     }
 

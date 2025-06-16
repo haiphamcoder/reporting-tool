@@ -4,6 +4,6 @@ import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 
 public interface RawDataService {
 
-    PreviewData previewSource(Long sourceId);
+    PreviewData previewSource(Long sourceId, Integer page, Integer limit);
 
 }

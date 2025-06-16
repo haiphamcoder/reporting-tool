@@ -32,7 +32,7 @@ public class ChartDataServiceImpl implements ChartDataService {
                     .build();
 
             // Lấy dữ liệu mới nhất từ StorageService
-            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1);
+            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1, 1);
             if (!data.isEmpty()) {
                 return data.get(0).toMap();
             }
@@ -67,7 +67,7 @@ public class ChartDataServiceImpl implements ChartDataService {
                     .build();
 
             // Lấy một bản ghi để kiểm tra sự tồn tại
-            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1);
+            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1, 1);
             return !data.isEmpty();
         } catch (Exception e) {
             log.error("Error checking data existence for chart {}: {}", chartId, e.getMessage());
@@ -86,7 +86,7 @@ public class ChartDataServiceImpl implements ChartDataService {
                     .build();
 
             // Lấy bản ghi mới nhất để lấy thời gian cập nhật
-            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1);
+            List<JSONObject> data = storageService.getPreviewData(sourceDto, 1, 1);
             if (!data.isEmpty()) {
                 return data.get(0).optString("updated_at");
             }

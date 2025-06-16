@@ -26,14 +26,14 @@ public class RawDataServiceImpl implements RawDataService {
     private final StorageService storageService;
 
     @Override
-    public PreviewData previewSource(Long sourceId) {
+    public PreviewData previewSource(Long sourceId, Integer page, Integer limit) {
         SourceDto source = sourceGrpcClient.getSourceById(sourceId);
 
         if (source == null || source.getMapping() == null) {
             throw new SourceNotFoundException("Source not found");
         }
 
-        List<JSONObject> data = storageService.getPreviewData(source, 10);
+        List<JSONObject> data = storageService.getPreviewData(source, page, limit);
 
         PreviewData previewData = new PreviewData();
         previewData.setSchema(source.getMapping());

@@ -66,12 +66,12 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public List<JSONObject> getPreviewData(SourceDto sourceDto, Integer limit) {
+    public List<JSONObject> getPreviewData(SourceDto sourceDto, Integer page, Integer limit) {
         String tableName = sourceDto.getTableName();
         List<Mapping> mappings = sourceDto.getMapping();
 
         try (TidbReader tidbReader = new TidbReader(url, username, password)) {
-            return tidbReader.getPreviewData(tableName, mappings, limit);
+            return tidbReader.getPreviewData(tableName, mappings, page, limit);
         } catch (Exception e) {
             log.error("Get preview data failed! {}", e.getMessage());
             return new ArrayList<>();

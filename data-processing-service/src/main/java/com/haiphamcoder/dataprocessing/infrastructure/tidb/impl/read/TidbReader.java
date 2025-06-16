@@ -43,7 +43,7 @@ public class TidbReader extends TidbAdapterImpl {
         }
     }
 
-    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer limit)
+    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer page,Integer limit)
             throws SQLException {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ");
@@ -57,6 +57,8 @@ public class TidbReader extends TidbAdapterImpl {
         sql.append(tableName);
         sql.append(" LIMIT ");
         sql.append(limit);
+        sql.append(" OFFSET ");
+        sql.append(page * limit);
         
         CustomResultSet resultSet = executeQuery(sql.toString());
         List<Map<String, Object>> data = resultSet.getRows();

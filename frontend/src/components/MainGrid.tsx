@@ -1,4 +1,3 @@
-import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -8,7 +7,6 @@ import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -31,6 +29,7 @@ import Charts from './modules/Charts';
 import Reports from './modules/Reports';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import SourceDetail from './modules/SourceDetail';
+import SourcePreview from './modules/SourcePreview';
 
 interface Source {
     id: string;
@@ -48,6 +47,16 @@ interface SourcesMetadata {
     total_pages: number;
     current_page: number;
     page_size: number;
+}
+
+interface PreviewData {
+    schema: {
+        field_name: string;
+        field_mapping: string;
+        field_type: string;
+        is_hidden: boolean;
+    }[];
+    records: any[];
 }
 
 const chartsRows = [
@@ -112,6 +121,13 @@ export default function MainGrid() {
     }
   });
   const [addStep, setAddStep] = useState(1);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewPagination, setPreviewPagination] = useState({
+    page: 0,
+    pageSize: 10,
+    totalRows: 0
+  });
 
   // Add state for table data
   const [sourcesData, setSourcesData] = useState<Source[]>([]);
@@ -191,14 +207,12 @@ export default function MainGrid() {
     }
   }, [currentContent]);
 
-  const handleRowDoubleClick = async (params: any) => {
+  const fetchSourcePreview = async (sourceId: string, page: number = 0, pageSize: number = 10) => {
     try {
-      // Convert id to string to ensure precision
-      const sourceId = params.row.id.toString();
-      console.log('Fetching source with ID:', sourceId);
-      console.log('Full row data:', params.row);
+      setPreviewLoading(true);
+      console.log('Fetching source preview with ID:', sourceId, 'page:', page, 'pageSize:', pageSize);
       
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceId}`;
+      const url = `${API_CONFIG.BASE_URL}/data-processing/sources/${sourceId}/preview?page=${page}&limit=${pageSize}`;
       console.log('API URL:', url);
 
       const response = await fetch(url, {
@@ -210,9 +224,6 @@ export default function MainGrid() {
         },
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -221,25 +232,54 @@ export default function MainGrid() {
       console.log('API Response data:', data);
 
       if (data.success) {
-        // Ensure id is treated as string in the response
-        const sourceData = {
-          ...data.result,
-          id: data.result.id.toString()
-        };
-        console.log('Processed source data:', sourceData);
-        setSelectedItem(sourceData);
-        setShowDetails(true);
+        setPreviewData(data.result);
+        // Assuming the API returns total count in metadata
+        setPreviewPagination(prev => ({
+          ...prev,
+          totalRows: data.result.total_count || 0
+        }));
       } else {
         console.error('API returned error:', data.message);
       }
     } catch (error) {
-      console.error('Error fetching source details:', error);
+      console.error('Error fetching source preview:', error);
+    } finally {
+      setPreviewLoading(false);
     }
+  };
+
+  const handleRowDoubleClick = async (params: any) => {
+    try {
+      const sourceId = params.row.id.toString();
+      setSelectedItem(params.row);
+      setShowDetails(true);
+      await fetchSourcePreview(sourceId);
+    } catch (error) {
+      console.error('Error handling row double click:', error);
+    }
+  };
+
+  const handlePreviewPageChange = async (page: number, pageSize: number) => {
+    if (!selectedItem) return;
+    
+    setPreviewPagination(prev => ({
+      ...prev,
+      page,
+      pageSize
+    }));
+    
+    await fetchSourcePreview(selectedItem.id.toString(), page, pageSize);
   };
 
   const handleBackToList = () => {
     setShowDetails(false);
     setSelectedItem(null);
+    setPreviewData(null);
+    setPreviewPagination({
+      page: 0,
+      pageSize: 10,
+      totalRows: 0
+    });
   };
 
   const handleEditClick = (row: any) => {
@@ -1413,12 +1453,18 @@ export default function MainGrid() {
   };
 
   const renderDetails = () => {
-    if (!selectedItem) return null;
+    if (!selectedItem || !previewData) return null;
 
     return (
-      <SourceDetail
+      <SourcePreview
         source={selectedItem}
+        previewData={previewData}
         onBack={handleBackToList}
+        onPageChange={handlePreviewPageChange}
+        totalRows={previewPagination.totalRows}
+        pageSize={previewPagination.pageSize}
+        currentPage={previewPagination.page}
+        loading={previewLoading}
       />
     );
   };
