@@ -24,7 +24,7 @@ The API Gateway service is a Spring Cloud Gateway-based service that acts as the
 
 - Java 17 or higher
 - Maven
-- Eureka Discovery Server running (default: http://localhost:8761)
+- Eureka Discovery Server running (default: <http://localhost:8761>)
 
 ## Configuration
 
