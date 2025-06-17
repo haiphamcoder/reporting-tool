@@ -1,34 +1,114 @@
-# Read Me First
-The following was discovered as part of building this project:
+# Reporting Service
 
-* The original package name 'com.haiphamcoder.reporting-service' is invalid and this project uses 'com.haiphamcoder.reporting_service' instead.
+A Spring Boot-based microservice for handling reporting functionalities, integrated with Hadoop HDFS for data storage and gRPC for service communication.
 
-# Getting Started
+## Technology Stack
 
-### Reference Documentation
-For further reference, please consider the following sections:
+- Java 17
+- Spring Boot 3.4.5
+- Spring Cloud 2024.0.1
+- Spring Security with JWT
+- Spring Data JPA
+- MySQL
+- Apache Hadoop 3.4.0
+- gRPC 1.61.0
+- Maven
+- Docker
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.4.5/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.4.5/maven-plugin/build-image.html)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.4.5/reference/using/devtools.html)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/3.4.5/reference/actuator/index.html)
-* [Spring Web](https://docs.spring.io/spring-boot/3.4.5/reference/web/servlet.html)
-* [Eureka Discovery Client](https://docs.spring.io/spring-cloud-netflix/reference/spring-cloud-netflix.html#_service_discovery_eureka_clients)
+## Prerequisites
 
-### Guides
-The following guides illustrate how to use some features concretely:
+- Java 17 or higher
+- Maven 3.9.8 or higher
+- Docker (for containerized deployment)
+- MySQL database
+- Apache Hadoop cluster
 
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
-* [Service Registration and Discovery with Eureka and Spring Cloud](https://spring.io/guides/gs/service-registration-and-discovery/)
+## Project Structure
 
-### Maven Parent overrides
+```text
+reporting-service/
+├── src/                    # Source code
+├── config/                 # Configuration files
+├── bin/                    # Shell scripts
+├── target/                 # Build output
+├── .mvn/                   # Maven wrapper
+├── pom.xml                 # Maven configuration
+├── Dockerfile             # Docker configuration
+└── README.md              # Project documentation
+```
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+## Features
 
+- RESTful API endpoints for reporting operations
+- JWT-based authentication and authorization
+- Integration with Hadoop HDFS for data storage
+- gRPC service communication
+- Service discovery with Eureka
+- Actuator endpoints for monitoring
+- Docker containerization
+
+## Building the Project
+
+### Local Development
+
+1. Clone the repository
+2. Configure your MySQL database settings in `application.properties`
+3. Run the following commands:
+
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+
+### Docker Build
+
+```bash
+docker build -t reporting-service .
+```
+
+## Running the Service
+
+### Local Run
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Docker Run
+
+```bash
+docker run -p 8080:8080 reporting-service
+```
+
+## Configuration
+
+The service can be configured through environment variables or application properties:
+
+- Database configuration
+- Hadoop HDFS settings
+- JWT security settings
+- Service discovery settings
+
+## API Documentation
+
+The service exposes RESTful APIs for reporting operations. API documentation will be available at:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+## Security
+
+The service implements JWT-based authentication. Include the JWT token in the Authorization header for protected endpoints:
+
+```text
+Authorization: Bearer <your-jwt-token>
+```
+
+## Monitoring
+
+The service exposes actuator endpoints for monitoring:
+
+```text
+http://localhost:8080/actuator
+```

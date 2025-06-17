@@ -1,34 +1,84 @@
-# Read Me First
-The following was discovered as part of building this project:
+# Integrated Service
 
-* The original package name 'com.haiphamcoder.integrated-service' is invalid and this project uses 'com.haiphamcoder.integrated_service' instead.
+A Spring Boot microservice that integrates various functionalities including Telegram bot integration and service discovery.
 
-# Getting Started
+## Overview
 
-### Reference Documentation
-For further reference, please consider the following sections:
+This service is part of a microservices architecture and provides integration capabilities with various external services. It's built using Spring Boot 3.4.5 and includes features like service discovery through Eureka, Telegram bot integration, and more.
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.4.5/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.4.5/maven-plugin/build-image.html)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.4.5/reference/using/devtools.html)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/3.4.5/reference/actuator/index.html)
-* [Spring Web](https://docs.spring.io/spring-boot/3.4.5/reference/web/servlet.html)
-* [Eureka Discovery Client](https://docs.spring.io/spring-cloud-netflix/reference/spring-cloud-netflix.html#_service_discovery_eureka_clients)
+## Prerequisites
 
-### Guides
-The following guides illustrate how to use some features concretely:
+- Java 17 or higher
+- Maven 3.6 or higher
+- MySQL 8.0 or higher
+- Docker (optional, for containerized deployment)
 
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
-* [Service Registration and Discovery with Eureka and Spring Cloud](https://spring.io/guides/gs/service-registration-and-discovery/)
+## Technology Stack
 
-### Maven Parent overrides
+- Spring Boot 3.4.5
+- Spring Cloud 2024.0.1
+- Spring Boot Actuator
+- Spring Boot Web
+- Netflix Eureka Client
+- Telegram Bots API 8.2.0
+- Lombok
+- MySQL 8
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+## Configuration
 
+The service can be configured through environment variables or application.properties. Key configurations include:
+
+### Server Configuration
+
+- `PORT`: Server port (default: 8080)
+- `spring.application.name`: Service name
+
+### Database Configuration
+
+- `MYSQL_SERVER_HOST`: MySQL server host (default: localhost)
+- `MYSQL_SERVER_PORT`: MySQL server port (default: 3306)
+- `MYSQL_DATABASE`: Database name (default: reporting_tool)
+- `MYSQL_USER`: Database username (default: root)
+- `MYSQL_PASSWORD`: Database password (default: root)
+- `MYSQL_POOL_SIZE`: Connection pool size (default: 5)
+
+### Service Discovery
+
+- `DISCOVERY_SERVER_URL`: Eureka server URL (default: http://localhost:8761)
+
+### Security
+
+- `JWT_SECRET_KEY`: JWT secret key for authentication
+
+### Telegram Bot
+
+- `telegram.bot.token`: Telegram bot token
+- `telegram.bot.username`: Telegram bot username
+
+## Building and Running
+
+### Local Development
+
+1. Clone the repository
+2. Configure the application.properties or set environment variables
+3. Run the application:
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Docker Deployment
+
+Build and run using Docker:
+
+```bash
+docker build -t integrated-service .
+docker run -p 8080:8080 integrated-service
+```
+
+## API Documentation
+
+The service exposes various endpoints for different functionalities. API documentation will be available at:
+
+- Actuator endpoints: <http://localhost:8080/actuator>
+- Swagger UI (if configured): <http://localhost:8080/swagger-ui.html>
