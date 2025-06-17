@@ -1,32 +1,83 @@
-# Read Me First
-The following was discovered as part of building this project:
+# Eureka Discovery Server
 
-* The original package name 'com.haiphamcoder.eureka-discovery-server' is invalid and this project uses 'com.haiphamcoder.eureka_discovery_server' instead.
+This is a Spring Cloud Netflix Eureka Server implementation that provides service discovery capabilities for microservices architecture.
 
-# Getting Started
+## Overview
 
-### Reference Documentation
-For further reference, please consider the following sections:
+The Eureka Discovery Server is a service registry that allows microservices to register themselves and discover other services. It provides a central registry where services can register their instances and clients can look up service instances.
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.4.5/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.4.5/maven-plugin/build-image.html)
-* [Eureka Server](https://docs.spring.io/spring-cloud-netflix/reference/spring-cloud-netflix.html#spring-cloud-eureka-server)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/3.4.5/reference/actuator/index.html)
-* [Validation](https://docs.spring.io/spring-boot/3.4.5/reference/io/validation.html)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.4.5/reference/using/devtools.html)
+## Technology Stack
 
-### Guides
-The following guides illustrate how to use some features concretely:
+- Java 17
+- Spring Boot 3.4.5
+- Spring Cloud 2024.0.1
+- Netflix Eureka Server
 
-* [Service Registration and Discovery with Eureka and Spring Cloud](https://spring.io/guides/gs/service-registration-and-discovery/)
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Validation](https://spring.io/guides/gs/validating-form-input/)
+## Prerequisites
 
-### Maven Parent overrides
+- JDK 17 or higher
+- Maven 3.6.x or higher
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+## Configuration
 
+The server runs on port 8761 by default. You can modify the following properties in `application.properties`:
+
+```properties
+server.port=${PORT:8761}
+eureka.instance.hostname=localhost
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+eureka.client.service-url.default-zone=${DISCOVERY_SERVER_URL:http://localhost:8761}/eureka
+```
+
+## Running the Application
+
+### Using Maven
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Using Docker
+
+Build the Docker image:
+
+```bash
+docker build -t eureka-discovery-server .
+```
+
+Run the container:
+
+```bash
+docker run -p 8761:8761 eureka-discovery-server
+```
+
+## Accessing the Eureka Dashboard
+
+Once the application is running, you can access the Eureka Dashboard at:
+
+```text
+http://localhost:8761
+```
+
+## Features
+
+- Service registration and discovery
+- Health monitoring
+- Load balancing support
+- High availability configuration support
+
+## Dependencies
+
+- Spring Boot Starter Actuator
+- Spring Boot Starter Validation
+- Spring Cloud Netflix Eureka Server
+- Spring Boot DevTools (for development)
+
+## Development
+
+The project uses Spring Boot DevTools for enhanced development experience. It provides features like:
+
+- Automatic application restart
+- Live reload
+- Remote debugging support
