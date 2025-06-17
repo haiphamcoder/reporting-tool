@@ -1,24 +1,33 @@
-import { DataGrid } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { DataGrid, DataGridProps } from '@mui/x-data-grid';
 
-export default function CustomizedDataGrid({ rows, columns }: { rows: any[], columns: any[] }) {
+export default function CustomDataGrid(props: DataGridProps) {
   return (
-    <Box>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       <DataGrid
-        checkboxSelection
-        rows={rows}
-        columns={columns}
-        getRowClassName={(params) =>
-          params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
-        }
+        {...props}
+        getRowClassName={(params) => (params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd')}
         initialState={{
           pagination: { paginationModel: { pageSize: 20 } },
         }}
+        sx={{
+          ...props.sx,
+          borderColor: (theme) =>
+            theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[200],
+          '& .MuiDataGrid-cell': {
+            borderColor: (theme) =>
+              theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[200],
+          },
+        }}
         pageSizeOptions={[10, 20, 50]}
-        disableColumnResize={false}
-        density="compact"
+        disableColumnResize
         slotProps={{
           filterPanel: {
+            sx: {
+              '& .MuiDataGrid-filterForm': {
+                columnGap: 1.5,
+                marginTop: 2,
+              },
+            },
             filterFormProps: {
               logicOperatorInputProps: {
                 variant: 'outlined',
@@ -44,6 +53,7 @@ export default function CustomizedDataGrid({ rows, columns }: { rows: any[], col
           },
         }}
       />
-    </Box>
+    </div>
   );
 }
+

@@ -10,8 +10,13 @@ backend/target/
 database/mysql-server/data/
 database/hadoop/dfs/namenode/
 database/hadoop/dfs/datanode/
+database/tidb/data
 
 frontend/node_modules/
 frontend/dist/
 frontend/package-lock.json
-frontend/src/config/api.ts
+
+authentication-service/config/application.properties
+integrated-service/config/application.properties
+
+source_dump.txt

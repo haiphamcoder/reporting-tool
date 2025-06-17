@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.reporting.proto";
+
+package chart;
+
+// Chart service definition
+service ChartService {
+  
+  // Get chart by id
+  rpc GetChartById(GetChartByIdRequest) returns (GetChartByIdResponse) {}
+  
+  // Update chart
+  rpc UpdateChart(UpdateChartRequest) returns (UpdateChartResponse) {}
+
+}
+
+// Chart message definition
+message ChartProto {
+  int64 id = 1;
+  string name = 2;
+  int64 user_id = 3;
+  string description = 4;
+  string config = 5;
+  string query_option = 6;
+  bool is_deleted = 7;
+}
+
+// Request/Response messages for GetChartById
+message GetChartByIdRequest {
+  int64 id = 1;
+}
+
+message GetChartByIdResponse {
+  ChartProto chart = 1;
+}
+
+// Request/Response messages for UpdateChart
+message UpdateChartRequest {
+  ChartProto chart = 1;
+}
+
+message UpdateChartResponse {
+  ChartProto chart = 1;
+}
+
+

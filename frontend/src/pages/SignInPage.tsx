@@ -22,6 +22,7 @@ import { GoogleIcon } from '../components/CustomIcons';
 import { API_CONFIG } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import { authApi } from '../api/auth/authApi';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
@@ -76,8 +77,26 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] = React.useState(false);
     const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
+    const [errorMessage, setErrorMessage] = React.useState('');
+    const [isLoading, setIsLoading] = React.useState(false);
 
-    const { checkAuth } = useAuth();
+    const navigate = useNavigate();
+    const { setAuthenticated } = useAuth();
+
+    React.useEffect(() => {
+        const checkCurrentUser = async () => {
+            try {
+                await authApi.getCurrentUser();
+                setAuthenticated(true);
+                navigate('/dashboard');
+            } catch (error) {
+                // Token is invalid or expired, stay on sign in page
+                setAuthenticated(false);
+            }
+        };
+        
+        checkCurrentUser();
+    }, [navigate, setAuthenticated]);
 
     const handleForgotPasswordDialogOpen = () => {
         setForgotPasswordDialogOpen(true);
@@ -90,40 +109,28 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (usernameError || passwordError) {
+        if (!validateInputs()) {
             return;
         }
 
+        setIsLoading(true);
         const data = new FormData(event.currentTarget);
-        const username = data.get('username');
-        const password = data.get('password');
+        const signInData = {
+            username: data.get('username') as string,
+            password: data.get('password') as string,
+        };
         
         try {
-            const response = fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTHENTICATE}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                }),
-                credentials: 'include',
-            });
-
-            if ((await response).status === 200) {
-                await checkAuth();
-                navigate('/dashboard');
-            } else {
-                setErrorDialogOpen(true);
-            }
+            await authApi.signIn(signInData);
+            setAuthenticated(true);
+            navigate('/dashboard');
         } catch (error) {
-            console.error('Error signing in:', error);
+            setErrorMessage(error instanceof Error ? error.message : 'Failed to sign in');
             setErrorDialogOpen(true);
+        } finally {
+            setIsLoading(false);
         }
     };
-
-    const navigate = useNavigate();
 
     const validateInputs = () => {
         const username = document.getElementById('username') as HTMLInputElement;
@@ -131,18 +138,18 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
 
         let isValid = true;
 
-        if (!username.value || username.value.length === 0) {
+        if (!username.value || username.value.length < 4) {
             setUsernameError(true);
-            setUsernameErrorMessage('Please enter a username.');
+            setUsernameErrorMessage('Please enter a valid username.');
             isValid = false;
         } else {
             setUsernameError(false);
             setUsernameErrorMessage('');
         }
 
-        if (!password.value || password.value.length === 0) {
+        if (!password.value || password.value.length < 6) {
             setPasswordError(true);
-            setPasswordErrorMessage('Please enter a password.');
+            setPasswordErrorMessage('Please enter a valid password.');
             isValid = false;
         } else {
             setPasswordError(false);
@@ -198,6 +205,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                                     fullWidth
                                     variant="outlined"
                                     color={usernameError ? 'error' : 'primary'}
+                                    disabled={isLoading}
                                 />
                             </FormControl>
                         </Box>
@@ -216,13 +224,14 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                                     fullWidth
                                     variant="outlined"
                                     color={passwordError ? 'error' : 'primary'}
+                                    disabled={isLoading}
                                 />
                             </FormControl>
                         </Box>
                         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 100%' } }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <FormControlLabel
-                                    control={<Checkbox value="remember" color="primary" />}
+                                    control={<Checkbox value="remember" color="primary" disabled={isLoading} />}
                                     label="Remember me"
                                 />
                                 <Link
@@ -231,6 +240,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                                     onClick={handleForgotPasswordDialogOpen}
                                     variant="body2"
                                     sx={{ alignSelf: 'center' }}
+                                    disabled={isLoading}
                                 >
                                     Forgot your password?
                                 </Link>
@@ -242,16 +252,18 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                             fullWidth
                             variant="contained"
                             onClick={validateInputs}
+                            disabled={isLoading}
                         >
-                            Sign in
+                            {isLoading ? 'Signing in...' : 'Sign in'}
                         </Button>
                     </Box>
                     <Divider>or</Divider>
                     <Button
                         fullWidth
                         variant="outlined"
-                        onClick={() => handleSignInWithGoogle()}
+                        onClick={handleSignInWithGoogle}
                         startIcon={<GoogleIcon />}
+                        disabled={isLoading}
                     >
                         Sign in with Google
                     </Button>
@@ -274,7 +286,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                 <DialogTitle>Error</DialogTitle>
                 <DialogContent>
                     <Typography id="error-dialog-description">
-                        Username or password is incorrect. Please try again.
+                        {errorMessage}
                     </Typography>
                 </DialogContent>
                 <DialogActions>

@@ -12,7 +12,6 @@ export type StatCardProps = {
   title: string;
   value: string;
   interval: string;
-  trend: 'up' | 'down' | 'neutral';
   data: number[];
 };
 
@@ -42,40 +41,65 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
+type TrendType = 'up' | 'down' | 'neutral';
+
+function calculateTrend(data: number[]): { trend: TrendType; value: string } {
+  if (data.length < 2) {
+    return { trend: 'neutral', value: '0%' };
+  }
+
+  // Tính giá trị trung bình của toàn bộ dữ liệu
+  const average = data.reduce((sum, val) => sum + val, 0) / data.length;
+  const lastValue = data[data.length - 1];
+  
+  // Tính phần trăm thay đổi giữa giá trị cuối và giá trị trung bình
+  const percentChange = ((lastValue - average) / average) * 100;
+  
+  // Làm tròn đến 1 chữ số thập phân
+  const roundedPercent = Math.round(percentChange * 10) / 10;
+  
+  // Xác định xu hướng dựa trên mức độ thay đổi
+  let trend: TrendType = 'neutral';
+  if (roundedPercent > 10) trend = 'up';
+  else if (roundedPercent < -10) trend = 'down';
+  
+  return {
+    trend,
+    value: `${roundedPercent > 0 ? '+' : ''}${roundedPercent}%`,
+  };
+}
+
+function getTrendColor(theme: any, trend: TrendType) {
+  const baseColors = {
+    up: theme.palette.mode === 'light' ? theme.palette.success.main : theme.palette.success.dark,
+    down: theme.palette.mode === 'light' ? theme.palette.error.main : theme.palette.error.dark,
+    neutral: theme.palette.mode === 'light' ? theme.palette.grey[400] : theme.palette.grey[700],
+  };
+
+  if (trend === 'neutral') return baseColors.neutral;
+
+  // Điều chỉnh độ sáng dựa trên cường độ
+  const color = baseColors[trend];
+  return color;
+}
+
 export default function StatCard({
   title,
   value,
   interval,
-  trend,
   data,
 }: StatCardProps) {
   const theme = useTheme();
   const daysInWeek = getDaysInMonth(4, 2024);
 
-  const trendColors = {
-    up:
-      theme.palette.mode === 'light'
-        ? theme.palette.success.main
-        : theme.palette.success.dark,
-    down:
-      theme.palette.mode === 'light'
-        ? theme.palette.error.main
-        : theme.palette.error.dark,
-    neutral:
-      theme.palette.mode === 'light'
-        ? theme.palette.grey[400]
-        : theme.palette.grey[700],
-  };
+  const { trend, value: trendValue } = calculateTrend(data);
+  const chartColor = getTrendColor(theme, trend);
 
   const labelColors = {
     up: 'success' as const,
     down: 'error' as const,
     neutral: 'default' as const,
   };
-
-  const color = labelColors[trend];
-  const chartColor = trendColors[trend];
-  const trendValues = { up: '+25%', down: '-25%', neutral: '+5%' };
 
   return (
     <Card variant="outlined" sx={{ height: '100%', flexGrow: 1 }}>
@@ -95,7 +119,7 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={color} label={trendValues[trend]} />
+              <Chip size="small" color={labelColors[trend]} label={trendValue} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}

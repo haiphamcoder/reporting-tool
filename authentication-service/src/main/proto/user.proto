@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.usermanagement.proto";
+
+package user;
+
+// User service definition
+service UserService {
+  
+  // Get user by username
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (GetUserByUsernameResponse) {}
+  
+  // Get user by email
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserByEmailResponse) {}
+  
+  // Get user by id
+  rpc GetUserById(GetUserByIdRequest) returns (GetUserByIdResponse) {}
+  
+  // Save user
+  rpc SaveUser(SaveUserRequest) returns (SaveUserResponse) {}
+
+}
+
+// User message definition
+message UserProto {
+  int64 id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string username = 4;
+  string password = 5;
+  string email = 6;
+  bool email_verified = 7;
+  string provider = 8;
+  string provider_id = 9;
+  string avatar_url = 10;
+  bool enabled = 11;
+  bool deleted = 12;
+  string role = 13;
+  int64 created_at = 14;
+  int64 modified_at = 15;
+}
+
+// Request/Response messages for GetUserByUsername
+message GetUserByUsernameRequest {
+  string username = 1;
+}
+
+message GetUserByUsernameResponse {
+  UserProto user = 1;
+}
+
+// Request/Response messages for GetUserByEmail
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message GetUserByEmailResponse {
+  UserProto user = 1;
+}
+
+// Request/Response messages for GetUserById
+message GetUserByIdRequest {
+  int64 id = 1;
+}
+
+message GetUserByIdResponse {
+  UserProto user = 1;
+}
+
+// Request/Response messages for SaveUser
+message SaveUserRequest {
+  UserProto user = 1;
+}
+
+message SaveUserResponse {
+  UserProto user = 1;
+}
+
