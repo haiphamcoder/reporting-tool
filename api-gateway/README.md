@@ -1,31 +1,86 @@
-# Read Me First
-The following was discovered as part of building this project:
+# API Gateway Service
 
-* The original package name 'com.haiphamcoder.api-gateway' is invalid and this project uses 'com.haiphamcoder.api_gateway' instead.
+## Overview
 
-# Getting Started
+The API Gateway service is a Spring Cloud Gateway-based service that acts as the entry point for all client requests. It provides routing, load balancing, and other cross-cutting concerns for the microservices architecture.
 
-### Reference Documentation
-For further reference, please consider the following sections:
+## Technology Stack
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.4.5/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.4.5/maven-plugin/build-image.html)
-* [Spring Boot Actuator](https://docs.spring.io/spring-boot/3.4.5/reference/actuator/index.html)
-* [Gateway](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-server-mvc.html)
-* [Eureka Discovery Client](https://docs.spring.io/spring-cloud-netflix/reference/spring-cloud-netflix.html#_service_discovery_eureka_clients)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.4.5/reference/using/devtools.html)
+- Java 17
+- Spring Boot 3.4.5
+- Spring Cloud Gateway
+- Spring Cloud Netflix Eureka Client
+- Maven
 
-### Guides
-The following guides illustrate how to use some features concretely:
+## Features
 
-* [Building a RESTful Web Service with Spring Boot Actuator](https://spring.io/guides/gs/actuator-service/)
-* [Service Registration and Discovery with Eureka and Spring Cloud](https://spring.io/guides/gs/service-registration-and-discovery/)
+- API Routing
+- Service Discovery Integration with Eureka
+- Load Balancing
+- Cross-cutting concerns handling
+- Actuator endpoints for monitoring
 
-### Maven Parent overrides
+## Prerequisites
 
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+- Java 17 or higher
+- Maven
+- Eureka Discovery Server running (default: http://localhost:8761)
 
+## Configuration
+
+The service can be configured through `application.properties`:
+
+```properties
+# Default port: 8765
+server.port=${PORT:8765}
+
+# Eureka Server URL
+eureka.client.serviceUrl.defaultZone=${DISCOVERY_SERVER_URL:http://localhost:8761}/eureka
+```
+
+## Building and Running
+
+### Using Maven
+
+```bash
+# Build the project
+mvn clean package
+
+# Run the application
+mvn spring-boot:run
+```
+
+### Using Docker
+
+```bash
+# Build the Docker image
+docker build -t api-gateway .
+
+# Run the container
+docker run -p 8765:8765 api-gateway
+```
+
+## Environment Variables
+
+- `PORT`: Server port (default: 8765)
+- `DISCOVERY_SERVER_URL`: Eureka Server URL (default: <http://localhost:8761>)
+
+## Dependencies
+
+- Spring Cloud Gateway
+- Spring Cloud Netflix Eureka Client
+- Spring Boot Actuator
+- Lombok
+- Spring Boot DevTools (for development)
+
+## Development
+
+The project uses Lombok for reducing boilerplate code. Make sure to install the Lombok plugin in your IDE.
+
+## Monitoring
+
+The service exposes actuator endpoints for monitoring. Access them at:
+
+- Health check: `/actuator/health`
+- Metrics: `/actuator/metrics`
+- Info: `/actuator/info`
