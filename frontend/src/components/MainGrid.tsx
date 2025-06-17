@@ -28,7 +28,6 @@ import Sources from './modules/Sources';
 import Charts from './modules/Charts';
 import Reports from './modules/Reports';
 import { GridPaginationModel } from '@mui/x-data-grid';
-import SourceDetail from './modules/SourceDetail';
 import SourcePreview from './modules/SourcePreview';
 import SourceEdit from './modules/SourceEdit';
 
@@ -139,8 +138,8 @@ export default function MainGrid() {
     current_page: 0,
     page_size: 10
   });
-  const [chartsData, setChartsData] = useState(chartsRows);
-  const [reportsData, setReportsData] = useState(reportsRows);
+  const [chartsData] = useState(chartsRows);
+  const [reportsData] = useState(reportsRows);
   const [loading, setLoading] = useState(false);
 
   const fetchSources = async (page: number = 0, pageSize: number = 10) => {

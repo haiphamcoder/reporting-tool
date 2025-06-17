@@ -9,16 +9,20 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.authentication.domain.dto.UserDto;
+import com.haiphamcoder.authentication.domain.model.Role;
 import com.haiphamcoder.authentication.mapper.UserMapper;
 import com.haiphamcoder.authentication.security.oauth2.exception.OAuth2AuthenticationProcessingException;
 import com.haiphamcoder.authentication.security.oauth2.user.OAuth2UserInfo;
 import com.haiphamcoder.authentication.security.oauth2.user.OAuth2UserInfoFactory;
 import com.haiphamcoder.authentication.security.oauth2.user.OAuth2UserPrincipal;
 import com.haiphamcoder.authentication.service.UserGrpcClient;
+import com.haiphamcoder.authentication.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.authentication.shared.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 
 @Service
 @RequiredArgsConstructor
@@ -52,10 +56,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new IllegalArgumentException("Email not found from OAuth2 provider");
         }
 
-        UserDto user = userGrpcClient.getUserByEmail(oAuth2UserInfo.getEmail());
-        log.info("Existing user found: {}", user);
-        
-        if (user != null) {
+        UserDto user;
+        try {
+            user = userGrpcClient.getUserByEmail(oAuth2UserInfo.getEmail());
+            log.info("Existing user found: {}", user);
+            
             if (!registrationId.equals(user.getProvider())) {
                 log.error("User signed up with different provider: {}", user.getProvider());
                 throw new OAuth2AuthenticationProcessingException("error",
@@ -64,9 +69,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
             user = updateExistingUser(user, oAuth2UserInfo);
             log.info("Updated existing user: {}", user);
-        } else {
-            user = registerNewUser(userRequest, oAuth2UserInfo);
-            log.info("Registered new user: {}", user);
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.NOT_FOUND.getCode()) {
+                user = registerNewUser(userRequest, oAuth2UserInfo);
+                log.info("Registered new user: {}", user);
+            } else {
+                throw e;
+            }
         }
         return new OAuth2UserPrincipal(oAuth2UserInfo);
     }
@@ -84,6 +93,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private UserDto registerNewUser(OAuth2UserRequest userRequest, OAuth2UserInfo oAuth2UserInfo) {
         UserDto user = UserDto.builder()
+                .id(SnowflakeIdGenerator.getInstance().generateId())
                 .provider(userRequest.getClientRegistration().getRegistrationId())
                 .providerId(oAuth2UserInfo.getId())
                 .username(oAuth2UserInfo.getEmail())
@@ -92,6 +102,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .lastName(oAuth2UserInfo.getLastName())
                 .avatarUrl(oAuth2UserInfo.getProfileImageUrl())
                 .emailVerified(true)
+                .role(Role.USER.getName())
                 .password(UUID.randomUUID().toString())
                 .build();
         return userGrpcClient.saveUser(UserMapper.toUser(user));

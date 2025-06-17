@@ -38,4 +38,7 @@ public class GetUserInforResponse {
     @JsonProperty("provider")
     private String provider;
 
+    @JsonProperty("avatar_url")
+    private String avatarUrl;
+
 }
