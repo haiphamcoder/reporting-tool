@@ -50,7 +50,7 @@ public class SourceController {
         Pair<List<SourceDto>, Metadata> sources = sourceService.getAllSourcesByUserId(userId, page, limit);
         GetAllSourcesResponse response = GetAllSourcesResponse.builder()
                 .data(sources.getFirst().stream().map(source -> GetAllSourcesResponse.Record.builder()
-                        .id(source.getId().toString())
+                        .id(source.getId())
                         .name(source.getName())
                         .description(source.getDescription())
                         .type(source.getConnectorType())
@@ -58,7 +58,7 @@ public class SourceController {
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
                         .build())
-                        .collect(Collectors.toList()))
+                        .toList())
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));

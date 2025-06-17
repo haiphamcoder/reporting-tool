@@ -37,13 +37,13 @@ public class ChartController {
         Pair<List<ChartDto>, Metadata> charts = chartService.getAllChartsByUserId(userId, page, limit);
         GetAllChartsResponse response = GetAllChartsResponse.builder()
                 .data(charts.getFirst().stream().map(chart -> GetAllChartsResponse.Record.builder()
-                        .id(chart.getId().toString())
+                        .id(chart.getId())
                         .name(chart.getName())
                         .description(chart.getDescription())
                         .createdAt(chart.getCreatedAt())
                         .updatedAt(chart.getModifiedAt())
                         .build())
-                        .collect(Collectors.toList()))
+                        .toList())
                 .metadata(charts.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Charts fetched successfully"));
@@ -61,6 +61,20 @@ public class ChartController {
             @RequestBody ChartDto chartDto) {
         ChartDto createdChart = chartService.createChart(userId, chartDto);
         return ResponseEntity.ok(ApiResponse.success(createdChart, "Chart created successfully"));
+    }
+
+    @PostMapping("/init")
+    public ResponseEntity<ApiResponse<Object>> init(@CookieValue(name = "user-id") Long userId,
+            @RequestBody ChartDto chartDto) {
+        // Init chart by chartDto
+        return ResponseEntity.ok(ApiResponse.success(null, "Chart initialized successfully"));
+    }
+
+    @PostMapping("/{chart-id}/confirm")
+    public ResponseEntity<ApiResponse<Object>> confirm(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId) {
+        // Confirm chart by chartId
+        return ResponseEntity.ok(ApiResponse.success(null, "Chart confirmed successfully"));
     }
 
     @PutMapping("/{chart-id}")

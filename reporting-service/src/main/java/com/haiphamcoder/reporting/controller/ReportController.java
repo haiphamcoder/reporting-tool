@@ -37,13 +37,13 @@ public class ReportController {
         Pair<List<ReportDto>, Metadata> reports = reportService.getAllReportsByUserId(userId, page, limit);
         GetAllReportsResponse response = GetAllReportsResponse.builder()
                 .data(reports.getFirst().stream().map(report -> GetAllReportsResponse.Record.builder()
-                        .id(report.getId().toString())
+                        .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())
-                        .collect(Collectors.toList()))
+                        .toList())
                 .metadata(reports.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Reports fetched successfully"));
