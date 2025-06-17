@@ -37,6 +37,9 @@ public class QueryOption {
     @JsonProperty("aggregations")
     private List<Aggregation> aggregations;
 
+    @JsonProperty("joins")
+    private List<Join> joins;
+
     @Data
     @Builder
     @AllArgsConstructor
@@ -118,4 +121,42 @@ public class QueryOption {
         @JsonProperty("alias")
         private String alias;
     }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Join {
+        @JsonProperty("table")
+        private String table;
+
+        @JsonProperty("type")
+        private String type; // INNER, LEFT, RIGHT, FULL
+
+        @JsonProperty("conditions")
+        private List<JoinCondition> conditions;
+
+        @JsonProperty("alias")
+        private String alias;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class JoinCondition {
+        @JsonProperty("left_field")
+        private String leftField;
+
+        @JsonProperty("right_field")
+        private String rightField;
+
+        @JsonProperty("operator")
+        private String operator; // EQ, GT, GTE, LT, LTE
+    }
+
 }

@@ -38,6 +38,7 @@ public class SourceGrpcServer {
                 SourceGrpcServer.this.stop();
             } catch (InterruptedException e) {
                 log.error("Error stopping gRPC server", e);
+                Thread.currentThread().interrupt();
             }
         }));
     }
