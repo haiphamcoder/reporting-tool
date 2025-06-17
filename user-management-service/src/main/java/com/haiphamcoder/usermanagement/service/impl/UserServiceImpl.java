@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +28,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getAllUsers() {
-        List<User> users = userRepository.getAllUsers();
-        return users.stream().map(UserMapper::toDto).collect(Collectors.toList());
+    public Page<UserDto> getAllUsers(Long userId, Integer page, Integer limit) {
+        Page<User> users = userRepository.getAllUsers(userId, page, limit);
+        return users.map(UserMapper::toDto);
     }
 
     @Override

@@ -2,11 +2,13 @@ package com.haiphamcoder.usermanagement.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 
 public interface UserService {
 
-    public List<UserDto> getAllUsers();
+    public Page<UserDto> getAllUsers(Long userId, Integer page, Integer limit);
 
     public List<UserDto> getAllUsersByProvider(String provider);
 

@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
@@ -31,8 +34,9 @@ public class UserRepositoryImpl implements UserRepository {
     private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
 
     @Override
-    public List<User> getAllUsers() {
-        return userJpaRepository.findAll();
+    public Page<User> getAllUsers(Long userId, Integer page, Integer limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        return userJpaRepository.findAll(pageable);
     }
 
     @Override
