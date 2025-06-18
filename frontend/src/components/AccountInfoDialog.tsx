@@ -18,6 +18,7 @@ import Tooltip from '@mui/material/Tooltip';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import googlePng from '../assets/google.png';
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
 
 interface AccountInfoDialogProps {
   open: boolean;
@@ -50,9 +51,9 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
             >
               {(!user.avatar_url && avatarFallback) || '?'}
             </Avatar>
-            <Typography variant="h6">{user.username}</Typography>
+            <Typography variant="h6">{fullName || 'No full name'}</Typography>
             <Typography variant="subtitle2" color="text.secondary">
-              {fullName || 'No full name'}
+            {user.username}
             </Typography>
             {getProviderIcon(user.provider)}
           </Stack>
@@ -65,17 +66,21 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
                 <ListItem>
                   <ListItemText
                     primary="Email"
-                    secondary={user.email || '-'}
+                    secondary={
+                      <Box display="flex" alignItems="center">
+                        <span>{user.email || '-'}</span>
+                        {typeof user.email_verified === 'boolean' && (
+                          <Tooltip title={user.email_verified ? 'Email verified' : 'Email not verified'}>
+                            {user.email_verified ? (
+                              <CheckCircleIcon sx={{ ml: 1.5, fontSize: 18, color: '#43a047 !important' }} />
+                            ) : (
+                              <CancelIcon sx={{ ml: 1.5, fontSize: 18, color: '#e53935 !important' }} />
+                            )}
+                          </Tooltip>
+                        )}
+                      </Box>
+                    }
                   />
-                  {typeof user.email_verified === 'boolean' && (
-                    <Tooltip title={user.email_verified ? 'Email verified' : 'Email not verified'}>
-                      {user.email_verified ? (
-                        <CheckCircleIcon color="success" sx={{ ml: 1 }} />
-                      ) : (
-                        <CancelIcon color="error" sx={{ ml: 1 }} />
-                      )}
-                    </Tooltip>
-                  )}
                 </ListItem>
                 <ListItem>
                   <ListItemText primary="User ID" secondary={user.user_id || '-'} />

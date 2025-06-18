@@ -20,6 +20,8 @@ import SourceEdit from './modules/SourceEdit';
 import AddSourceDialog from './modules/AddSourceDialog';
 import { SourceSummary } from '../types/source';
 import { useNavigate, useParams } from 'react-router-dom';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -758,6 +760,9 @@ export default function MainGrid() {
         handleAddNext={handleAddNext}
         handleAddBack={handleAddBack}
       />
+      <Backdrop open={previewLoading} sx={{ zIndex: 2000 }}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }
