@@ -9,16 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
-
-interface Source {
-    id: string;
-    name: string;
-    description: string;
-    type: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-}
+import { SourceSummary } from '../../types/source';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -29,12 +20,12 @@ interface SourcesMetadata {
 }
 
 interface SourcesProps {
-    sourcesData: Source[];
+    sourcesData: SourceSummary[];
     metadata: SourcesMetadata;
     onPageChange: (model: GridPaginationModel) => void;
-    handleEditClick: (row: Source) => void;
-    handleDeleteClick: (row: Source) => void;
-    handleRowDoubleClick: (params: GridRowParams<Source>) => void;
+    handleEditClick: (row: SourceSummary) => void;
+    handleDeleteClick: (row: SourceSummary) => void;
+    handleRowDoubleClick: (params: GridRowParams<SourceSummary>) => void;
     handleAddClick: () => void;
     handleRefresh: () => void;
 }
@@ -59,7 +50,7 @@ export default function Sources({
             headerName: 'Type',
             flex: 1,
             minWidth: 150,
-            renderCell: (params: GridRenderCellParams<Source>) => {
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => {
                 if (params.row?.type === 1) {
                     return (
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
@@ -82,7 +73,7 @@ export default function Sources({
             flex: 0.5,
             minWidth: 120,
             sortable: false,
-            renderCell: (params: GridRenderCellParams<Source>) => {
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => {
                 if (!params.row) return null;
                 return (
                     <Stack

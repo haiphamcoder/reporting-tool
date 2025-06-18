@@ -18,16 +18,7 @@ import { GridPaginationModel } from '@mui/x-data-grid';
 import SourcePreview from './modules/SourcePreview';
 import SourceEdit from './modules/SourceEdit';
 import AddSourceDialog from './modules/AddSourceDialog';
-
-interface Source {
-    id: string;
-    name: string;
-    description: string;
-    type: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-}
+import { SourceSummary } from '../types/source';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -120,7 +111,7 @@ export default function MainGrid() {
   });
 
   // Add state for table data
-  const [sourcesData, setSourcesData] = useState<Source[]>([]);
+  const [sourcesData, setSourcesData] = useState<SourceSummary[]>([]);
   const [sourcesMetadata, setSourcesMetadata] = useState<SourcesMetadata>({
     total_elements: 0,
     number_of_elements: 0,
@@ -285,8 +276,8 @@ export default function MainGrid() {
     });
   };
 
-  const handleEditClick = (row: any) => {
-    setEditForm(row);
+  const handleEditClick = (row: SourceSummary) => {
+    setSelectedItem(row);
     setShowEdit(true);
   };
 
@@ -604,10 +595,10 @@ export default function MainGrid() {
   };
 
   const renderContent = () => {
-    if (showEdit && editForm) {
+    if (showEdit && selectedItem && selectedItem.id) {
       return (
         <SourceEdit
-          source={editForm}
+          sourceId={selectedItem.id}
           onBack={handleEditClose}
           onSave={handleEditSave}
         />
