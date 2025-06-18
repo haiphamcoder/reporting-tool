@@ -252,20 +252,20 @@ services:
       eureka-discovery-server:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: reporting-tool-frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks:
-      reporting-tool-network:
-        ipv4_address: 172.19.80.12
-    restart: always
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: reporting-tool-frontend
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     reporting-tool-network:
+  #       ipv4_address: 172.19.80.12
+  #   restart: always
 
 networks:
   reporting-tool-network:
