@@ -10,6 +10,7 @@ import SideMenu from "../components/SizeMenu";
 import AppNavbar from "../components/AppNavbar";
 import Header from "../components/Header";
 import MainGrid from "../components/MainGrid";
+import { Routes, Route } from 'react-router-dom';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -44,7 +45,10 @@ export default function Dashboard(props: { disableCustomTheme?: boolean }) {
                         }}
                     >
                         <Header />
-                        <MainGrid />
+                        <Routes>
+                          <Route path="sources/:source_id/view-data" element={<MainGrid />} />
+                          <Route path="*" element={<MainGrid />} />
+                        </Routes>
                     </Stack>
                 </Box>
             </Box>

@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
         <Routes>
           <Route path="/auth/signin" element={<SignInPage />} />
           <Route path="/auth/signup" element={<SignUpPage />} />
-          <Route path="/dashboard/:section"
+          <Route path="/dashboard/:section/*"
             element={
               <ProtectedRoute>
                 <ContentProvider>
@@ -25,7 +25,8 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
                   </StatisticsProvider>
                 </ContentProvider>
               </ProtectedRoute>
-            } />
+            }
+          />
           <Route path="/dashboard" element={<Navigate to="/dashboard/home" />} />
           <Route path="/" element={<Navigate to="/dashboard/home" />} />
         </Routes>

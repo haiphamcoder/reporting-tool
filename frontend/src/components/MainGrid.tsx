@@ -19,6 +19,7 @@ import SourcePreview from './modules/SourcePreview';
 import SourceEdit from './modules/SourceEdit';
 import AddSourceDialog from './modules/AddSourceDialog';
 import { SourceSummary } from '../types/source';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -122,6 +123,25 @@ export default function MainGrid() {
   const [chartsData] = useState(chartsRows);
   const [reportsData] = useState(reportsRows);
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+  const { source_id } = useParams();
+
+  // Auto show Data Preview if source_id is present in URL
+  useEffect(() => {
+    if (source_id && sourcesData.length > 0) {
+      const found = sourcesData.find(s => s.id.toString() === source_id);
+      if (found) {
+        setSelectedItem(found);
+        setShowDetails(true);
+        fetchSourcePreview(source_id);
+      }
+    } else if (!source_id) {
+      setShowDetails(false);
+      setSelectedItem(null);
+      setPreviewData(null);
+    }
+  }, [source_id, sourcesData]);
 
   const fetchSources = async (page: number = 0, pageSize: number = 10) => {
     try {
@@ -247,6 +267,9 @@ export default function MainGrid() {
       const sourceId = params.row.id.toString();
       setSelectedItem(params.row);
       setShowDetails(true);
+      if (source_id !== sourceId) {
+        navigate(`/dashboard/sources/${sourceId}/view-data`);
+      }
       await fetchSourcePreview(sourceId);
     } catch (error) {
       console.error('Error handling row double click:', error);
@@ -274,6 +297,7 @@ export default function MainGrid() {
       pageSize: 10,
       totalRows: 0
     });
+    navigate('/dashboard/sources');
   };
 
   const handleEditClick = (row: SourceSummary) => {
@@ -664,6 +688,58 @@ export default function MainGrid() {
         return null;
     }
   };
+
+  // Reset detail state khi đổi màn (Home, Sources, Charts, Reports, ...)
+  useEffect(() => {
+    setShowDetails(false);
+    setSelectedItem(null);
+    setPreviewData(null);
+    setShowEdit(false);
+    setEditForm(null);
+    setAddStep(1);
+    setAddForm({
+      name: '',
+      type: '',
+      schedule: '',
+      chartType: '',
+      dataSource: '',
+      description: '',
+      connectorType: '',
+      connectionConfig: {},
+      schemaMapping: {},
+      previewData: null,
+      selectedFile: null,
+      mode: 'normal',
+      displayType: 'chart',
+      selectedChartType: '',
+      sources: [],
+      query: {
+        filters: [],
+        groupBy: [],
+        sortBy: [],
+        joins: [],
+      },
+      sqlQuery: '',
+      recipients: [],
+      format: 'pdf',
+      charts: [],
+      emailSubject: '',
+      emailBody: '',
+      advancedSettings: {
+        includeDataTable: true,
+        includeChart: true,
+        pageSize: 'A4',
+        orientation: 'portrait',
+        header: '',
+        footer: '',
+      }
+    });
+    setPreviewPagination({
+      page: 0,
+      pageSize: 10,
+      totalRows: 0
+    });
+  }, [currentContent]);
 
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
