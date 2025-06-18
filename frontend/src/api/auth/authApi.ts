@@ -2,12 +2,15 @@ import { API_CONFIG } from '../../config/api';
 import { SignUpRequest, SignUpResponse, SignInRequest, SignInResponse } from './types';
 
 export interface UserInfo {
-    id: string;
+    user_id: string;
     username: string;
     email: string;
+    email_verified: boolean;
+    role: string;
     first_name: string;
     last_name: string;
     avatar_url: string;
+    provider: string;
 }
 
 export const authApi = {

@@ -12,6 +12,12 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import { useAuth } from '../context/AuthContext';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import Tooltip from '@mui/material/Tooltip';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import googlePng from '../assets/google.png';
+import Grid from '@mui/material/Grid';
 
 interface AccountInfoDialogProps {
   open: boolean;
@@ -23,6 +29,14 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
 
   const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '';
   const avatarFallback = user?.username ? user.username[0].toUpperCase() : '?';
+
+  function getProviderIcon(provider: string | undefined) {
+    if (!provider) return <AccountCircleIcon sx={{ mr: 1 }} fontSize="small" color="disabled" />;
+    const p = provider.toLowerCase();
+    if (p === 'google') return <img src={googlePng} alt="Google" style={{ width: 20, height: 20, marginRight: 6, verticalAlign: 'middle' }} />;
+    // Có thể mở rộng thêm các provider khác ở đây
+    return <AccountCircleIcon sx={{ mr: 1 }} fontSize="small" color="disabled" />;
+  }
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -40,18 +54,54 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
             <Typography variant="subtitle2" color="text.secondary">
               {fullName || 'No full name'}
             </Typography>
+            {getProviderIcon(user.provider)}
           </Stack>
         ) : null}
         <Divider sx={{ mb: 2 }} />
         {user ? (
-          <List dense>
-            <ListItem>
-              <ListItemText primary="Email" secondary={user.email || '-'} />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="User ID" secondary={user.id || '-'} />
-            </ListItem>
-          </List>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <List dense>
+                <ListItem>
+                  <ListItemText
+                    primary="Email"
+                    secondary={user.email || '-'}
+                  />
+                  {typeof user.email_verified === 'boolean' && (
+                    <Tooltip title={user.email_verified ? 'Email verified' : 'Email not verified'}>
+                      {user.email_verified ? (
+                        <CheckCircleIcon color="success" sx={{ ml: 1 }} />
+                      ) : (
+                        <CancelIcon color="error" sx={{ ml: 1 }} />
+                      )}
+                    </Tooltip>
+                  )}
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="User ID" secondary={user.user_id || '-'} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Role" secondary={user.role || '-'} />
+                </ListItem>
+              </List>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <List dense>
+                <ListItem>
+                  <ListItemText primary="First Name" secondary={user.first_name || '-'} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Last Name" secondary={user.last_name || '-'} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Username" secondary={user.username || '-'} />
+                </ListItem>
+                <ListItem>
+                  <ListItemText primary="Provider" secondary={user.provider || '-'} />
+                </ListItem>
+              </List>
+            </Grid>
+          </Grid>
         ) : (
           <Typography variant="body2">No user information available.</Typography>
         )}
