@@ -1,13 +1,27 @@
 import Grid from '@mui/material/Grid2';
 import StatCard from './StatCard';
+import { useStatistics } from '../context/StatisticsContext';
+import { CircularProgress, Box } from '@mui/material';
 
-interface StatisticProps {
-    sourcesData: any[];
-    chartsData: any[];
-    reportsData: any[];
-}
+export default function Statistic() {
+    const { statistics, loading, error } = useStatistics();
 
-export default function Statistic({ sourcesData, chartsData, reportsData }: StatisticProps) {
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!statistics) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <div>No statistics available</div>
+            </Box>
+        );
+    }
+
     return (
         <Grid
             container
@@ -18,28 +32,25 @@ export default function Statistic({ sourcesData, chartsData, reportsData }: Stat
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                     title="Data Sources"
-                    value={sourcesData.length.toString()}
+                    value={statistics.sources.count.toString()}
                     interval="Last 30 days"
-                    // trend="up"
-                    data={[5, 7, 8, 9, 10, 12, 15]}
+                    data={statistics.sources.data}
                 />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                     title="Charts"
-                    value={chartsData.length.toString()}
+                    value={statistics.charts.count.toString()}
                     interval="Last 30 days"
-                    // trend="neutral"
-                    data={[3, 4, 5, 6, 7, 8, 9]}
+                    data={statistics.charts.data}
                 />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <StatCard
                     title="Reports"
-                    value={reportsData.length.toString()}
+                    value={statistics.reports.count.toString()}
                     interval="Last 30 days"
-                    // trend="down"
-                    data={[8, 7, 6, 5, 4, 3, 2]}
+                    data={statistics.reports.data}
                 />
             </Grid>
         </Grid>

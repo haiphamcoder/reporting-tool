@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { ContentProvider } from './context/ContentContext';
+import { StatisticsProvider } from './context/StatisticsContext';
 
 ReactDOM.createRoot(document.querySelector("#root")!).render(
   <React.StrictMode>
@@ -19,7 +20,9 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
             element={
               <ProtectedRoute>
                 <ContentProvider>
-                  <Dashboard />
+                  <StatisticsProvider>
+                    <Dashboard />
+                  </StatisticsProvider>
                 </ContentProvider>
               </ProtectedRoute>
             } />

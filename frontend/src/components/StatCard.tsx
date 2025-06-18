@@ -15,18 +15,22 @@ export type StatCardProps = {
   data: number[];
 };
 
-function getDaysInMonth(month: number, year: number) {
-  const date = new Date(year, month, 0);
-  const monthName = date.toLocaleDateString('en-US', {
-    month: 'short',
-  });
-  const daysInMonth = date.getDate();
+function getLast30Days() {
   const days = [];
-  let i = 1;
-  while (days.length < daysInMonth) {
-    days.push(`${monthName} ${i}`);
-    i += 1;
+  const today = new Date();
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', {
+      month: 'short',
+    });
+    
+    days.push(`${month} ${day}`);
   }
+  
   return days;
 }
 
@@ -48,14 +52,19 @@ function calculateTrend(data: number[]): { trend: TrendType; value: string } {
     return { trend: 'neutral', value: '0%' };
   }
 
-  // Tính giá trị trung bình của toàn bộ dữ liệu
-  const average = data.reduce((sum, val) => sum + val, 0) / data.length;
+  // So sánh 2 giá trị cuối cùng (ngày mới nhất và ngày trước đó)
   const lastValue = data[data.length - 1];
+  const prevValue = data[data.length - 2];
   
-  // Tính phần trăm thay đổi giữa giá trị cuối và giá trị trung bình
-  const percentChange = ((lastValue - average) / average) * 100;
+  let percentChange: number;
   
-  // Làm tròn đến 1 chữ số thập phân
+  if (prevValue === 0) {
+    // Nếu giá trị trước đó là 0, thì phần trăm thay đổi là 100% nếu giá trị hiện tại > 0
+    percentChange = lastValue > 0 ? 100 : 0;
+  } else {
+    percentChange = ((lastValue - prevValue) / prevValue) * 100;
+  }
+  
   const roundedPercent = Math.round(percentChange * 10) / 10;
   
   // Xác định xu hướng dựa trên mức độ thay đổi
@@ -90,10 +99,10 @@ export default function StatCard({
   data,
 }: StatCardProps) {
   const theme = useTheme();
-  const daysInWeek = getDaysInMonth(4, 2024);
+  const last30Days = getLast30Days();
 
-  const { trend, value: trendValue } = calculateTrend(data);
-  const chartColor = getTrendColor(theme, trend);
+  const { trend: calculatedTrend, value: trendValue } = calculateTrend(data);
+  const chartColor = getTrendColor(theme, calculatedTrend);
 
   const labelColors = {
     up: 'success' as const,
@@ -119,7 +128,7 @@ export default function StatCard({
               <Typography variant="h4" component="p">
                 {value}
               </Typography>
-              <Chip size="small" color={labelColors[trend]} label={trendValue} />
+              <Chip size="small" color={labelColors[calculatedTrend]} label={trendValue} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {interval}
@@ -134,7 +143,7 @@ export default function StatCard({
               showTooltip
               xAxis={{
                 scaleType: 'band',
-                data: daysInWeek,
+                data: last30Days,
               }}
               sx={{
                 [`& .${areaElementClasses.root}`]: {

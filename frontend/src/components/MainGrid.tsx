@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useContent } from '../context/ContentContext';
+import { useStatistics } from '../context/StatisticsContext';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../config/api';
@@ -73,6 +74,7 @@ const reportsRows = [
 
 export default function MainGrid() {
   const { currentContent } = useContent();
+  const { refreshStatistics } = useStatistics();
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -83,6 +85,7 @@ export default function MainGrid() {
   const [, setConnectors] = useState<any[]>([]);
   const [, setLoadingConnectors] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [needsStatisticsRefresh, setNeedsStatisticsRefresh] = useState(false);
   const [addForm, setAddForm] = useState<any>({
     name: '',
     type: '',
@@ -177,6 +180,7 @@ export default function MainGrid() {
         console.log('Setting metadata:', data.result.metadata);
         setSourcesData(processedSources);
         setSourcesMetadata(data.result.metadata);
+        setNeedsStatisticsRefresh(true);
       } else {
         console.error('API returned error:', data.message);
       }
@@ -205,7 +209,19 @@ export default function MainGrid() {
     if (currentContent === 'sources') {
       fetchSources();
     }
-  }, [currentContent]);
+    if (currentContent === 'home' && needsStatisticsRefresh) {
+      refreshStatistics();
+      setNeedsStatisticsRefresh(false);
+    }
+  }, [currentContent, needsStatisticsRefresh]);
+
+  // Fetch statistics on component mount only once
+  useEffect(() => {
+    // Only fetch if we're on home page initially
+    if (currentContent === 'home') {
+      refreshStatistics();
+    }
+  }, []);
 
   const fetchSourcePreview = async (sourceId: string, page: number = 0, pageSize: number = 10) => {
     try {
@@ -312,6 +328,7 @@ export default function MainGrid() {
       if (data.success) {
         // Refresh the sources list after successful update
         fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+        setNeedsStatisticsRefresh(true);
         handleEditClose();
       }
     } catch (error) {
@@ -339,6 +356,7 @@ export default function MainGrid() {
       if (data.success) {
         // Refresh the sources list after successful deletion
         fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+        setNeedsStatisticsRefresh(true);
       }
     } catch (error) {
       console.error('Error deleting source:', error);
@@ -390,9 +408,10 @@ export default function MainGrid() {
 
   const handleRefresh = () => {
     fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+    setNeedsStatisticsRefresh(true);
   };
 
-  const handleAddNext = () => {
+  const handleAddNext = async () => {
     if (currentContent === 'sources') {
       if (addStep === 1) {
         setAddStep(2);
@@ -400,8 +419,46 @@ export default function MainGrid() {
         setAddStep(3);
       } else if (addStep === 3) {
         // Handle source creation
-        console.log('Creating source:', addForm);
-        handleAddClose();
+        try {
+          console.log('Creating source:', addForm);
+          const formData = new FormData();
+          formData.append('name', addForm.name);
+          formData.append('connectorType', addForm.connectorType);
+          
+          if (addForm.selectedFile) {
+            formData.append('file', addForm.selectedFile);
+          }
+          
+          if (addForm.connectionConfig) {
+            Object.keys(addForm.connectionConfig).forEach(key => {
+              if (addForm.connectionConfig[key]) {
+                formData.append(key, addForm.connectionConfig[key]);
+              }
+            });
+          }
+
+          const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}`, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              // Refresh sources list and statistics
+              fetchSources(sourcesMetadata.current_page, sourcesMetadata.page_size);
+              setNeedsStatisticsRefresh(true);
+              handleAddClose();
+            } else {
+              console.error('Failed to create source:', data.message);
+            }
+          } else {
+            console.error('Failed to create source:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error creating source:', error);
+        }
       }
     } else if (currentContent === 'charts') {
       if (addStep === 1) {
@@ -1455,11 +1512,7 @@ export default function MainGrid() {
     switch (currentContent) {
       case 'home':
         return (
-          <Home
-            sourcesData={sourcesData}
-            chartsData={chartsData}
-            reportsData={reportsData}
-          />
+          <Home />
         );
       case 'sources':
         return (

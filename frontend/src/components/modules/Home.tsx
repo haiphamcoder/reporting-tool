@@ -3,23 +3,13 @@ import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
 import Statistic from '../Statistic';
 
-interface HomeProps {
-  sourcesData: any[];
-  chartsData: any[];
-  reportsData: any[];
-}
-
-export default function Home({ sourcesData, chartsData, reportsData }: HomeProps) {
+export default function Home() {
   return (
     <>
       <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
         Overview
       </Typography>
-      <Statistic
-        sourcesData={sourcesData}
-        chartsData={chartsData}
-        reportsData={reportsData}
-      />
+      <Statistic />
       <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
         Details
       </Typography>
