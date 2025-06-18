@@ -11,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
 
 interface Source {
+    id: string;
     name: string;
     description: string;
     type: number;
