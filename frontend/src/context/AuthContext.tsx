@@ -1,36 +1,36 @@
 import { createContext, useState, useContext, useEffect } from 'react';
-import { authApi } from '../api/auth/authApi';
+import { authApi, UserInfo } from '../api/auth/authApi';
 import { Alert, Snackbar } from '@mui/material';
 
 interface AuthContextType {
-    userId: string | null;
+    user: UserInfo | null;
     isAuthenticated: boolean;
     isLoading: boolean;
     setAuthenticated: (value: boolean) => void;
+    setUser: (user: UserInfo | null) => void;
     logout: () => Promise<void>;
 }
 
 // Create the context object with a default value
 const AuthContext = createContext<AuthContextType | null>({
-    userId: null,
+    user: null,
     isAuthenticated: false,
     isLoading: false,
     setAuthenticated: () => { },
+    setUser: () => { },
     logout: async () => { },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [userId, setUserId] = useState<string | null>(null);
+    const [user, setUser] = useState<UserInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true); // Set initial loading to true
     const [error, setError] = useState<string | null>(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const setAuthenticated = (value: boolean) => {
         setIsAuthenticated(value);
-        if (value) {
-            setUserId('authenticated'); // Set a dummy value since we don't need the actual userId
-        } else {
-            setUserId(null);
+        if (!value) {
+            setUser(null);
         }
     };
 
@@ -38,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await authApi.logout();
             setAuthenticated(false);
+            setUser(null);
         } catch (error) {
             console.error("Error logging out", error);
             setError("Failed to logout. Please try again.");
@@ -48,10 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
-                await authApi.getCurrentUser();
+                const userInfo = await authApi.getCurrentUser();
+                setUser(userInfo);
                 setAuthenticated(true);
             } catch (error) {
                 setAuthenticated(false);
+                setUser(null);
             } finally {
                 setIsLoading(false);
             }
@@ -62,10 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <AuthContext.Provider value={{ 
-            userId, 
+            user,
             isAuthenticated, 
             isLoading, 
             setAuthenticated,
+            setUser,
             logout 
         }}>
             {children}

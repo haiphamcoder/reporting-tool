@@ -13,6 +13,7 @@ import MenuButton from './MenuButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth/authApi';
+import AccountInfoDialog from './AccountInfoDialog';
 
 const MenuItem = styled(MuiMenuItem)({
   margin: '2px 0',
@@ -30,6 +31,7 @@ export default function OptionsMenu() {
 
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const [openAccountDialog, setOpenAccountDialog] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -73,10 +75,7 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
-        <Divider />
-        <MenuItem onClick={handleClose}>Add another account</MenuItem>
+        <MenuItem onClick={() => setOpenAccountDialog(true)}>My account</MenuItem>
         <MenuItem onClick={handleClose}>Settings</MenuItem>
         <Divider />
         <MenuItem
@@ -94,6 +93,7 @@ export default function OptionsMenu() {
           </ListItemIcon>
         </MenuItem>
       </Menu>
+      <AccountInfoDialog open={openAccountDialog} onClose={() => setOpenAccountDialog(false)} />
     </React.Fragment>
   );
 }
