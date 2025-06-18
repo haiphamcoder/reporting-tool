@@ -10,6 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.service.UserService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.entity.User;
 import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
@@ -17,6 +20,7 @@ import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;

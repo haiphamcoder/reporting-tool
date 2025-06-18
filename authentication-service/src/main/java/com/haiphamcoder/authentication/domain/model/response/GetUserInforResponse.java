@@ -26,6 +26,9 @@ public class GetUserInforResponse {
     @JsonProperty("email")
     private String email;
 
+    @JsonProperty("email_verified")
+    private Boolean emailVerified;
+
     @JsonProperty("first_name")
     private String firstName;
 
