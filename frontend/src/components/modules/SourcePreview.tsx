@@ -54,8 +54,28 @@ export default function SourcePreview({
         <IconButton onClick={onBack} sx={{ mr: 2 }}>
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5" component="h1">
-          {source.name} - Data Preview
+        <Typography variant="h5" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          Data Preview - 
+          <Box
+            component="span"
+            sx={{
+              color: 'success.main',
+              border: '1.5px solid',
+              borderColor: 'success.light',
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              px: 1.5,
+              py: 0.25,
+              fontWeight: 600,
+              fontSize: '1rem',
+              ml: 1,
+              display: 'inline-block',
+              minWidth: 60,
+              textAlign: 'center',
+            }}
+          >
+            {source.id}
+          </Box>
         </Typography>
       </Box>
 

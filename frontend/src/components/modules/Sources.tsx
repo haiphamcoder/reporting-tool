@@ -10,6 +10,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
 import { SourceSummary } from '../../types/source';
+import Box from '@mui/material/Box';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -62,7 +63,42 @@ export default function Sources({
                 return params.row?.type || '';
             }
         },
-        { field: 'status', headerName: 'Status', flex: 1, minWidth: 150 },
+        {
+            field: 'status',
+            headerName: 'Status',
+            flex: 1,
+            minWidth: 150,
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    color: 'success.main',
+                    border: '1.5px solid',
+                    borderColor: 'success.light',
+                    backgroundColor: 'white',
+                    borderRadius: '16px',
+                    px: 1,
+                    py: 0,
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    minWidth: 60,
+                    textAlign: 'center',
+                    ml: 1,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {params.value}
+                </Box>
+              </Box>
+            ),
+        },
         { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
         {
             field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180

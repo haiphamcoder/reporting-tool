@@ -123,7 +123,7 @@ export default function SourceEdit({ sourceId, onBack, onSave }: SourceEditProps
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" component="h1">
-          {formData.name} - Edit
+          Edit
         </Typography>
       </Box>
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
