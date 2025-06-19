@@ -155,6 +155,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         .role(user.getRole())
                                         .provider(user.getProvider())
                                         .avatarUrl(user.getAvatarUrl())
+                                        .firstLogin(user.getFirstLogin())
                                         .build();
                 } catch (Exception e) {
                         log.error("Error getting user info", e);
