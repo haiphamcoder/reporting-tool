@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.service.UserService;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
@@ -29,6 +30,11 @@ public class UserServiceImpl implements UserService {
             @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostConstruct
+    public void init() {
+        autoRegisterAdminAccount();
     }
 
     @Override
@@ -76,5 +82,26 @@ public class UserServiceImpl implements UserService {
         User userEntity = UserMapper.toEntity(user);
         User savedUser = userRepository.saveUser(userEntity);
         return UserMapper.toDto(savedUser);
+    }
+
+    private void autoRegisterAdminAccount() {
+        final String adminUsername = "admin";
+        final String adminEmail = "admin@reporting-tool.com";
+        final String defaultPassword = "admin";
+        Optional<User> existing = userRepository.getUserByUsername(adminUsername);
+        if (existing.isEmpty()) {
+            UserDto adminUser = UserDto.builder()
+                    .username(adminUsername)
+                    .email(adminEmail)
+                    .password(defaultPassword)
+                    .firstName("Admin")
+                    .lastName("User")
+                    .role("admin")
+                    .firstLogin(true)
+                    .enabled(true)
+                    .emailVerified(true)
+                    .build();
+            saveUser(adminUser);
+        }
     }
 }

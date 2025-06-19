@@ -12,6 +12,7 @@ import com.haiphamcoder.authentication.domain.exception.business.detail.InvalidI
 import com.haiphamcoder.authentication.domain.model.AuthenticationRequest;
 import com.haiphamcoder.authentication.domain.model.CustomUserDetail;
 import com.haiphamcoder.authentication.domain.model.RegisterRequest;
+import com.haiphamcoder.authentication.domain.model.Role;
 import com.haiphamcoder.authentication.domain.model.TokenType;
 import com.haiphamcoder.authentication.domain.model.response.GetUserInforResponse;
 import com.haiphamcoder.authentication.domain.model.response.RegisterResponse;
@@ -53,7 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                                         .setUsername(request.getUsername())
                                         .setPassword(request.getPassword())
                                         .setEmail(request.getEmail())
-                                        .setRole(request.getRole().getName())
+                                        .setRole(Role.USER.getName())
                                         .build();
                         UserDto savedUser = userGrpcClient.saveUser(user);
                         return RegisterResponse.builder()

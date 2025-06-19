@@ -32,8 +32,4 @@ public class RegisterRequest {
     @JsonProperty("email")
     private String email;
 
-    @JsonProperty("role")
-    @Builder.Default
-    private Role role = Role.USER;
-
 }
