@@ -86,12 +86,13 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         userDto.setProvider(user.getProvider());
         userDto.setProviderId(user.getProviderId());
         userDto.setAvatarUrl(user.getAvatarUrl());
+        userDto.setFirstLogin(user.getFirstLogin());
         userDto.setRole(user.getRole());
         return userDto;
     }
 
     private UserProto convertToUser(UserDto userDto) {
-        UserProto user = UserProto.newBuilder()
+        return UserProto.newBuilder()
                 .setId(userDto.getId())
                 .setUsername(userDto.getUsername())
                 .setPassword(userDto.getPassword())
@@ -102,12 +103,12 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
                 .setProvider(userDto.getProvider())
                 .setProviderId(userDto.getProviderId() != null ? userDto.getProviderId() : "")
                 .setAvatarUrl(userDto.getAvatarUrl() != null ? userDto.getAvatarUrl() : "")
+                .setFirstLogin(userDto.isFirstLogin())
                 .setRole(userDto.getRole())
                 .setEnabled(userDto.isEnabled())
                 .setCreatedAt(userDto.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .setModifiedAt(userDto.getModifiedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .build();
-        return user;
     }
 
 }

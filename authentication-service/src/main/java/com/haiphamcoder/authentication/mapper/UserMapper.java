@@ -41,6 +41,9 @@ public class UserMapper {
         if (!StringUtils.isNullOrEmpty(userDto.getRole())) {
             builder.setRole(userDto.getRole());
         }
+        if (userDto.getFirstLogin() != null) {
+            builder.setFirstLogin(userDto.getFirstLogin());
+        }
         return builder.build();
     }
 

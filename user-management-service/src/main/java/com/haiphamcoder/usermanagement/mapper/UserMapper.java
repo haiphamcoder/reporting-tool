@@ -42,9 +42,9 @@ public class UserMapper {
         if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
             builder.role(userDto.getRole());
         }
-        
         builder.emailVerified(userDto.isEmailVerified());
         builder.enabled(userDto.isEnabled());
+        builder.firstLogin(userDto.isFirstLogin());
 
         return builder.build();
     }
@@ -61,6 +61,7 @@ public class UserMapper {
                 .providerId(user.getProviderId())
                 .password(user.getPassword())
                 .avatarUrl(user.getAvatarUrl())
+                .firstLogin(user.isFirstLogin())
                 .role(user.getRole())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())

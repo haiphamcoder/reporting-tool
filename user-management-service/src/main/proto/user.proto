@@ -34,11 +34,12 @@ message UserProto {
   string provider = 8;
   string provider_id = 9;
   string avatar_url = 10;
-  bool enabled = 11;
-  bool deleted = 12;
-  string role = 13;
-  int64 created_at = 14;
-  int64 modified_at = 15;
+  bool first_login = 11;
+  bool enabled = 12;
+  bool deleted = 13;
+  string role = 14;
+  int64 created_at = 15;
+  int64 modified_at = 16;
 }
 
 // Request/Response messages for GetUserByUsername

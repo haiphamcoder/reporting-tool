@@ -49,6 +49,9 @@ public class UserDto {
     @JsonProperty("avatar_url")
     private String avatarUrl;
 
+    @JsonProperty("first_login")
+    private boolean firstLogin;
+
     @JsonProperty("role")
     private String role;
 

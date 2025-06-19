@@ -40,6 +40,9 @@ public class UserDto {
     @JsonProperty("email_verified")
     private Boolean emailVerified;
 
+    @JsonProperty("first_login")
+    private Boolean firstLogin;
+
     @JsonProperty("provider")
     private String provider;
 

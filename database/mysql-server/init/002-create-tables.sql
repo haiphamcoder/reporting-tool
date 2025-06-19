@@ -17,6 +17,7 @@ CREATE TABLE
         avatar_url VARCHAR(255) COMMENT 'Link ảnh đại diện của user',
         password VARCHAR(255) NOT NULL COMMENT 'Mật khẩu (được hash trước khi lưu)',
         role VARCHAR(255) NOT NULL DEFAULT 'user' COMMENT 'Vai trò của user: admin, manager, user',
+        first_login BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái đăng nhập lần đầu: TRUE = Lần đầu, FALSE = Không phải lần đầu',
         enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Trạng thái tài khoản: TRUE = Hoạt động, FALSE = Bị khóa',
         deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Xóa mềm: TRUE = Đã xóa, FALSE = Hoạt động',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',

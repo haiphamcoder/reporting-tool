@@ -44,8 +44,7 @@ public class UserGrpcClient {
     public UserDto saveUser(UserProto user) {
         SaveUserRequest request = SaveUserRequest.newBuilder().setUser(user).build();
         SaveUserResponse response = userServiceBlockingStub.saveUser(request);
-        UserDto userDto = convertUserToUserDto(response.getUser());
-        return userDto;
+        return convertUserToUserDto(response.getUser());
     }
 
     private UserDto convertUserToUserDto(UserProto user) {
@@ -58,6 +57,7 @@ public class UserGrpcClient {
                 .provider(user.getProvider())
                 .providerId(user.getProviderId())
                 .avatarUrl(user.getAvatarUrl())
+                .firstLogin(user.getFirstLogin())
                 .enabled(user.getEnabled())
                 .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(user.getCreatedAt()), ZoneId.systemDefault()))
                 .modifiedAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(user.getModifiedAt()), ZoneId.systemDefault()))
