@@ -20,6 +20,7 @@ public class UserMapper {
                 .setEmailVerified(userDto.getEmailVerified())
                 .setRole(userDto.getRole())
                 .setAvatarUrl(userDto.getAvatarUrl())
+                .setFirstLogin(userDto.getFirstLogin())
                 .build();
     }
     

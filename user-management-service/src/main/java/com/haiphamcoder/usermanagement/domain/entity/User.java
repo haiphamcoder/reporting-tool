@@ -62,6 +62,10 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "first_login", nullable = false)
+    @Builder.Default
+    private boolean firstLogin = false;
+
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     private boolean enabled = true;
