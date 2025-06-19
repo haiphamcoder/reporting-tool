@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.model.GetAllUserResponse;
+import com.haiphamcoder.usermanagement.domain.model.GetUserDetailsResponse;
 import com.haiphamcoder.usermanagement.domain.model.Metadata;
 import com.haiphamcoder.usermanagement.service.UserService;
 import com.haiphamcoder.usermanagement.shared.http.ApiResponse;
@@ -62,7 +63,19 @@ public class UserController {
     @GetMapping(path = "/{user-id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Object>> getById(@PathVariable(name = "user-id", required = true) Long userId) {
         UserDto user = userService.getUserById(userId);
-        return ResponseEntity.ok().body(ApiResponse.success(user, "Get user by id successfully"));
+        GetUserDetailsResponse response = GetUserDetailsResponse.builder()
+                .id(user.getId().toString())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .emailVerified(user.isEmailVerified())
+                .role(user.getRole())
+                .avatarUrl(user.getAvatarUrl())
+                .provider(user.getProvider())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getModifiedAt())
+                .build();
+        return ResponseEntity.ok().body(ApiResponse.success(response, "Get user by id successfully"));
     }
 
 }
