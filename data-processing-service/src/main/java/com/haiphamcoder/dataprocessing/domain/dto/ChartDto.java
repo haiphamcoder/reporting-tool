@@ -47,4 +47,27 @@ public class ChartDto {
 
     @JsonProperty("is_deleted")
     private Boolean isDeleted;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Mapping {
+
+        @JsonProperty("field_name")
+        private String fieldName;
+
+        @JsonProperty("field_mapping")
+        private String fieldMapping;
+
+        @JsonProperty("field_type")
+        private String fieldType;
+
+        @JsonProperty("is_hidden")
+        @Builder.Default
+        private Boolean isHidden = false;
+
+    }
 }

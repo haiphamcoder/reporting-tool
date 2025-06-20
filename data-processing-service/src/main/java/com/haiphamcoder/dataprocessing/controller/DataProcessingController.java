@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
+import com.haiphamcoder.dataprocessing.domain.model.ChartData;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
@@ -53,6 +54,16 @@ public class DataProcessingController {
             @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
         PreviewData previewData = rawDataService.previewSource(sourceId, page, limit);
         return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
+    }
+
+    @GetMapping("/charts/{id}/data")
+    public ResponseEntity<ApiResponse<Object>> getChartData(
+        @CookieValue(value = "user-id", required = true) Long userId,
+        @PathVariable("id") Long chartId,
+        @RequestParam(value = "page", defaultValue = "0") Integer page,
+        @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+        ChartData chartData = rawDataService.getChartData(chartId, page, limit);
+        return ResponseEntity.ok().body(ApiResponse.success(chartData, "Chart data fetched successfully"));
     }
 
 }
