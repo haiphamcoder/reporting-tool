@@ -1,6 +1,5 @@
 package com.haiphamcoder.usermanagement.repository.impl;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Repository;
 
 import com.haiphamcoder.usermanagement.domain.entity.User;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
-import com.haiphamcoder.usermanagement.shared.SnowflakeIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,8 +28,6 @@ interface UserJpaRepository extends JpaRepository<User, Long> {
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
     private final UserJpaRepository userJpaRepository;
-
-    private final SnowflakeIdGenerator snowflakeIdGenerator = SnowflakeIdGenerator.getInstance();
 
     @Override
     public Page<User> getAllUsers(Long userId, Integer page, Integer limit) {
@@ -61,13 +57,6 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User saveUser(User user) {
-        user.setId(snowflakeIdGenerator.generateId());
-        Optional<User> existingUser = userJpaRepository.findByUsername(user.getUsername());
-        if (existingUser.isPresent()) {
-            return userJpaRepository.save(existingUser.get());
-        }
-        user.setCreatedAt(LocalDateTime.now());
-        user.setModifiedAt(LocalDateTime.now());
         return userJpaRepository.save(user);
     }
 }

@@ -67,7 +67,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void saveUser(SaveUserRequest request, StreamObserver<SaveUserResponse> responseObserver) {
         UserDto userDto = this.convertToUserDto(request.getUser());
-        UserDto savedUser = userService.saveUser(userDto);
+        UserDto savedUser = userService.createUser(userDto);
         SaveUserResponse response = SaveUserResponse.newBuilder()
                 .setUser(this.convertToUser(savedUser))
                 .build();

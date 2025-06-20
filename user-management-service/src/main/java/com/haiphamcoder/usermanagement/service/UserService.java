@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
+import com.haiphamcoder.usermanagement.domain.model.ChangeRoleRequest;
 
 public interface UserService {
 
@@ -19,7 +20,12 @@ public interface UserService {
 
     public UserDto getUserById(Long id);
 
-    public UserDto saveUser(UserDto user);
+    public UserDto createUser(UserDto user);
 
     public UserDto changePassword(Long userId, Long targetUserId, ChangePasswordRequest request);
+
+    public UserDto changeRole(Long userId, Long targetUserId, ChangeRoleRequest request);
+
+    public void deleteUser(Long userId, Long targetUserId);
+
 }

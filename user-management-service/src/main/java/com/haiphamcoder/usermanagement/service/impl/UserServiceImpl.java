@@ -2,7 +2,6 @@ package com.haiphamcoder.usermanagement.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -10,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.service.UserService;
+import com.haiphamcoder.usermanagement.shared.SnowflakeIdGenerator;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +19,19 @@ import com.haiphamcoder.usermanagement.domain.entity.User;
 import com.haiphamcoder.usermanagement.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
+import com.haiphamcoder.usermanagement.domain.model.ChangeRoleRequest;
 import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
 
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
+
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_EMAIL = "admin@reporting-tool.com";
+    private static final String DEFAULT_PASSWORD = "admin";
+    private static final String ADMIN_ROLE = "admin";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -48,7 +55,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getAllUsersByProvider(String provider) {
         List<User> users = userRepository.getAllUsersByProvider(provider);
-        return users.stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return users.stream().map(UserMapper::toDto).toList();
     }
 
     @Override
@@ -79,7 +86,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto saveUser(UserDto user) {
+    public UserDto createUser(UserDto user) {
+        user.setId(SnowflakeIdGenerator.getInstance().generateId());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User userEntity = UserMapper.toEntity(user);
         User savedUser = userRepository.saveUser(userEntity);
@@ -87,23 +95,20 @@ public class UserServiceImpl implements UserService {
     }
 
     private void autoRegisterAdminAccount() {
-        final String adminUsername = "admin";
-        final String adminEmail = "admin@reporting-tool.com";
-        final String defaultPassword = "admin";
-        Optional<User> existing = userRepository.getUserByUsername(adminUsername);
+        Optional<User> existing = userRepository.getUserByUsername(ADMIN_USERNAME);
         if (existing.isEmpty()) {
             UserDto adminUser = UserDto.builder()
-                    .username(adminUsername)
-                    .email(adminEmail)
-                    .password(defaultPassword)
+                    .username(ADMIN_USERNAME)
+                    .email(ADMIN_EMAIL)
+                    .password(DEFAULT_PASSWORD)
                     .firstName("Admin")
                     .lastName("User")
-                    .role("admin")
+                    .role(ADMIN_ROLE)
                     .firstLogin(true)
                     .enabled(true)
                     .emailVerified(true)
                     .build();
-            saveUser(adminUser);
+            createUser(adminUser);
         }
     }
 
@@ -113,7 +118,7 @@ public class UserServiceImpl implements UserService {
         if (user.isEmpty()) {
             throw new ResourceNotFoundException("User", userId);
         }
-        if (!user.get().getRole().equals("admin") || !user.get().getId().equals(targetUserId)) {
+        if (!user.get().getRole().equals(ADMIN_ROLE) || !user.get().getId().equals(targetUserId)) {
             throw new ForbiddenException("You are not allowed to change password for this user");
         }
         Optional<User> targetUser = userRepository.getUserById(targetUserId);
@@ -125,4 +130,47 @@ public class UserServiceImpl implements UserService {
         userRepository.saveUser(targetUser.get());
         return UserMapper.toDto(targetUser.get());
     }
+
+    @Override
+    public UserDto changeRole(Long userId, Long targetUserId, ChangeRoleRequest request) {
+        Optional<User> user = userRepository.getUserById(userId);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", userId);
+        }
+        if (!user.get().getRole().equals(ADMIN_ROLE)) {
+            throw new ForbiddenException("You are not allowed to change role for this user");
+        }
+        if (user.get().getId().equals(targetUserId) && !request.getRole().equals(ADMIN_ROLE)) {
+            throw new ForbiddenException(
+                    "You are not allowed to change role for yourself. You will lose your admin privileges.");
+        }
+        Optional<User> targetUser = userRepository.getUserById(targetUserId);
+        if (targetUser.isEmpty()) {
+            throw new ResourceNotFoundException("User", targetUserId);
+        }
+        targetUser.get().setRole(request.getRole());
+        userRepository.saveUser(targetUser.get());
+        return UserMapper.toDto(targetUser.get());
+    }
+
+    @Override
+    public void deleteUser(Long userId, Long targetUserId) {
+        Optional<User> user = userRepository.getUserById(userId);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", userId);
+        }
+        if (!user.get().getRole().equals(ADMIN_ROLE)) {
+            throw new ForbiddenException("You are not allowed to delete this user");
+        }
+        if (user.get().getId().equals(targetUserId)) {
+            throw new ForbiddenException("You are not allowed to delete yourself. You will lose your admin privileges.");
+        }
+        Optional<User> targetUser = userRepository.getUserById(targetUserId);
+        if (targetUser.isEmpty()) {
+            throw new ResourceNotFoundException("User", targetUserId);
+        }
+        targetUser.get().setDeleted(true);
+        userRepository.saveUser(targetUser.get());
+    }
+
 }
