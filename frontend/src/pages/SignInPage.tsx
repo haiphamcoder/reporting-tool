@@ -81,14 +81,20 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
     const [isLoading, setIsLoading] = React.useState(false);
 
     const navigate = useNavigate();
-    const { setAuthenticated } = useAuth();
+    const { setAuthenticated, setUser } = useAuth();
 
     React.useEffect(() => {
         const checkCurrentUser = async () => {
             try {
-                await authApi.getCurrentUser();
-                setAuthenticated(true);
-                navigate('/dashboard');
+                const userInfo = await authApi.getCurrentUser();
+                setUser(userInfo);
+                
+                if (userInfo.provider === 'local' && userInfo.role === 'admin' && userInfo.first_login) {
+                    navigate('/change-password');
+                } else {
+                    setAuthenticated(true);
+                    navigate('/dashboard');
+                }
             } catch (error) {
                 // Token is invalid or expired, stay on sign in page
                 setAuthenticated(false);
@@ -147,7 +153,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
             setUsernameErrorMessage('');
         }
 
-        if (!password.value || password.value.length < 6) {
+        if (!password.value || password.value.length < 5) {
             setPasswordError(true);
             setPasswordErrorMessage('Please enter a valid password.');
             isValid = false;

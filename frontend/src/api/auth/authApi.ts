@@ -11,6 +11,7 @@ export interface UserInfo {
     last_name: string;
     avatar_url: string;
     provider: string;
+    first_login: boolean;
 }
 
 export const authApi = {
@@ -29,6 +30,19 @@ export const authApi = {
         }
 
         return response.json();
+    },
+
+    updatePassword: async (userId: string, newPassword: string): Promise<void> => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_USER.replace(':user_id', userId)}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                password: newPassword
+            }),
+            credentials: 'include',
+        });
     },
 
     signIn: async (data: SignInRequest): Promise<SignInResponse> => {

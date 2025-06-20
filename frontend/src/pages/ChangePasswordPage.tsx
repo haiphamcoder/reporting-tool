@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     Box,
     Card,
-    CardContent,
     TextField,
     Button,
     Typography,
@@ -10,15 +9,62 @@ import {
     CircularProgress,
     InputAdornment,
     IconButton,
-    Container,
-    Stack
+    Stack,
+    CssBaseline
 } from '@mui/material';
 import { Visibility, VisibilityOff, LockOutlined, LogoutRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
 import { authApi } from '../api/auth/authApi';
 import { useAuth } from '../context/AuthContext';
 import AppTheme from '../theme/AppTheme';
 import ColorSchemeToggle from '../theme/ColorSchemeToggle';
+
+const StyledCard = styled(Card)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignSelf: 'center',
+    width: '100%',
+    padding: theme.spacing(4),
+    gap: theme.spacing(2),
+    margin: 'auto',
+    maxHeight: '100vh',
+    overflow: 'auto',
+    boxShadow:
+        'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+    [theme.breakpoints.up('sm')]: {
+        width: '450px',
+    },
+    ...theme.applyStyles('dark', {
+        boxShadow:
+            'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+    }),
+}));
+
+const ChangePasswordContainer = styled(Stack)(({ theme }) => ({
+    height: 'calc((1 - var(--template-frame-height, 0)) * 100dvh)',
+    minHeight: '100%',
+    padding: theme.spacing(2),
+    display: 'flex',
+    alignItems: 'center',
+    [theme.breakpoints.up('sm')]: {
+        padding: theme.spacing(4),
+    },
+    '&::before': {
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        zIndex: -1,
+        inset: 0,
+        backgroundImage:
+            'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
+        backgroundRepeat: 'no-repeat',
+        ...theme.applyStyles('dark', {
+            backgroundImage:
+                'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
+        }),
+    },
+}));
 
 const ChangePasswordPage: React.FC = () => {
     const [newPassword, setNewPassword] = useState('');
@@ -93,13 +139,13 @@ const ChangePasswordPage: React.FC = () => {
     if (!user) {
         return (
             <AppTheme>
+                <CssBaseline enableColorScheme />
                 <Box
                     sx={{
                         minHeight: '100vh',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}
                 >
                     <CircularProgress />
@@ -110,129 +156,102 @@ const ChangePasswordPage: React.FC = () => {
 
     return (
         <AppTheme>
-            <Box
-                sx={{
-                    minHeight: '100vh',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 2
-                }}
-            >
-                <Container maxWidth="sm">
-                    <Stack spacing={2} alignItems="center">
-                        {/* Header */}
-                        <Box textAlign="center" mb={2} sx={{ position: 'relative' }}>
-                            <LockOutlined sx={{ fontSize: 48, color: 'white', mb: 1 }} />
-                            <Typography variant="h4" color="white" gutterBottom>
-                                Change Password Required
-                            </Typography>
-                            <Typography variant="body1" color="white" sx={{ opacity: 0.9 }}>
-                                As an admin user, you need to change your password on first login
-                            </Typography>
-                            
-                            {/* Logout Button */}
-                            <Button
+            <CssBaseline enableColorScheme />
+            <ChangePasswordContainer direction="column" justifyContent="space-between">
+                <ColorSchemeToggle sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
+                <StyledCard variant="outlined">
+                    <Box textAlign="center" mb={2}>
+                        <LockOutlined sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
+                        <Typography variant="h4" gutterBottom>
+                            Change Password Required
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            As an admin user, you need to change your password on first login
+                        </Typography>
+                        
+                        {/* Logout Button */}
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<LogoutRounded />}
+                            onClick={handleLogout}
+                            sx={{ mt: 2 }}
+                        >
+                            Logout
+                        </Button>
+                    </Box>
+
+                    <form onSubmit={handleSubmit}>
+                        {error && (
+                            <Alert severity="error" sx={{ mb: 3 }}>
+                                {error}
+                            </Alert>
+                        )}
+
+                        <Stack spacing={3}>
+                            <TextField
+                                fullWidth
+                                label="New Password"
+                                type={showNewPassword ? 'text' : 'password'}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                disabled={isSubmitting}
                                 variant="outlined"
-                                color="inherit"
-                                startIcon={<LogoutRounded />}
-                                onClick={handleLogout}
-                                sx={{ 
-                                    mt: 2, 
-                                    color: 'white', 
-                                    borderColor: 'white',
-                                    '&:hover': {
-                                        borderColor: 'white',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                    }
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleClickShowNewPassword}
+                                                edge="end"
+                                                disabled={isSubmitting}
+                                            >
+                                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
                                 }}
+                                helperText="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+                            />
+
+                            <TextField
+                                fullWidth
+                                label="Confirm New Password"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                disabled={isSubmitting}
+                                variant="outlined"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleClickShowConfirmPassword}
+                                                edge="end"
+                                                disabled={isSubmitting}
+                                            >
+                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                size="large"
+                                fullWidth
+                                disabled={isSubmitting || !newPassword || !confirmPassword}
+                                startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
                             >
-                                Logout
+                                {isSubmitting ? 'Updating Password...' : 'Update Password'}
                             </Button>
-                        </Box>
-
-                        {/* Color Scheme Toggle */}
-                        <Box position="absolute" top={16} right={16}>
-                            <ColorSchemeToggle />
-                        </Box>
-
-                        {/* Password Form Card */}
-                        <Card sx={{ width: '100%', maxWidth: 450, boxShadow: 3 }}>
-                            <CardContent sx={{ p: 4 }}>
-                                <form onSubmit={handleSubmit}>
-                                    {error && (
-                                        <Alert severity="error" sx={{ mb: 3 }}>
-                                            {error}
-                                        </Alert>
-                                    )}
-
-                                    <Stack spacing={3}>
-                                        <TextField
-                                            fullWidth
-                                            label="New Password"
-                                            type={showNewPassword ? 'text' : 'password'}
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            required
-                                            disabled={isSubmitting}
-                                            InputProps={{
-                                                endAdornment: (
-                                                    <InputAdornment position="end">
-                                                        <IconButton
-                                                            onClick={handleClickShowNewPassword}
-                                                            edge="end"
-                                                            disabled={isSubmitting}
-                                                        >
-                                                            {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                                                        </IconButton>
-                                                    </InputAdornment>
-                                                ),
-                                            }}
-                                            helperText="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-                                        />
-
-                                        <TextField
-                                            fullWidth
-                                            label="Confirm New Password"
-                                            type={showConfirmPassword ? 'text' : 'password'}
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            required
-                                            disabled={isSubmitting}
-                                            InputProps={{
-                                                endAdornment: (
-                                                    <InputAdornment position="end">
-                                                        <IconButton
-                                                            onClick={handleClickShowConfirmPassword}
-                                                            edge="end"
-                                                            disabled={isSubmitting}
-                                                        >
-                                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                                        </IconButton>
-                                                    </InputAdornment>
-                                                ),
-                                            }}
-                                        />
-
-                                        <Button
-                                            type="submit"
-                                            variant="contained"
-                                            size="large"
-                                            fullWidth
-                                            disabled={isSubmitting || !newPassword || !confirmPassword}
-                                            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
-                                            sx={{ mt: 2 }}
-                                        >
-                                            {isSubmitting ? 'Updating Password...' : 'Update Password'}
-                                        </Button>
-                                    </Stack>
-                                </form>
-                            </CardContent>
-                        </Card>
-                    </Stack>
-                </Container>
-            </Box>
+                        </Stack>
+                    </form>
+                </StyledCard>
+            </ChangePasswordContainer>
         </AppTheme>
     );
 };
