@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.entity.User;
+import com.haiphamcoder.usermanagement.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
 import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
 
@@ -103,5 +105,24 @@ public class UserServiceImpl implements UserService {
                     .build();
             saveUser(adminUser);
         }
+    }
+
+    @Override
+    public UserDto changePassword(Long userId, Long targetUserId, ChangePasswordRequest request) {
+        Optional<User> user = userRepository.getUserById(userId);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", userId);
+        }
+        if (!user.get().getRole().equals("admin") || !user.get().getId().equals(targetUserId)) {
+            throw new ForbiddenException("You are not allowed to change password for this user");
+        }
+        Optional<User> targetUser = userRepository.getUserById(targetUserId);
+        if (targetUser.isEmpty()) {
+            throw new ResourceNotFoundException("User", targetUserId);
+        }
+        targetUser.get().setPassword(passwordEncoder.encode(request.getNewPassword()));
+        targetUser.get().setFirstLogin(false);
+        userRepository.saveUser(targetUser.get());
+        return UserMapper.toDto(targetUser.get());
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
+import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
 
 public interface UserService {
 
@@ -19,4 +20,6 @@ public interface UserService {
     public UserDto getUserById(Long id);
 
     public UserDto saveUser(UserDto user);
+
+    public UserDto changePassword(Long userId, Long targetUserId, ChangePasswordRequest request);
 }
