@@ -4,7 +4,7 @@ import { useStatistics } from '../context/StatisticsContext';
 import { CircularProgress, Box } from '@mui/material';
 
 export default function Statistic() {
-    const { statistics, loading, error } = useStatistics();
+    const { statistics, loading } = useStatistics();
 
     if (loading) {
         return (

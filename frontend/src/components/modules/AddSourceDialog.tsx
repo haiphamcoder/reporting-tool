@@ -9,6 +9,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
+import { API_CONFIG } from '../../config/api';
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -32,8 +33,6 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
   addForm,
   setAddForm,
   currentContent,
-  sourcesData,
-  chartsData,
   handleAddNext,
   handleAddBack,
 }) => {
@@ -380,7 +379,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
   const handleAddNextInternal = async () => {
     if (currentContent === 'sources' && addStep === 1) {
       try {
-        const response = await fetch('http://localhost:8765/reporting/sources/init', {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.INIT_SOURCES}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -410,7 +409,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
       try {
         const formData = new FormData();
         formData.append('file', addForm.selectedFile);
-        const response = await fetch(`http://localhost:8765/reporting/sources/upload-file?source-id=${addForm.sourceId}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_UPLOAD_FILE}?source-id=${addForm.sourceId}`, {
           method: 'POST',
           credentials: 'include',
           body: formData,
@@ -431,7 +430,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
       }
       try {
         // 1. Confirm schema
-        const confirmRes = await fetch('http://localhost:8765/reporting/sources/confirm-schema', {
+        const confirmRes = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_CONFIRM_SCHEMA}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -445,7 +444,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
           throw new Error(error.message || 'Failed to confirm schema');
         }
         // 2. Ingest data
-        const ingestRes = await fetch(`http://localhost:8765/data-processing/sources/import/${addForm.sourceId}`, {
+        const ingestRes = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_SUBMIT_IMPORT}/${addForm.sourceId}`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -468,7 +467,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
     if (currentContent === 'sources' && addStep === 3 && addForm.sourceId && !addForm.schema) {
       (async () => {
         try {
-          const response = await fetch(`http://localhost:8765/data-processing/sources/schema/${addForm.sourceId}`, {
+          const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_GET_SCHEMA}/${addForm.sourceId}`, {
             method: 'GET',
             credentials: 'include',
           });

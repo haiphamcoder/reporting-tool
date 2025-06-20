@@ -21,6 +21,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import CircularProgress from '@mui/material/CircularProgress';
+import { API_CONFIG } from '../../config/api';
 
 interface SourceEditProps {
   sourceId: string;
@@ -67,7 +68,7 @@ export default function SourceEdit({ sourceId, onBack, onSave }: SourceEditProps
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`http://localhost:8765/reporting/sources/${sourceId}`, {
+    fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceId}`, {
       credentials: 'include',
     })
       .then(async (res) => {

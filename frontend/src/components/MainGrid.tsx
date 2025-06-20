@@ -59,7 +59,7 @@ export default function MainGrid() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState<any>(null);
+  const [, setEditForm] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
   const [addSourceOpen] = useState(false);
@@ -531,38 +531,6 @@ export default function MainGrid() {
         footer: '',
       }
     });
-  };
-
-  const handleAddFormChange = (field: string, value: any) => {
-    setAddForm((prev: any) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAddForm((prev: any) => ({
-        ...prev,
-        selectedFile: file,
-        connectionConfig: {
-          ...prev.connectionConfig,
-          fileName: file.name,
-        }
-      }));
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setAddForm((prev: any) => ({
-      ...prev,
-      selectedFile: null,
-      connectionConfig: {
-        ...prev.connectionConfig,
-        fileName: null,
-      }
-    }));
   };
 
   useEffect(() => {
