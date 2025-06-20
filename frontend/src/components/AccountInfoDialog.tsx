@@ -23,9 +23,10 @@ import Box from '@mui/material/Box';
 interface AccountInfoDialogProps {
   open: boolean;
   onClose: () => void;
+  onChangePassword?: () => void;
 }
 
-const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) => {
+const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose, onChangePassword }) => {
   const { user } = useAuth();
 
   const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '';
@@ -40,7 +41,7 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle align="center">Account Information</DialogTitle>
       <DialogContent dividers>
         {user ? (
@@ -112,6 +113,17 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) 
         )}
       </DialogContent>
       <DialogActions>
+        {user?.provider === 'local' && (
+          <Button
+            onClick={onChangePassword}
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            sx={{ mr: 1 }}
+          >
+            Change Password
+          </Button>
+        )}
         <Button onClick={onClose} variant="contained" color="primary" fullWidth>Close</Button>
       </DialogActions>
     </Dialog>

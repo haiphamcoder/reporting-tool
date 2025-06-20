@@ -42,6 +42,12 @@ public class UserMapper {
         if (userDto.getRole() != null && !userDto.getRole().isEmpty()) {
             builder.role(userDto.getRole());
         }
+        if (userDto.getCreatedAt() != null) {
+            builder.createdAt(userDto.getCreatedAt());
+        }
+        if (userDto.getModifiedAt() != null) {
+            builder.modifiedAt(userDto.getModifiedAt());
+        }
         builder.emailVerified(userDto.isEmailVerified());
         builder.enabled(userDto.isEnabled());
         builder.firstLogin(userDto.isFirstLogin());
@@ -67,6 +73,23 @@ public class UserMapper {
                 .createdAt(user.getCreatedAt())
                 .modifiedAt(user.getModifiedAt())
                 .build();
+    }
+
+    public static UserDto updateUser(User user, UserDto userDto) {
+        UserDto result = toDto(user);
+        if (userDto.getFirstName() != null && !userDto.getFirstName().isEmpty()) {
+            result.setFirstName(userDto.getFirstName());
+        }
+        if (userDto.getLastName() != null && !userDto.getLastName().isEmpty()) {
+            result.setLastName(userDto.getLastName());
+        }
+        if (userDto.getEmail() != null && !userDto.getEmail().isEmpty()) {
+            result.setEmail(userDto.getEmail());
+        }
+        if (userDto.getAvatarUrl() != null && !userDto.getAvatarUrl().isEmpty()) {
+            result.setAvatarUrl(userDto.getAvatarUrl());
+        }
+        return result;
     }
 
 }

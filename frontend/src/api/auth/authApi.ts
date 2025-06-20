@@ -32,17 +32,24 @@ export const authApi = {
         return response.json();
     },
 
-    updatePassword: async (userId: string, newPassword: string): Promise<void> => {
+    updatePassword: async (userId: string, oldPassword: string, newPassword: string): Promise<UserInfo> => {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPDATE_USER.replace(':user_id', userId)}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                password: newPassword
+                old_password: oldPassword,
+                new_password: newPassword
             }),
             credentials: 'include',
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update password');
+        }
+
+        return response.json().then(data => data.result);
     },
 
     signIn: async (data: SignInRequest): Promise<SignInResponse> => {

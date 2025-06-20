@@ -67,20 +67,27 @@ const ChangePasswordContainer = styled(Stack)(({ theme }) => ({
 }));
 
 const ChangePasswordPage: React.FC = () => {
+    const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showOldPassword, setShowOldPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { user, logout } = useAuth();
+    const { setUser, user, logout } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        
+
         if (!user) {
             setError('User information not available');
+            return;
+        }
+
+        if (!oldPassword) {
+            setError('Please enter your current password');
             return;
         }
 
@@ -106,9 +113,8 @@ const ChangePasswordPage: React.FC = () => {
         setError('');
 
         try {
-            await authApi.updatePassword(user.user_id, newPassword);
-            // Don't refresh user info here as it might cause unwanted redirects
-            // Just navigate to dashboard directly
+            const userInfo = await authApi.updatePassword(user.user_id, oldPassword, newPassword);
+            setUser(userInfo);
             navigate('/dashboard');
         } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to update password');
@@ -123,6 +129,10 @@ const ChangePasswordPage: React.FC = () => {
 
     const handleClickShowConfirmPassword = () => {
         setShowConfirmPassword(!showConfirmPassword);
+    };
+
+    const handleClickShowOldPassword = () => {
+        setShowOldPassword(!showOldPassword);
     };
 
     const handleLogout = async () => {
@@ -168,7 +178,7 @@ const ChangePasswordPage: React.FC = () => {
                         <Typography variant="body1" color="text.secondary">
                             As an admin user, you need to change your password on first login
                         </Typography>
-                        
+
                         {/* Logout Button */}
                         <Button
                             variant="outlined"
@@ -189,6 +199,30 @@ const ChangePasswordPage: React.FC = () => {
                         )}
 
                         <Stack spacing={3}>
+                            <TextField
+                                fullWidth
+                                label="Current Password"
+                                type={showOldPassword ? 'text' : 'password'}
+                                value={oldPassword}
+                                onChange={(e) => setOldPassword(e.target.value)}
+                                required
+                                disabled={isSubmitting}
+                                variant="outlined"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                onClick={handleClickShowOldPassword}
+                                                edge="end"
+                                                disabled={isSubmitting}
+                                            >
+                                                {showOldPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+
                             <TextField
                                 fullWidth
                                 label="New Password"

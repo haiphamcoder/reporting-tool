@@ -94,6 +94,17 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toDto(savedUser);
     }
 
+    @Override
+    public UserDto updateUser(UserDto user) {
+        Optional<User> existingUser = userRepository.getUserById(user.getId());
+        if (existingUser.isEmpty()) {
+            throw new ResourceNotFoundException("User", user.getId());
+        }
+        UserDto updatedUser = UserMapper.updateUser(existingUser.get(), user);
+        User savedUser = userRepository.saveUser(UserMapper.toEntity(updatedUser));
+        return UserMapper.toDto(savedUser);
+    }
+
     private void autoRegisterAdminAccount() {
         Optional<User> existing = userRepository.getUserByUsername(ADMIN_USERNAME);
         if (existing.isEmpty()) {

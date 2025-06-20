@@ -59,7 +59,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         UserDto user;
         try {
             user = userGrpcClient.getUserByEmail(oAuth2UserInfo.getEmail());
-            log.info("Existing user found: {}", user);
             
             if (!registrationId.equals(user.getProvider())) {
                 log.error("User signed up with different provider: {}", user.getProvider());

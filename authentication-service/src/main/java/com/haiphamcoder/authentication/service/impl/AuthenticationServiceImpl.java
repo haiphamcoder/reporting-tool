@@ -146,7 +146,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 try {
                         UserDto user = userGrpcClient.getUserById(userId);
                         return GetUserInforResponse.builder()
-                                        .userId(user.getId())
+                                        .userId(user.getId().toString())
                                         .username(user.getUsername())
                                         .email(user.getEmail())
                                         .emailVerified(user.getEmailVerified())

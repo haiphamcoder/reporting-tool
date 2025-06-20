@@ -67,7 +67,21 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
     @Override
     public void saveUser(SaveUserRequest request, StreamObserver<SaveUserResponse> responseObserver) {
         UserDto userDto = this.convertToUserDto(request.getUser());
-        UserDto savedUser = userService.createUser(userDto);
+
+        UserDto savedUser = null;
+        UserDto existingUser = null;
+        try {
+            existingUser = userService.getUserByEmail(userDto.getEmail());
+        } catch (ResourceNotFoundException e) {
+            existingUser = null;
+        }
+
+        if (existingUser != null) {
+            savedUser = userService.updateUser(userDto);
+        } else {
+            savedUser = userService.createUser(userDto);
+        }
+
         SaveUserResponse response = SaveUserResponse.newBuilder()
                 .setUser(this.convertToUser(savedUser))
                 .build();
@@ -83,6 +97,7 @@ public class UserServiceGrpcImpl extends UserServiceGrpc.UserServiceImplBase {
         userDto.setFirstName(user.getFirstName());
         userDto.setLastName(user.getLastName());
         userDto.setEmail(user.getEmail());
+        userDto.setEmailVerified(user.getEmailVerified());
         userDto.setProvider(user.getProvider());
         userDto.setProviderId(user.getProviderId());
         userDto.setAvatarUrl(user.getAvatarUrl());

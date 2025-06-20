@@ -22,6 +22,8 @@ public interface UserService {
 
     public UserDto createUser(UserDto user);
 
+    public UserDto updateUser(UserDto user);
+
     public UserDto changePassword(Long userId, Long targetUserId, ChangePasswordRequest request);
 
     public UserDto changeRole(Long userId, Long targetUserId, ChangeRoleRequest request);
