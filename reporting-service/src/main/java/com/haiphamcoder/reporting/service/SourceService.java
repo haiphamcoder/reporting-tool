@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.shared.Pair;
 
@@ -29,5 +30,7 @@ public interface SourceService {
     public SourceDto confirmSchema(Long userId, SourceDto sourceDto);
 
     public void deleteSource(Long sourceId);
+
+    public SourceDto updateSource(Long userId, Long sourceId, UpdateSourceRequest request);
 
 }

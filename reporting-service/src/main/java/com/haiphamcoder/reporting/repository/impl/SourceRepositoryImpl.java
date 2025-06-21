@@ -43,7 +43,7 @@ public class SourceRepositoryImpl implements SourceRepository {
     private final SourceJpaRepository sourceJpaRepository;
 
     @Override
-    public Boolean checkSourceName(Long userId, String sourceName) {
+    public boolean checkSourceName(Long userId, String sourceName) {
         return sourceJpaRepository.countByUserIdAndName(userId, sourceName) > 0;
     }
 

@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.SourceService;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
@@ -67,6 +69,14 @@ public class SourceController {
             @PathVariable("source-id") Long sourceId) {
         SourceDto source = sourceService.getSourceById(sourceId);
         return ResponseEntity.ok(ApiResponse.success(source, "Source fetched successfully"));
+    }
+
+    @PutMapping("/{source-id}")
+    public ResponseEntity<ApiResponse<Object>> updateSource(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId,
+            @RequestBody UpdateSourceRequest updateSourceRequest) {
+        SourceDto updatedSource = sourceService.updateSource(userId, sourceId, updateSourceRequest);
+        return ResponseEntity.ok(ApiResponse.success(updatedSource, "Source updated successfully"));
     }
 
     @PostMapping("/upload-file")

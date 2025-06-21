@@ -11,7 +11,7 @@ public interface SourceRepository {
 
     Optional<Source> getSourceById(Long id);
 
-    Boolean checkSourceName(Long userId, String sourceName);
+    boolean checkSourceName(Long userId, String sourceName);
 
     Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Integer page, Integer limit);
 

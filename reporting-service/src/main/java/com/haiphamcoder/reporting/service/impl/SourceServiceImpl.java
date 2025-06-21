@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputE
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
@@ -47,7 +47,7 @@ public class SourceServiceImpl implements SourceService {
     public SourceDto initSource(Long userId, InitSourceRequest request) {
         if (request.getName() == null) {
             throw new InvalidInputException("name");
-        }   
+        }
         if (sourceRepository.checkSourceName(userId, request.getName())) {
             throw new ResourceAlreadyExistsException("Source name", request.getName());
         }
@@ -99,7 +99,7 @@ public class SourceServiceImpl implements SourceService {
         Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, page, limit);
         return new Pair<>(sources.stream()
                 .map(SourceMapper::toDto)
-                .collect(Collectors.toList()),
+                .toList(),
                 Metadata.builder()
                         .totalElements(sources.getTotalElements())
                         .numberOfElements(sources.getNumberOfElements())
@@ -208,7 +208,7 @@ public class SourceServiceImpl implements SourceService {
         }
     }
 
-    private Boolean hasWritePermission(Long userId, Long sourceId) {
+    private boolean hasWritePermission(Long userId, Long sourceId) {
         Optional<SourcePermission> sourcePermission = sourcePermissionRepository
                 .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
         if (sourcePermission.isPresent()) {
@@ -223,6 +223,23 @@ public class SourceServiceImpl implements SourceService {
         if (source.isPresent()) {
             source.get().setIsDeleted(true);
             sourceRepository.updateSource(source.get());
+        } else {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+    }
+
+    @Override
+    public SourceDto updateSource(Long userId, Long sourceId, UpdateSourceRequest request) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            source.get().setName(request.getName());
+            source.get().setDescription(request.getDescription());
+            Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
+            if (updatedSource.isPresent()) {
+                return SourceMapper.toDto(updatedSource.get());
+            } else {
+                throw new RuntimeException("Update source failed");
+            }
         } else {
             throw new ResourceNotFoundException("Source", sourceId);
         }
