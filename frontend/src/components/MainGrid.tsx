@@ -14,6 +14,7 @@ import Home from './modules/Home';
 import Sources from './modules/Sources';
 import Charts from './modules/Charts';
 import Reports from './modules/Reports';
+import UserManagement from './modules/UserManagement';
 import { GridPaginationModel } from '@mui/x-data-grid';
 import SourcePreview from './modules/SourcePreview';
 import SourceEdit from './modules/SourceEdit';
@@ -649,6 +650,10 @@ export default function MainGrid() {
             handleRowDoubleClick={handleRowDoubleClick}
             handleAddClick={handleAddClick}
           />
+        );
+      case 'users':
+        return (
+          <UserManagement />
         );
       case 'settings':
         return (

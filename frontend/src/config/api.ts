@@ -19,5 +19,6 @@ export const API_CONFIG = {
         SOURCE_SUBMIT_IMPORT: '/data-processing/sources/import',
         SOURCE_GET_SCHEMA: '/data-processing/sources/schema',
         SOURCE_DETAILS: '/reporting/sources/:id',
+        USER_MANAGEMENT: '/user-management',
     }
 } as const;

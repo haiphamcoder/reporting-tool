@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-type ContentType = 'home' | 'sources' | 'charts' | 'reports' | 'settings' | 'about' | 'feedback';
+type ContentType = 'home' | 'sources' | 'charts' | 'reports' | 'settings' | 'about' | 'feedback' | 'users';
 
 interface ContentContextType {
   currentContent: ContentType;

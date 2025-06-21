@@ -152,7 +152,7 @@ export default function Sources({
             </Typography>
             <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
                 <Button
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<RefreshIcon />}
                     onClick={handleRefresh}
                 >
