@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
-import { ContentProvider } from './context/ContentContext';
 import { StatisticsProvider } from './context/StatisticsContext';
 
 ReactDOM.createRoot(document.querySelector("#root")!).render(
@@ -18,28 +17,19 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
           <Route path="/auth/signin" element={<SignInPage />} />
           <Route path="/auth/signup" element={<SignUpPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
-          <Route path="/dashboard/:section/*"
+          <Route path="/dashboard/*"
             element={
               <ProtectedRoute>
-                <ContentProvider>
-                  <StatisticsProvider>
-                    <Dashboard />
-                  </StatisticsProvider>
-                </ContentProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Navigate to="/dashboard/home" />
+                <StatisticsProvider>
+                  <Dashboard />
+                </StatisticsProvider>
               </ProtectedRoute>
             }
           />
           <Route path="/" 
             element={
               <ProtectedRoute>
-                <Navigate to="/dashboard/home" />
+                <Navigate to="/dashboard" />
               </ProtectedRoute>
             }
           />

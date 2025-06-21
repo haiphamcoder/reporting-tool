@@ -8,16 +8,34 @@ import { GridColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { useState } from 'react';
 
-interface ReportsProps {
-    reportsData: any[];
-    handleEditClick: (row: any) => void;
-    handleDeleteClick: (row: any) => void;
-    handleRowDoubleClick: (row: any) => void;
-    handleAddClick: () => void;
-}
+export default function Reports() {
+    const [reportsData, _setReportsData] = useState([
+        { id: 1, name: 'Report 1', description: 'Description 1', owner: 'User 1', status: 'Active', updated_at: '2023-01-01', created_at: '2023-01-01' },
+        { id: 2, name: 'Report 2', description: 'Description 2', owner: 'User 2', status: 'Inactive', updated_at: '2023-01-02', created_at: '2023-01-02' },
+        { id: 3, name: 'Report 3', description: 'Description 3', owner: 'User 3', status: 'Active', updated_at: '2023-01-03', created_at: '2023-01-03' },
+    ]);
 
-export default function Reports({ reportsData, handleEditClick, handleDeleteClick, handleRowDoubleClick, handleAddClick }: ReportsProps) {
+    const handleEditClick = (row: any) => {
+        console.log('Edit report:', row);
+        // Handle edit logic here
+    };
+
+    const handleDeleteClick = (row: any) => {
+        console.log('Delete report:', row);
+        // Handle delete logic here
+    };
+
+    const handleRowDoubleClick = (row: any) => {
+        console.log('View report details:', row);
+        // Handle view details logic here
+    };
+
+    const handleAddClick = () => {
+        console.log('Add new report');
+        // Handle add logic here
+    };
 
     const reportsColumns: GridColDef[] = [
         { field: 'id', headerName: 'ID', flex: 0.5, minWidth: 70 },

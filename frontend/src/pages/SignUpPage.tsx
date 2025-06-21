@@ -19,6 +19,8 @@ import MuiCard from '@mui/material/Card';
 import { GoogleIcon } from '../components/CustomIcons';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth/authApi';
+import { useAuth } from '../context/AuthContext';
+import { API_CONFIG } from '../config/api';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -84,6 +86,28 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
     const [agreedToTerms, setAgreedToTerms] = React.useState(false);
     const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
     const [errorMessage, setErrorMessage] = React.useState('');
+
+    const { setAuthenticated, setUser } = useAuth();
+
+    React.useEffect(() => {
+        const checkCurrentUser = async () => {
+            try {
+                const userInfo = await authApi.getCurrentUser();
+                setUser(userInfo);
+
+                if (userInfo.provider === 'local' && userInfo.role === 'admin' && userInfo.first_login) {
+                    navigate('/change-password');
+                } else {
+                    setAuthenticated(true);
+                    navigate('/dashboard');
+                }
+            } catch (error) {
+                setAuthenticated(false);
+            }
+        };
+
+        checkCurrentUser();
+    }, [navigate, setAuthenticated]);
 
     const handleAgreeToTerms = (event: React.ChangeEvent<HTMLInputElement>) => {
         setAgreedToTerms(event.target.checked);
@@ -185,6 +209,11 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
         }
 
         return isValid;
+    };
+
+    const handleSignUpWithGoogle = async () => {
+        const redirectUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REDIRECT_LOGIN_GOOGLE}`;
+        window.open(redirectUrl, '_self');
     };
 
     return (
@@ -340,7 +369,7 @@ export default function SignUpPage(props: { disableCustomTheme?: boolean }) {
                     <Button
                         fullWidth
                         variant="outlined"
-                        onClick={() => alert('Sign up with Google')}
+                        onClick={handleSignUpWithGoogle}
                         startIcon={<GoogleIcon />}
                     >
                         Sign up with Google

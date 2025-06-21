@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -11,6 +12,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
 import { SourceSummary } from '../../types/source';
 import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import { API_CONFIG } from '../../config/api';
+import AddSourceDialog from './AddSourceDialog';
+import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
+import CardAlert from '../CardAlert';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -20,28 +27,313 @@ interface SourcesMetadata {
     page_size: number;
 }
 
-interface SourcesProps {
-    sourcesData: SourceSummary[];
-    metadata: SourcesMetadata;
-    onPageChange: (model: GridPaginationModel) => void;
-    handleEditClick: (row: SourceSummary) => void;
-    handleDeleteClick: (row: SourceSummary) => void;
-    handleRowDoubleClick: (params: GridRowParams<SourceSummary>) => void;
-    handleAddClick: () => void;
-    handleRefresh: () => void;
-}
+export default function Sources() {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-export default function Sources({
-    sourcesData,
-    metadata,
-    onPageChange,
-    handleEditClick,
-    handleDeleteClick,
-    handleRowDoubleClick,
-    handleAddClick,
-    handleRefresh
-}: SourcesProps) {
-    console.log('Sources component received data:', { sourcesData, metadata });
+    console.log('Sources component - RENDER - location.pathname:', location.pathname);
+
+    const [sourcesData, setSourcesData] = useState<SourceSummary[]>([]);
+    const [metadata, setMetadata] = useState<SourcesMetadata>({
+        total_elements: 0,
+        number_of_elements: 0,
+        total_pages: 0,
+        current_page: 0,
+        page_size: 10
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
+
+    // Popup notification states
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+    // Dialog states
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [sourceToDelete, setSourceToDelete] = useState<SourceSummary | null>(null);
+
+    // Add source dialog states
+    const [addStep, setAddStep] = useState(1);
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [addForm, setAddForm] = useState<any>({
+        name: '',
+        type: '',
+        schedule: '',
+        chartType: '',
+        dataSource: '',
+        description: '',
+        connectorType: '',
+        connectionConfig: {},
+        schemaMapping: {},
+        previewData: null,
+        selectedFile: null,
+        mode: 'normal',
+        displayType: 'chart',
+        selectedChartType: '',
+        sources: [],
+        query: {
+            filters: [],
+            groupBy: [],
+            sortBy: [],
+            joins: [],
+        },
+        sqlQuery: '',
+        recipients: [],
+        format: 'pdf',
+        charts: [],
+        emailSubject: '',
+        emailBody: '',
+        advancedSettings: {
+            includeDataTable: true,
+            includeChart: true,
+            pageSize: 'A4',
+            orientation: 'portrait',
+            header: '',
+            footer: '',
+        }
+    });
+
+    // Check for success parameter in URL
+    useEffect(() => {
+        const urlParams = new URLSearchParams(location.search);
+        const successParam = urlParams.get('success');
+        
+        console.log('Sources component - URL params:', location.search);
+        console.log('Sources component - successParam:', successParam);
+        
+        if (successParam === 'updated') {
+            console.log('Sources component - Setting success message');
+            setSuccess('Source updated successfully');
+            setShowSuccessPopup(true);
+            // Clear the URL parameter
+            navigate('/dashboard/sources', { replace: true });
+        }
+    }, [location.search, navigate]);
+
+    const fetchSources = async (page: number = 0, pageSize: number = 10) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?page=${page}&size=${pageSize}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Response was not JSON");
+            }
+            const data = await response.json();
+            if (data.success) {
+                const processedSources = data.result.sources.map((source: any) => ({
+                    ...source,
+                    id: source.id.toString()
+                }));
+                setSourcesData(processedSources);
+                setMetadata(data.result.metadata);
+            } else {
+                setError(data.message || 'Failed to fetch sources');
+                setShowErrorPopup(true);
+            }
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to fetch sources');
+            setShowErrorPopup(true);
+            setSourcesData([]);
+            setMetadata({
+                total_elements: 0,
+                number_of_elements: 0,
+                total_pages: 0,
+                current_page: 0,
+                page_size: pageSize
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSources();
+    }, []);
+
+    const handlePageChange = (model: GridPaginationModel) => {
+        fetchSources(model.page, model.pageSize);
+    };
+
+    const handleRowDoubleClick = async (params: GridRowParams<SourceSummary>) => {
+        if (params.row) {
+            const clickedSourceId = params.row.id.toString();
+
+            // Navigate to the preview URL
+            navigate(`/dashboard/sources/${clickedSourceId}/view-data`);
+        }
+    };
+
+    const handleEditClick = (row: SourceSummary) => {
+        // Navigate to the edit page instead of opening dialog
+        navigate(`/dashboard/sources/${row.id}/edit`);
+    };
+
+    const handleDeleteClick = (row: SourceSummary) => {
+        setSourceToDelete(row);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!sourceToDelete) return;
+
+        try {
+            setError(null);
+            setSuccess(null);
+
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceToDelete.id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setSuccess('Source deleted successfully');
+                setShowSuccessPopup(true);
+                setDeleteDialogOpen(false);
+                setSourceToDelete(null);
+                fetchSources(metadata.current_page, metadata.page_size);
+            } else {
+                setError(data.message || 'Failed to delete source');
+                setShowErrorPopup(true);
+            }
+        } catch (error) {
+            console.error('Error deleting source:', error);
+            setError(error instanceof Error ? error.message : 'Failed to delete source');
+            setShowErrorPopup(true);
+        }
+    };
+
+    const handleAddClick = () => {
+        setAddDialogOpen(true);
+    };
+
+    const handleRefresh = () => {
+        fetchSources(metadata.current_page, metadata.page_size);
+    };
+
+    const handleAddNext = async () => {
+        if (addStep === 1) {
+            setAddStep(2);
+        } else if (addStep === 2) {
+            setAddStep(3);
+        } else if (addStep === 3) {
+            // Handle source creation
+            try {
+                console.log('Creating source:', addForm);
+                const formData = new FormData();
+                formData.append('name', addForm.name);
+                formData.append('connectorType', addForm.connectorType);
+
+                if (addForm.selectedFile) {
+                    formData.append('file', addForm.selectedFile);
+                }
+
+                if (addForm.connectionConfig) {
+                    Object.keys(addForm.connectionConfig).forEach(key => {
+                        if (addForm.connectionConfig[key]) {
+                            formData.append(key, addForm.connectionConfig[key]);
+                        }
+                    });
+                }
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // Refresh sources list
+                        fetchSources(metadata.current_page, metadata.page_size);
+                        setSuccess('Source created successfully');
+                        setShowSuccessPopup(true);
+                        handleAddClose();
+                    } else {
+                        setError(data.message || 'Failed to create source');
+                        setShowErrorPopup(true);
+                    }
+                } else {
+                    setError('Failed to create source');
+                    setShowErrorPopup(true);
+                }
+            } catch (error) {
+                console.error('Error creating source:', error);
+                setError(error instanceof Error ? error.message : 'Failed to create source');
+                setShowErrorPopup(true);
+            }
+        }
+    };
+
+    const handleAddBack = () => {
+        if (addStep > 1) {
+            setAddStep(addStep - 1);
+        }
+    };
+
+    const handleAddClose = () => {
+        setAddDialogOpen(false);
+        setAddStep(1);
+        setAddForm({
+            name: '',
+            type: '',
+            schedule: '',
+            chartType: '',
+            dataSource: '',
+            description: '',
+            connectorType: '',
+            connectionConfig: {},
+            schemaMapping: {},
+            previewData: null,
+            selectedFile: null,
+            mode: 'normal',
+            displayType: 'chart',
+            selectedChartType: '',
+            sources: [],
+            query: {
+                filters: [],
+                groupBy: [],
+                sortBy: [],
+                joins: [],
+            },
+            sqlQuery: '',
+            recipients: [],
+            format: 'pdf',
+            charts: [],
+            emailSubject: '',
+            emailBody: '',
+            advancedSettings: {
+                includeDataTable: true,
+                includeChart: true,
+                pageSize: 'A4',
+                orientation: 'portrait',
+                header: '',
+                footer: '',
+            }
+        });
+    };
 
     const sourcesColumns: GridColDef[] = [
         { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
@@ -69,34 +361,34 @@ export default function Sources({
             flex: 1,
             minWidth: 150,
             renderCell: (params: GridRenderCellParams<SourceSummary>) => (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: '100%',
-                }}
-              >
                 <Box
-                  component="span"
-                  sx={{
-                    color: 'success.main',
-                    border: '1.5px solid',
-                    borderColor: 'success.light',
-                    backgroundColor: 'white',
-                    borderRadius: '16px',
-                    px: 1,
-                    py: 0,
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    minWidth: 60,
-                    textAlign: 'center',
-                    ml: 1,
-                    lineHeight: 1.5,
-                  }}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '100%',
+                    }}
                 >
-                  {params.value}
+                    <Box
+                        component="span"
+                        sx={{
+                            color: 'success.main',
+                            border: '1.5px solid',
+                            borderColor: 'success.light',
+                            backgroundColor: 'white',
+                            borderRadius: '16px',
+                            px: 1,
+                            py: 0,
+                            fontWeight: 600,
+                            fontSize: '1rem',
+                            minWidth: 60,
+                            textAlign: 'center',
+                            ml: 1,
+                            lineHeight: 1.5,
+                        }}
+                    >
+                        {params.value}
+                    </Box>
                 </Box>
-              </Box>
             ),
         },
         { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
@@ -145,6 +437,8 @@ export default function Sources({
         },
     ];
 
+    console.log('Rendering Sources DataGrid mode');
+
     return (
         <Stack gap={2}>
             <Typography variant="h4" component="h2" gutterBottom>
@@ -155,6 +449,7 @@ export default function Sources({
                     variant="outlined"
                     startIcon={<RefreshIcon />}
                     onClick={handleRefresh}
+                    disabled={loading}
                 >
                     Refresh
                 </Button>
@@ -167,22 +462,74 @@ export default function Sources({
                     Add Source
                 </Button>
             </Stack>
-            <CustomizedDataGrid
-                rows={sourcesData}
-                columns={sourcesColumns}
-                sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
-                disableColumnMenu
-                disableRowSelectionOnClick
-                columnBufferPx={2}
-                onRowDoubleClick={handleRowDoubleClick}
-                paginationMode="server"
-                rowCount={metadata.total_elements}
-                pageSizeOptions={[10, 25, 50]}
-                paginationModel={{
-                    page: metadata.current_page,
-                    pageSize: metadata.page_size
-                }}
-                onPaginationModelChange={onPageChange}
+            {loading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                    <CircularProgress />
+                </Box>
+            ) : (
+                <CustomizedDataGrid
+                    rows={sourcesData}
+                    columns={sourcesColumns}
+                    sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+                    disableColumnMenu
+                    disableRowSelectionOnClick
+                    columnBufferPx={2}
+                    onRowDoubleClick={handleRowDoubleClick}
+                    paginationMode="server"
+                    rowCount={metadata.total_elements}
+                    pageSizeOptions={[10, 25, 50]}
+                    paginationModel={{
+                        page: metadata.current_page,
+                        pageSize: metadata.page_size
+                    }}
+                    onPaginationModelChange={handlePageChange}
+                />
+            )}
+
+            {/* Popup Notifications */}
+            {showErrorPopup && (
+                <CardAlert
+                    open={showErrorPopup}
+                    severity="error"
+                    message={error || 'An error occurred'}
+                    onClose={() => setShowErrorPopup(false)}
+                    autoHideDuration={5000}
+                    position="bottom-right"
+                />
+            )}
+
+            {showSuccessPopup && (
+                <CardAlert
+                    open={showSuccessPopup}
+                    severity="success"
+                    message={success || 'Operation completed successfully'}
+                    onClose={() => setShowSuccessPopup(false)}
+                    autoHideDuration={2000}
+                    position="bottom-right"
+                />
+            )}
+
+            {/* Dialogs */}
+            <AddSourceDialog
+                open={addDialogOpen}
+                onClose={handleAddClose}
+                addStep={addStep}
+                setAddStep={setAddStep}
+                addForm={addForm}
+                setAddForm={setAddForm}
+                currentContent="sources"
+                sourcesData={sourcesData}
+                chartsData={[]}
+                handleAddNext={handleAddNext}
+                handleAddBack={handleAddBack}
+            />
+
+            <DeleteConfirmationDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Source"
+                message={`Are you sure you want to delete "${sourceToDelete?.name}"? This action cannot be undone.`}
             />
         </Stack>
     );

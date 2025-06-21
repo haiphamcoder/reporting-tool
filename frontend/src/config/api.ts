@@ -17,6 +17,7 @@ export const API_CONFIG = {
         SOURCE_UPLOAD_FILE: '/reporting/sources/upload-file',
         SOURCE_CONFIRM_SCHEMA: '/reporting/sources/confirm-schema',
         SOURCE_SUBMIT_IMPORT: '/data-processing/sources/import',
+        SOURCE_PREVIEW: '/data-processing/sources/:source_id/preview',
         SOURCE_GET_SCHEMA: '/data-processing/sources/schema',
         SOURCE_DETAILS: '/reporting/sources/:id',
         USER_MANAGEMENT: '/user-management',

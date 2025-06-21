@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { API_CONFIG } from '../config/api';
 
 interface Statistics {
@@ -27,19 +27,24 @@ const StatisticsContext = createContext<StatisticsContextType | undefined>(undef
 
 export function StatisticsProvider({ children }: { children: React.ReactNode }) {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const isLoadingRef = useRef(false);
 
   const fetchStatistics = useCallback(async (forceRefresh = false) => {
+    console.log('fetchStatistics called with forceRefresh:', forceRefresh, 'isLoadingRef.current:', isLoadingRef.current);
     // Prevent duplicate requests unless forced refresh
-    if (loading && !forceRefresh) {
+    if (isLoadingRef.current && !forceRefresh) {
+      console.log('Skipping fetch - already loading and not forced refresh');
       return;
     }
     
     try {
+      isLoadingRef.current = true;
       setLoading(true);
       setError(null);
+      console.log('Making API call to statistics endpoint');
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STATISTICS}`, {
         method: 'GET',
         credentials: 'include',
@@ -97,15 +102,19 @@ export function StatisticsProvider({ children }: { children: React.ReactNode }) 
       });
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
       setHasInitialized(true);
     }
-  }, [loading]);
+  }, []);
 
+  // Initial fetch only once
   useEffect(() => {
     if (!hasInitialized) {
       fetchStatistics();
     }
-  }, [fetchStatistics, hasInitialized]);
+  }, [hasInitialized]);
+
+  const refreshStatistics = useCallback(() => fetchStatistics(true), [fetchStatistics]);
 
   return (
     <StatisticsContext.Provider
@@ -113,7 +122,7 @@ export function StatisticsProvider({ children }: { children: React.ReactNode }) 
         statistics,
         loading,
         error,
-        refreshStatistics: () => fetchStatistics(true),
+        refreshStatistics,
       }}
     >
       {children}

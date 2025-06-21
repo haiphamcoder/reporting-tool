@@ -10,7 +10,9 @@ import SideMenu from "../components/SizeMenu";
 import AppNavbar from "../components/AppNavbar";
 import Header from "../components/Header";
 import MainGrid from "../components/MainGrid";
-import { Routes, Route } from 'react-router-dom';
+import SourceEditPage from "../pages/SourceEditPage";
+import SourceViewDataPage from "../components/modules/SourceViewDataPage";
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -20,6 +22,9 @@ const xThemeComponents = {
 };
 
 export default function Dashboard(props: { disableCustomTheme?: boolean }) {
+    const location = useLocation();
+    console.log('Dashboard - location.pathname:', location.pathname);
+    
     return (
         <AppTheme {...props} themeComponents={xThemeComponents}>
             <CssBaseline enableColorScheme />
@@ -33,7 +38,7 @@ export default function Dashboard(props: { disableCustomTheme?: boolean }) {
                         flexGrow: 1,
                         backgroundColor: alpha(theme.palette.background.default, 1),
                         overflow: 'auto',
-                      })}
+                    })}
                 >
                     <Stack
                         spacing={2}
@@ -46,8 +51,10 @@ export default function Dashboard(props: { disableCustomTheme?: boolean }) {
                     >
                         <Header />
                         <Routes>
-                          <Route path="sources/:source_id/view-data" element={<MainGrid />} />
-                          <Route path="*" element={<MainGrid />} />
+                            <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+                            <Route path="/sources/:source_id/view-data" element={<SourceViewDataPage />} />
+                            <Route path="/sources/:sourceId/edit" element={<SourceEditPage />} />
+                            <Route path="/:section" element={<MainGrid />} />
                         </Routes>
                     </Stack>
                 </Box>

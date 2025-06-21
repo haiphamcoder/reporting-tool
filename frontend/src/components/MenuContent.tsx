@@ -13,7 +13,7 @@ import SourceRoundedIcon from '@mui/icons-material/SourceRounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
-import { useContent } from '../context/ContentContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 type MenuItem = {
@@ -22,33 +22,54 @@ type MenuItem = {
   type: 'home' | 'sources' | 'charts' | 'reports' | 'users';
 };
 
-const mainListItems: MenuItem[] = [
+const menuItems: MenuItem[] = [
   { text: 'Home', icon: <HomeRoundedIcon />, type: 'home' },
   { text: 'Sources', icon: <SourceRoundedIcon />, type: 'sources' },
   { text: 'Charts', icon: <BarChartRoundedIcon />, type: 'charts' },
   { text: 'Reports', icon: <AssignmentRoundedIcon />, type: 'reports' },
 ];
 
-const adminListItems: MenuItem[] = [
+const adminMenuItems: MenuItem[] = [
   { text: 'Users', icon: <PeopleRoundedIcon />, type: 'users' },
 ];
 
 interface MenuContentProps {
   collapsed: boolean;
-  onToggleCollapse: () => void;
 }
 
 export default function MenuContent({ collapsed }: MenuContentProps) {
-  const { currentContent, setCurrentContent } = useContent();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+
+  // Determine current content based on pathname
+  let currentContent: string = 'home';
+  if (location.pathname.startsWith('/dashboard/sources')) {
+    currentContent = 'sources';
+  } else if (location.pathname.startsWith('/dashboard/charts')) {
+    currentContent = 'charts';
+  } else if (location.pathname.startsWith('/dashboard/reports')) {
+    currentContent = 'reports';
+  } else if (location.pathname.startsWith('/dashboard/users')) {
+    currentContent = 'users';
+  } else if (location.pathname.startsWith('/dashboard/settings')) {
+    currentContent = 'settings';
+  } else if (location.pathname.startsWith('/dashboard/home')) {
+    currentContent = 'home';
+  }
+
+  const handleNavigation = (contentType: string) => {
+    console.log('MenuContent - Navigating to:', contentType);
+    navigate(`/dashboard/${contentType}`);
+  };
 
   const renderMenuItem = (item: MenuItem, index: number) => (
     <ListItem key={index} disablePadding sx={{ display: 'block', justifyContent: 'center', my: collapsed ? 0.5 : 0 }}>
       {collapsed ? (
         <Tooltip title={item.text} placement="right">
           <IconButton
-            onClick={() => setCurrentContent(item.type)}
+            onClick={() => handleNavigation(item.type)}
             sx={{
               width: 40,
               height: 40,
@@ -77,7 +98,7 @@ export default function MenuContent({ collapsed }: MenuContentProps) {
       ) : (
         <ListItemButton
           selected={currentContent === item.type}
-          onClick={() => setCurrentContent(item.type)}
+          onClick={() => handleNavigation(item.type)}
         >
           <ListItemIcon>{item.icon}</ListItemIcon>
           <ListItemText primary={item.text} />
@@ -87,22 +108,19 @@ export default function MenuContent({ collapsed }: MenuContentProps) {
   );
 
   return (
-    <Stack sx={{ flexGrow: 1, p: 1, justifyContent: 'space-between', alignItems: collapsed ? 'center' : 'stretch' }}>
-      <List
-        dense
-        sx={collapsed ? { display: 'flex', flexDirection: 'column', alignItems: 'center', p: 0 } : {}}
-      >
-        {/* Main menu items */}
-        {mainListItems.map((item, index) => renderMenuItem(item, index))}
-        
-        {/* Divider for admin section */}
-        {isAdmin && !collapsed && (
-          <Divider sx={{ my: 1 }} />
-        )}
-        
-        {/* Admin menu items */}
-        {isAdmin && adminListItems.map((item, index) => renderMenuItem(item, mainListItems.length + index))}
+    <Stack spacing={1} sx={{ width: '100%' }}>
+      <List>
+        {menuItems.map((item, index) => renderMenuItem(item, index))}
       </List>
+
+      {isAdmin && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <List>
+            {adminMenuItems.map((item, index) => renderMenuItem(item, index))}
+          </List>
+        </>
+      )}
     </Stack>
   );
 }

@@ -33,6 +33,7 @@ import { API_CONFIG } from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import { GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-data-grid';
 import CustomizedDataGrid from '../CustomizedDataGrid';
+import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 
 interface User {
   id: string; // Changed from user_id to id
@@ -613,21 +614,16 @@ export default function UserManagement() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete user "{userToDelete?.first_name} {userToDelete?.last_name}"?
-            This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        itemName={`${userToDelete?.first_name} ${userToDelete?.last_name}`}
+        itemType="user"
+        title="Delete User"
+        confirmButtonText="Delete User"
+        severity="error"
+      />
     </Stack>
   );
 } 

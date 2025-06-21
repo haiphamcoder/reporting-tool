@@ -9,11 +9,9 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import PeopleRoundedIcon from '@mui/icons-material/PeopleRounded';
 import MenuButton from './MenuButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useContent } from '../context/ContentContext';
 import { authApi } from '../api/auth/authApi';
 import AccountInfoDialog from './AccountInfoDialog';
 import SettingsDialog from './SettingsDialog';
@@ -33,12 +31,9 @@ export default function OptionsMenu() {
   };
 
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
-  const { setCurrentContent } = useContent();
+  const { logout } = useAuth();
   const [openAccountDialog, setOpenAccountDialog] = React.useState(false);
   const [openSettingsDialog, setOpenSettingsDialog] = React.useState(false);
-
-  const isAdmin = user?.role === 'admin';
 
   const handleLogout = async () => {
     try {
@@ -51,11 +46,6 @@ export default function OptionsMenu() {
       logout();
       navigate('/auth/signin');
     }
-  };
-
-  const handleUserManagement = () => {
-    setCurrentContent('users');
-    handleClose();
   };
 
   return (
@@ -89,14 +79,6 @@ export default function OptionsMenu() {
       >
         <MenuItem onClick={() => setOpenAccountDialog(true)}>My account</MenuItem>
         <MenuItem onClick={() => setOpenSettingsDialog(true)}>Settings</MenuItem>
-        {isAdmin && (
-          <MenuItem onClick={handleUserManagement}>
-            <ListItemText>User Management</ListItemText>
-            <ListItemIcon>
-              <PeopleRoundedIcon fontSize="small" />
-            </ListItemIcon>
-          </MenuItem>
-        )}
         <Divider />
         <MenuItem
           onClick={handleLogout}
