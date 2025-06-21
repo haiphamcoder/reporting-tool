@@ -493,7 +493,6 @@ export default function Sources() {
                     }}
                     disableColumnMenu
                     disableRowSelectionOnClick
-                    columnBufferPx={2}
                     onRowDoubleClick={handleRowDoubleClick}
                     paginationMode="server"
                     rowCount={metadata.total_elements}

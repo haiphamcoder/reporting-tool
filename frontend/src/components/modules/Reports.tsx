@@ -131,7 +131,6 @@ export default function Reports() {
                   }}
                 disableColumnMenu
                 disableRowSelectionOnClick
-                columnBufferPx={2}
                 onRowDoubleClick={handleRowDoubleClick}
             />
         </Stack>

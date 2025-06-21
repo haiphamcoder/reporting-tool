@@ -15,15 +15,11 @@ import GoogleIcon from '@mui/icons-material/Google';
 import connectorCsvIcon from '../assets/connector-csv.png';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import CircularProgress from '@mui/material/CircularProgress';
 import { API_CONFIG } from '../config/api';
 import { Stack } from '@mui/material';
+import CustomizedDataGrid from '../components/CustomizedDataGrid';
+import { GridColDef } from '@mui/x-data-grid';
 
 const getSourceTypeIcon = (type: number) => {
     switch (type) {
@@ -63,6 +59,35 @@ export default function SourceEditPage() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Define columns for the mapping DataGrid
+    const mappingColumns: GridColDef[] = [
+        {
+            field: 'field_name',
+            headerName: 'Field Name',
+            flex: 1,
+            minWidth: 150,
+        },
+        {
+            field: 'field_mapping',
+            headerName: 'Field Mapping',
+            flex: 1,
+            minWidth: 150,
+        },
+        {
+            field: 'field_type',
+            headerName: 'Field Type',
+            flex: 1,
+            minWidth: 120,
+        },
+        {
+            field: 'is_hidden',
+            headerName: 'Hidden',
+            flex: 0.5,
+            minWidth: 100,
+            valueGetter: (params: any) => params.value ? 'Yes' : 'No',
+        },
+    ];
 
     useEffect(() => {
         if (!sourceId) {
@@ -302,36 +327,36 @@ export default function SourceEditPage() {
                 </Box>
             )}
             {tab === 1 && (
-                <Box sx={{ bgcolor: 'background.paper', borderRadius: 1, p: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom>Field Mappings</Typography>
-                    <TableContainer>
-                        <Table size="small">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>Field Name</TableCell>
-                                    <TableCell>Field Mapping</TableCell>
-                                    <TableCell>Field Type</TableCell>
-                                    <TableCell>Hidden</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {Array.isArray(formData.mapping) && formData.mapping.length > 0 ? (
-                                    formData.mapping.map((field, idx) => (
-                                        <TableRow key={idx}>
-                                            <TableCell>{field.field_name}</TableCell>
-                                            <TableCell>{field.field_mapping}</TableCell>
-                                            <TableCell>{field.field_type}</TableCell>
-                                            <TableCell>{field.is_hidden ? 'Yes' : 'No'}</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={4} align="center">No mapping data</TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                <Box sx={{ bgcolor: 'background.paper', borderRadius: 0, p: 0 }}>
+                    <CustomizedDataGrid
+                        rows={Array.isArray(formData.mapping) ? formData.mapping.map((field, idx) => ({
+                            id: idx,
+                            ...field
+                        })) : []}
+                        columns={mappingColumns}
+                        sx={{
+                            height: '100% !important',
+                            minHeight: '500px',
+                            maxHeight: '500px',
+                            '& .MuiDataGrid-cell:focus': { outline: 'none' },
+                            '& .MuiDataGrid-row': {
+                                borderBottom: '1px solid #e0e0e0',
+                            },
+                            '& .MuiDataGrid-row:hover': {
+                                backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                            },
+                            '& .MuiDataGrid-virtualScroller': {
+                                overflow: 'auto !important',
+                            },
+                            '& .MuiDataGrid-main': {
+                                height: '100% !important',
+                            },
+                        }}
+                        disableColumnMenu
+                        disableRowSelectionOnClick
+                        loading={loading}
+                        hideFooterSelectedRowCount
+                    />
                 </Box>
             )}
         </Stack>

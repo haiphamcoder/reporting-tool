@@ -368,8 +368,6 @@ export default function SourceViewDataPage() {
         }}
         disableColumnMenu
         disableRowSelectionOnClick
-        columnBufferPx={2}
-        density="compact"
         disableColumnResize
         paginationMode="server"
         rowCount={-1}
