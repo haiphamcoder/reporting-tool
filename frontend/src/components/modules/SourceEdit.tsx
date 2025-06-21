@@ -89,7 +89,7 @@ export default function SourceEdit({ sourceId, onBack, onSave }: SourceEditProps
     setFormData((prev) => {
       if (!prev) return prev;
       const next = { ...prev, [field]: value };
-      if (!next.id || !next.name || next.connector_type === undefined) return prev;
+      if (!next.id || next.name === undefined || next.connector_type === undefined) return prev;
       return next;
     });
   };
