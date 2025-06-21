@@ -98,10 +98,10 @@ export default function Sources() {
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         const successParam = urlParams.get('success');
-        
+
         console.log('Sources component - URL params:', location.search);
         console.log('Sources component - successParam:', successParam);
-        
+
         if (successParam === 'updated') {
             console.log('Sources component - Setting success message');
             setSuccess('Source updated successfully');
@@ -450,6 +450,7 @@ export default function Sources() {
                     startIcon={<RefreshIcon />}
                     onClick={handleRefresh}
                     disabled={loading}
+                    sx={{ minWidth: '120px' }}
                 >
                     Refresh
                 </Button>
@@ -458,6 +459,7 @@ export default function Sources() {
                     color="primary"
                     onClick={handleAddClick}
                     startIcon={<AddIcon />}
+                    sx={{ minWidth: '140px', maxWidth: '140px' }}
                 >
                     Add Source
                 </Button>
@@ -470,7 +472,25 @@ export default function Sources() {
                 <CustomizedDataGrid
                     rows={sourcesData}
                     columns={sourcesColumns}
-                    sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+                    // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+                    sx={{
+                        height: '100% !important',
+                        minHeight: '500px',
+                        maxHeight: '500px',
+                        '& .MuiDataGrid-cell:focus': { outline: 'none' },
+                        '& .MuiDataGrid-row': {
+                            borderBottom: '1px solid #e0e0e0',
+                        },
+                        '& .MuiDataGrid-row:hover': {
+                            backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                        },
+                        '& .MuiDataGrid-virtualScroller': {
+                            overflow: 'auto !important',
+                        },
+                        '& .MuiDataGrid-main': {
+                            height: '100% !important',
+                        },
+                    }}
                     disableColumnMenu
                     disableRowSelectionOnClick
                     columnBufferPx={2}
@@ -530,6 +550,7 @@ export default function Sources() {
                 onConfirm={handleDeleteConfirm}
                 title="Delete Source"
                 message={`Are you sure you want to delete "${sourceToDelete?.name}"? This action cannot be undone.`}
+                severity="error"
             />
         </Stack>
     );

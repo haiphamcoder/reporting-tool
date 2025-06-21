@@ -238,6 +238,7 @@ export default function SourceViewDataPage() {
             startIcon={<RefreshIcon />}
             onClick={handleRefresh}
             disabled={loading}
+            sx={{ minWidth: '120px' }}
           >
             Refresh
           </Button>
@@ -339,6 +340,7 @@ export default function SourceViewDataPage() {
           startIcon={<RefreshIcon />}
           onClick={handleRefresh}
           disabled={loading}
+          sx={{ minWidth: '140px', maxWidth: '140px' }}
         >
           Refresh
         </Button>

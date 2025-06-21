@@ -457,7 +457,25 @@ export default function UserManagement() {
           rows={users}
           columns={userColumns}
           getRowId={(row: User) => row.id}
-          sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+          // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+          sx={{
+            height: '100% !important',
+            minHeight: '500px',
+            maxHeight: '500px',
+            '& .MuiDataGrid-cell:focus': { outline: 'none' },
+            '& .MuiDataGrid-row': {
+              borderBottom: '1px solid #e0e0e0',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'rgba(25, 118, 210, 0.08)',
+            },
+            '& .MuiDataGrid-virtualScroller': {
+              overflow: 'auto !important',
+            },
+            '& .MuiDataGrid-main': {
+              height: '100% !important',
+            },
+          }}
           disableColumnMenu
           disableRowSelectionOnClick
           columnBufferPx={2}
@@ -492,7 +510,7 @@ export default function UserManagement() {
 
   return (
     <Stack gap={2} >
-      <Typography variant="h4" component="h1">
+      <Typography variant="h4" component="h2" gutterBottom>
         Users
       </Typography>
       <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
@@ -501,6 +519,7 @@ export default function UserManagement() {
           startIcon={<RefreshIcon />}
           onClick={() => fetchUsers(metadata.current_page, metadata.page_size)}
           disabled={loading}
+          sx={{ minWidth: '120px' }}
         >
           Refresh
         </Button>
@@ -508,6 +527,7 @@ export default function UserManagement() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddUser}
+          sx={{ minWidth: '140px', maxWidth: '140px' }}
         >
           Add User
         </Button>

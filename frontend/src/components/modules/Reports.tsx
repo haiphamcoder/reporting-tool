@@ -91,8 +91,9 @@ export default function Reports() {
             </Typography>
             <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
                 <Button
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<RefreshIcon />}
+                    sx={{ minWidth: '120px' }}
                 >
                     Refresh
                 </Button>
@@ -101,6 +102,7 @@ export default function Reports() {
                     color="primary"
                     onClick={handleAddClick}
                     startIcon={<AddIcon />}
+                    sx={{ minWidth: '140px', maxWidth: '140px' }}
                 >
                     Add Report
                 </Button>
@@ -108,7 +110,25 @@ export default function Reports() {
             <CustomizedDataGrid
                 rows={reportsData}
                 columns={reportsColumns}
-                sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+                // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+                sx={{
+                    height: '100% !important',
+                    minHeight: '500px',
+                    maxHeight: '500px',
+                    '& .MuiDataGrid-cell:focus': { outline: 'none' },
+                    '& .MuiDataGrid-row': {
+                      borderBottom: '1px solid #e0e0e0',
+                    },
+                    '& .MuiDataGrid-row:hover': {
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                    },
+                    '& .MuiDataGrid-virtualScroller': {
+                      overflow: 'auto !important',
+                    },
+                    '& .MuiDataGrid-main': {
+                      height: '100% !important',
+                    },
+                  }}
                 disableColumnMenu
                 disableRowSelectionOnClick
                 columnBufferPx={2}
