@@ -20,6 +20,7 @@ export const API_CONFIG = {
         SOURCE_PREVIEW: '/data-processing/sources/:source_id/preview',
         SOURCE_GET_SCHEMA: '/data-processing/sources/schema',
         SOURCE_DETAILS: '/reporting/sources/:id',
+        CHARTS: '/reporting/charts',
         USER_MANAGEMENT: '/user-management',
     }
 } as const;

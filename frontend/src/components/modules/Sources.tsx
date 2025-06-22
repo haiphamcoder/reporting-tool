@@ -5,12 +5,11 @@ import Button from '@mui/material/Button';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import CustomizedDataGrid from '../CustomizedDataGrid';
-import { GridColDef, GridPaginationModel, GridRowParams, GridRenderCellParams } from '@mui/x-data-grid';
+import { GridColDef, GridRowParams, GridRenderCellParams } from '@mui/x-data-grid';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
-import { SourceSummary } from '../../types/source';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { API_CONFIG } from '../../config/api';
@@ -18,6 +17,7 @@ import AddSourceDialog from './AddSourceDialog';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { SourceSummary } from '../../types/source';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -30,8 +30,6 @@ interface SourcesMetadata {
 export default function Sources() {
     const navigate = useNavigate();
     const location = useLocation();
-
-    console.log('Sources component - RENDER - location.pathname:', location.pathname);
 
     const [sourcesData, setSourcesData] = useState<SourceSummary[]>([]);
     const [metadata, setMetadata] = useState<SourcesMetadata>({
@@ -52,6 +50,10 @@ export default function Sources() {
     // Dialog states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [sourceToDelete, setSourceToDelete] = useState<SourceSummary | null>(null);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
 
     // Add source dialog states
     const [addStep, setAddStep] = useState(1);
@@ -99,11 +101,7 @@ export default function Sources() {
         const urlParams = new URLSearchParams(location.search);
         const successParam = urlParams.get('success');
 
-        console.log('Sources component - URL params:', location.search);
-        console.log('Sources component - successParam:', successParam);
-
         if (successParam === 'updated') {
-            console.log('Sources component - Setting success message');
             setSuccess('Source updated successfully');
             setShowSuccessPopup(true);
             // Clear the URL parameter
@@ -115,7 +113,7 @@ export default function Sources() {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?page=${page}&size=${pageSize}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?page=${page}&limit=${pageSize}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -138,6 +136,8 @@ export default function Sources() {
                 }));
                 setSourcesData(processedSources);
                 setMetadata(data.result.metadata);
+                setCurrentPage(page);
+                setPageSize(pageSize);
             } else {
                 setError(data.message || 'Failed to fetch sources');
                 setShowErrorPopup(true);
@@ -162,8 +162,8 @@ export default function Sources() {
         fetchSources();
     }, []);
 
-    const handlePageChange = (model: GridPaginationModel) => {
-        fetchSources(model.page, model.pageSize);
+    const handlePageChange = (page: number, size: number) => {
+        fetchSources(page, size);
     };
 
     const handleRowDoubleClick = async (params: GridRowParams<SourceSummary>) => {
@@ -498,10 +498,12 @@ export default function Sources() {
                     rowCount={metadata.total_elements}
                     pageSizeOptions={[10, 25, 50]}
                     paginationModel={{
-                        page: metadata.current_page,
-                        pageSize: metadata.page_size
+                        page: currentPage,
+                        pageSize: pageSize
                     }}
-                    onPaginationModelChange={handlePageChange}
+                    onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
+                    hideFooterSelectedRowCount
+                    loading={loading}
                 />
             )}
 
