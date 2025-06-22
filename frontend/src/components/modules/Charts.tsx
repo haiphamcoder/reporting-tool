@@ -16,6 +16,7 @@ import { useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import CardAlert from '../CardAlert';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
+import AddChartDialog from '../dialogs/AddChartDiaglog';
 
 interface ChartsMetadata {
     total_elements: number;
@@ -53,6 +54,8 @@ export default function Charts() {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
 
     // Function to update URL with pagination parameters
     const updateURLWithPagination = (page: number, size: number) => {
@@ -194,8 +197,7 @@ export default function Charts() {
     };
 
     const handleAddClick = () => {
-        console.log('Add new chart');
-        // Handle add logic here
+        setAddDialogOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
@@ -326,6 +328,18 @@ export default function Charts() {
         fetchCharts(currentPage, pageSize);
     }
 
+    function handleAddClose(): void {
+        setAddDialogOpen(false);
+    }
+
+    const handleAddSuccess = (chartId: string) => {
+        setAddDialogOpen(false);
+        setSuccess('Chart created successfully');
+        setShowSuccessPopup(true);
+        // Refresh the charts list
+        fetchCharts(currentPage, pageSize);
+    };
+
     return (
         <Stack gap={2}>
             <Typography variant="h4" component="h2" gutterBottom>
@@ -416,6 +430,12 @@ export default function Charts() {
                     position="bottom-right"
                 />
             )}
+
+            <AddChartDialog
+                open={addDialogOpen}
+                onClose={handleAddClose}
+                onSuccess={handleAddSuccess}
+            />
 
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
