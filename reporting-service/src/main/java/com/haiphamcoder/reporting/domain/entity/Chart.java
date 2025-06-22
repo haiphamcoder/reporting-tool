@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.haiphamcoder.reporting.shared.converter.JsonNodeStringConverter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -47,7 +50,8 @@ public class Chart {
     private String description;
 
     @Column(name = "config", nullable = false)
-    private String config;
+    @Convert(converter = JsonNodeStringConverter.class)
+    private JsonNode config;
 
     @Column(name = "query_option", nullable = false)
     private String queryOption;

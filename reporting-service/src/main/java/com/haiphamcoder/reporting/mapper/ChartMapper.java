@@ -1,7 +1,6 @@
 package com.haiphamcoder.reporting.mapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.ChartDtoBuilder;
 import com.haiphamcoder.reporting.domain.entity.Chart;
@@ -21,9 +20,11 @@ public class ChartMapper {
                         builder.name(chart.getName());
                         builder.userId(chart.getUserId() != null ? chart.getUserId().toString() : null);
                         builder.description(chart.getDescription());
-                        builder.config(!StringUtils.isNullOrEmpty(chart.getConfig())
-                                        ? MapperUtils.objectMapper.readValue(chart.getConfig(), ObjectNode.class)
-                                        : MapperUtils.objectMapper.createObjectNode());
+
+                        builder.config(chart.getConfig() != null
+                                        ? MapperUtils.objectMapper.readValue(chart.getConfig().toString(),
+                                                        ChartDto.ChartConfig.class)
+                                        : null);
                         builder.queryOption(
                                         MapperUtils.objectMapper.readValue(chart.getQueryOption(), QueryOption.class));
                         builder.isDeleted(chart.getIsDeleted());
@@ -47,7 +48,8 @@ public class ChartMapper {
                                 builder.description(chartDto.getDescription());
                         }
                         if (chartDto.getConfig() != null) {
-                                builder.config(MapperUtils.objectMapper.writeValueAsString(chartDto.getConfig()));
+                                builder.config(MapperUtils.objectMapper.readTree(
+                                                MapperUtils.objectMapper.writeValueAsString(chartDto.getConfig())));
                         }
                         if (chartDto.getQueryOption() != null) {
                                 builder.queryOption(

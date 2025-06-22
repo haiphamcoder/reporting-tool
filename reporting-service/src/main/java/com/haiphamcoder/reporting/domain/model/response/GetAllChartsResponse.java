@@ -44,6 +44,9 @@ public class GetAllChartsResponse {
         @JsonProperty("description")
         private String description;
 
+        @JsonProperty("type")
+        private String type;
+
         @JsonProperty("created_at")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;

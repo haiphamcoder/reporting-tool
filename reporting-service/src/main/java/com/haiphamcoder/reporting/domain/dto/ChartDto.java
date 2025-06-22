@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 
 import lombok.AllArgsConstructor;
@@ -34,7 +33,7 @@ public class ChartDto {
     private String description;
 
     @JsonProperty("config")
-    private ObjectNode config;
+    private ChartConfig config;
 
     @JsonProperty("query_option")
     private QueryOption queryOption;
@@ -47,4 +46,17 @@ public class ChartDto {
 
     @JsonProperty("modified_at")
     private LocalDateTime modifiedAt;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ChartConfig {
+
+        @JsonProperty("type")
+        private String type;
+
+    }
 }

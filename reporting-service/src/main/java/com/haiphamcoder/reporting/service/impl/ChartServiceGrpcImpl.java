@@ -3,6 +3,7 @@ package com.haiphamcoder.reporting.service.impl;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.Chart.ChartBuilder;
 import com.haiphamcoder.reporting.proto.ChartProto;
@@ -12,6 +13,7 @@ import com.haiphamcoder.reporting.proto.GetChartByIdResponse;
 import com.haiphamcoder.reporting.proto.UpdateChartRequest;
 import com.haiphamcoder.reporting.proto.UpdateChartResponse;
 import com.haiphamcoder.reporting.repository.ChartRepository;
+import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
 import io.grpc.Status;
@@ -67,7 +69,11 @@ public class ChartServiceGrpcImpl extends ChartServiceGrpc.ChartServiceImplBase 
             builder.setDescription(chart.getDescription());
         }
         if (chart.getConfig() != null && !chart.getConfig().isEmpty()) {
-            builder.setConfig(chart.getConfig());
+            try {
+                builder.setConfig(MapperUtils.objectMapper.writeValueAsString(chart.getConfig()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
         if (chart.getQueryOption() != null && !chart.getQueryOption().isEmpty()) {
             builder.setQueryOption(chart.getQueryOption());
@@ -87,7 +93,11 @@ public class ChartServiceGrpcImpl extends ChartServiceGrpc.ChartServiceImplBase 
             builder.description(chartProto.getDescription());
         }
         if (chartProto.getConfig() != null && !chartProto.getConfig().isEmpty()) {
-            builder.config(chartProto.getConfig());
+            try {
+                builder.config(MapperUtils.objectMapper.readTree(chartProto.getConfig()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
         if (chartProto.getQueryOption() != null && !chartProto.getQueryOption().isEmpty()) {
             builder.queryOption(chartProto.getQueryOption());
