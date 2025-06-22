@@ -12,6 +12,7 @@ import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.repository.ChartRepository;
@@ -82,11 +83,17 @@ public class ChartServiceImpl implements ChartService {
     }
 
     @Override
-    public ChartDto createChart(Long userId, ChartDto chartDto) {
-        if (StringUtils.isNullOrEmpty(chartDto.getName())) {
+    public ChartDto createChart(Long userId, CreateChartRequest request) {
+        if (StringUtils.isNullOrEmpty(request.getName())) {
             throw new InvalidInputException("name");
         }
 
+        ChartDto chartDto = ChartDto.builder()
+                .config(request.getConfig())
+                .name(request.getName())
+                .description(request.getDescription())
+                .sqlQuery(request.getSqlQuery())
+                .build();
         Chart chart = ChartMapper.toChart(chartDto);
         chart.setId(SnowflakeIdGenerator.getInstance().generateId());
         chart.setUserId(userId);

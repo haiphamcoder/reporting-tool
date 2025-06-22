@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllChartsResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.ChartService;
@@ -38,7 +39,7 @@ public class ChartController {
                         .id(chart.getId())
                         .name(chart.getName())
                         .description(chart.getDescription())
-                        .type(chart.getConfig().getType())
+                        .type(chart.getConfig().getType().getValue())
                         .createdAt(chart.getCreatedAt())
                         .updatedAt(chart.getModifiedAt())
                         .build())
@@ -57,23 +58,9 @@ public class ChartController {
 
     @PostMapping
     public ResponseEntity<Object> create(@CookieValue(name = "user-id") Long userId,
-            @RequestBody ChartDto chartDto) {
-        ChartDto createdChart = chartService.createChart(userId, chartDto);
+            @RequestBody CreateChartRequest request) {
+        ChartDto createdChart = chartService.createChart(userId, request);
         return ResponseEntity.ok(ApiResponse.success(createdChart, "Chart created successfully"));
-    }
-
-    @PostMapping("/init")
-    public ResponseEntity<ApiResponse<Object>> init(@CookieValue(name = "user-id") Long userId,
-            @RequestBody ChartDto chartDto) {
-        // Init chart by chartDto
-        return ResponseEntity.ok(ApiResponse.success(null, "Chart initialized successfully"));
-    }
-
-    @PostMapping("/{chart-id}/confirm")
-    public ResponseEntity<ApiResponse<Object>> confirm(@CookieValue(name = "user-id") Long userId,
-            @PathVariable("chart-id") Long chartId) {
-        // Confirm chart by chartId
-        return ResponseEntity.ok(ApiResponse.success(null, "Chart confirmed successfully"));
     }
 
     @PutMapping("/{chart-id}")

@@ -23,7 +23,7 @@ message ChartProto {
   int64 user_id = 3;
   string description = 4;
   string config = 5;
-  string query_option = 6;
+  string sql_query = 6;
   bool is_deleted = 7;
 }
 

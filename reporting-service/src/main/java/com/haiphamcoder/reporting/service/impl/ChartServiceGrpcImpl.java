@@ -75,8 +75,8 @@ public class ChartServiceGrpcImpl extends ChartServiceGrpc.ChartServiceImplBase 
                 throw new RuntimeException(e);
             }
         }
-        if (chart.getQueryOption() != null && !chart.getQueryOption().isEmpty()) {
-            builder.setQueryOption(chart.getQueryOption());
+        if (!StringUtils.isNullOrEmpty(chart.getSqlQuery())) {
+            builder.setSqlQuery(chart.getSqlQuery());
         }
         builder.setIsDeleted(chart.getIsDeleted());
         return builder.build();
@@ -99,8 +99,8 @@ public class ChartServiceGrpcImpl extends ChartServiceGrpc.ChartServiceImplBase 
                 throw new RuntimeException(e);
             }
         }
-        if (chartProto.getQueryOption() != null && !chartProto.getQueryOption().isEmpty()) {
-            builder.queryOption(chartProto.getQueryOption());
+        if (!StringUtils.isNullOrEmpty(chartProto.getSqlQuery())) {
+            builder.sqlQuery(chartProto.getSqlQuery());
         }
         builder.isDeleted(chartProto.getIsDeleted());
         return builder.build();

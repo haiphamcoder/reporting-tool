@@ -53,8 +53,8 @@ public class Chart {
     @Convert(converter = JsonNodeStringConverter.class)
     private JsonNode config;
 
-    @Column(name = "query_option", nullable = false)
-    private String queryOption;
+    @Column(name = "sql_query", nullable = true)
+    private String sqlQuery;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

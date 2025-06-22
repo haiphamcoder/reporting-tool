@@ -5,7 +5,6 @@ import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.ChartDtoBuilder;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.Chart.ChartBuilder;
-import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -25,8 +24,7 @@ public class ChartMapper {
                                         ? MapperUtils.objectMapper.readValue(chart.getConfig().toString(),
                                                         ChartDto.ChartConfig.class)
                                         : null);
-                        builder.queryOption(
-                                        MapperUtils.objectMapper.readValue(chart.getQueryOption(), QueryOption.class));
+                        builder.sqlQuery(chart.getSqlQuery());
                         builder.isDeleted(chart.getIsDeleted());
                         builder.createdAt(chart.getCreatedAt());
                         builder.modifiedAt(chart.getModifiedAt());
@@ -51,9 +49,8 @@ public class ChartMapper {
                                 builder.config(MapperUtils.objectMapper.readTree(
                                                 MapperUtils.objectMapper.writeValueAsString(chartDto.getConfig())));
                         }
-                        if (chartDto.getQueryOption() != null) {
-                                builder.queryOption(
-                                                MapperUtils.objectMapper.writeValueAsString(chartDto.getQueryOption()));
+                        if (!StringUtils.isNullOrEmpty(chartDto.getSqlQuery())) {
+                                builder.sqlQuery(chartDto.getSqlQuery());
                         }
                         if (chartDto.getIsDeleted() != null) {
                                 builder.isDeleted(chartDto.getIsDeleted());
@@ -84,8 +81,8 @@ public class ChartMapper {
                 if (chartDto.getConfig() != null) {
                         result.setConfig(chartDto.getConfig());
                 }
-                if (chartDto.getQueryOption() != null) {
-                        result.setQueryOption(chartDto.getQueryOption());
+                if (!StringUtils.isNullOrEmpty(chartDto.getSqlQuery())) {
+                        result.setSqlQuery(chartDto.getSqlQuery());
                 }
                 if (chartDto.getIsDeleted() != null) {
                         result.setIsDeleted(chartDto.getIsDeleted());
