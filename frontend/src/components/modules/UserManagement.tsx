@@ -34,6 +34,7 @@ import { useAuth } from '../../context/AuthContext';
 import { GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-data-grid';
 import CustomizedDataGrid from '../CustomizedDataGrid';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
+import { useLocation } from 'react-router-dom';
 
 interface User {
   id: string; // Changed from user_id to id
@@ -67,6 +68,7 @@ interface UserMetadata {
 
 export default function UserManagement() {
   const { user } = useAuth();
+  const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
   const [users, setUsers] = useState<User[]>([]);
@@ -94,6 +96,47 @@ export default function UserManagement() {
     password: ''
   });
 
+  // Function to update URL with pagination parameters
+  const updateURLWithPagination = (page: number, size: number) => {
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set('page', page.toString());
+    urlParams.set('pageSize', size.toString());
+    
+    // Preserve other URL parameters
+    const newSearch = urlParams.toString();
+    const newPath = `/dashboard/user-management${newSearch ? `?${newSearch}` : ''}`;
+    
+    window.history.replaceState(null, '', newPath);
+  };
+
+  // Function to get pagination parameters from URL
+  const getPaginationFromURL = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const page = parseInt(urlParams.get('page') || '0', 10);
+    const size = parseInt(urlParams.get('pageSize') || '10', 10);
+    return { page, size };
+  };
+
+  // Initialize URL with default pagination values on first load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const hasPageParam = urlParams.has('page');
+    const hasPageSizeParam = urlParams.has('pageSize');
+    
+    // If URL doesn't have pagination parameters, add default values
+    if (!hasPageParam || !hasPageSizeParam) {
+      const defaultPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
+      const defaultSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
+      
+      urlParams.set('page', defaultPage.toString());
+      urlParams.set('pageSize', defaultSize.toString());
+      
+      const newSearch = urlParams.toString();
+      const newPath = `/dashboard/user-management?${newSearch}`;
+      window.history.replaceState(null, '', newPath);
+    }
+  }, []); // Only run once on mount
+
   const fetchUsers = async (page: number = 0, pageSize: number = 10) => {
     try {
       setLoading(true);
@@ -120,8 +163,8 @@ export default function UserManagement() {
           total_elements: 0,
           number_of_elements: 0,
           total_pages: 0,
-          current_page: 0,
-          page_size: 10
+          current_page: page,
+          page_size: pageSize
         });
         setLoading(false);
       } else {
@@ -136,8 +179,9 @@ export default function UserManagement() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const { page, size } = getPaginationFromURL();
+    fetchUsers(page, size);
+  }, [location.search]); // Listen to location.search changes
 
   useEffect(() => {
     console.log('Users state changed:', users);
@@ -148,6 +192,7 @@ export default function UserManagement() {
   }, [metadata]);
 
   const handlePageChange = (model: GridPaginationModel) => {
+    updateURLWithPagination(model.page, model.pageSize);
     fetchUsers(model.page, model.pageSize);
   };
 

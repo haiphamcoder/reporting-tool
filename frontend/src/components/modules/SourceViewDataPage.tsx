@@ -6,7 +6,7 @@ import { GridColDef } from '@mui/x-data-grid';
 import CustomizedDataGrid from '../CustomizedDataGrid';
 import { Button, Stack, Alert, CircularProgress } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../../config/api';
 
@@ -24,12 +24,54 @@ interface PreviewData {
 
 export default function SourceViewDataPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { source_id } = useParams();
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+
+  // Function to update URL with pagination parameters
+  const updateURLWithPagination = (page: number, size: number) => {
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set('page', page.toString());
+    urlParams.set('pageSize', size.toString());
+    
+    // Preserve other URL parameters
+    const newSearch = urlParams.toString();
+    const newPath = `/dashboard/sources/${source_id}/view-data${newSearch ? `?${newSearch}` : ''}`;
+    
+    navigate(newPath, { replace: true });
+  };
+
+  // Function to get pagination parameters from URL
+  const getPaginationFromURL = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const page = parseInt(urlParams.get('page') || '0', 10);
+    const size = parseInt(urlParams.get('pageSize') || '10', 10);
+    return { page, size };
+  };
+
+  // Initialize URL with default pagination values on first load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const hasPageParam = urlParams.has('page');
+    const hasPageSizeParam = urlParams.has('pageSize');
+    
+    // If URL doesn't have pagination parameters, add default values
+    if (!hasPageParam || !hasPageSizeParam) {
+      const defaultPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
+      const defaultSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
+      
+      urlParams.set('page', defaultPage.toString());
+      urlParams.set('pageSize', defaultSize.toString());
+      
+      const newSearch = urlParams.toString();
+      const newPath = `/dashboard/sources/${source_id}/view-data?${newSearch}`;
+      navigate(newPath, { replace: true });
+    }
+  }, [source_id]); // Run when source_id changes
 
   const handleBack = () => {
     navigate('/dashboard/sources');
@@ -64,11 +106,9 @@ export default function SourceViewDataPage() {
 
         if (data.result && data.result.schema && data.result.records) {
           // Expected structure: { schema: [...], records: [...] }
-          console.log('Using schema and records structure');
           previewDataToSet = data.result;
         } else if (data.result && Array.isArray(data.result)) {
           // If result is an array, treat it as records
-          console.log('Using array as records structure');
           previewDataToSet = {
             schema: data.result.length > 0 ? Object.keys(data.result[0]).map(key => ({
               field_name: key,
@@ -82,13 +122,11 @@ export default function SourceViewDataPage() {
           // If result is an object, try to extract schema and records
           if (data.result.sources) {
             // This might be the sources list response
-            console.log('Detected sources list response, not preview data');
             setError('This endpoint returns sources list, not preview data');
             return;
           }
 
           // Try to treat the object as a single record
-          console.log('Using object as single record structure');
           previewDataToSet = {
             schema: Object.keys(data.result).map(key => ({
               field_name: key,
@@ -99,21 +137,17 @@ export default function SourceViewDataPage() {
             records: [data.result]
           };
         } else {
-          console.log('Unexpected data structure:', data.result);
           setError('Unexpected data structure from API');
           return;
         }
 
-        console.log('Processed preview data:', previewDataToSet);
         setPreviewData(previewDataToSet);
         setCurrentPage(page);
         setPageSize(size);
       } else {
-        console.log('API returned success: false');
         setError(data.message || 'Failed to fetch preview data');
       }
     } catch (error) {
-      console.error('Error in fetchSourcePreview:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch preview data');
     } finally {
       setLoading(false);
@@ -121,6 +155,7 @@ export default function SourceViewDataPage() {
   };
 
   const handlePageChange = (page: number, size: number) => {
+    updateURLWithPagination(page, size);
     fetchSourceData(page, size);
   };
 
@@ -130,19 +165,15 @@ export default function SourceViewDataPage() {
 
   // Fetch data on component mount
   useEffect(() => {
-    console.log('SourcePreview useEffect - source_id:', source_id);
     if (source_id) {
-      console.log('Fetching preview data for source_id:', source_id);
-      fetchSourceData(0, 10);
+      const { page, size } = getPaginationFromURL();
+      fetchSourceData(page, size);
     } else {
       console.log('No source_id in useEffect');
     }
-  }, [source_id]);
-
-  console.log('SourcePreview render - source_id:', source_id, 'loading:', loading, 'error:', error, 'previewData:', previewData);
+  }, [source_id, location.search]); // Also listen to location.search changes
 
   if (!source_id) {
-    console.log('Rendering error: Source ID not found');
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">Source ID not found</Alert>
@@ -151,7 +182,6 @@ export default function SourceViewDataPage() {
   }
 
   if (loading && !previewData) {
-    console.log('Rendering loading state');
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
         <CircularProgress />
@@ -160,7 +190,6 @@ export default function SourceViewDataPage() {
   }
 
   if (error) {
-    console.log('Rendering error state:', error);
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error" onClose={() => setError(null)}>
@@ -171,7 +200,6 @@ export default function SourceViewDataPage() {
   }
 
   if (!previewData) {
-    console.log('Rendering no data state');
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="info">No preview data available</Alert>
@@ -179,11 +207,8 @@ export default function SourceViewDataPage() {
     );
   }
 
-  console.log('Rendering preview data with records:', previewData.records?.length);
-
   // Validate schema and records
   if (!previewData.schema || !Array.isArray(previewData.schema) || previewData.schema.length === 0) {
-    console.log('Invalid schema, creating default columns from records');
     const firstRecord = previewData.records && previewData.records.length > 0 ? previewData.records[0] : {};
     const columns: GridColDef[] = Object.keys(firstRecord).map((key) => ({
       field: key,
@@ -266,8 +291,6 @@ export default function SourceViewDataPage() {
           }}
           disableColumnMenu
           disableRowSelectionOnClick
-          columnBufferPx={2}
-          density="compact"
           disableColumnResize
           paginationMode="server"
           rowCount={-1}
@@ -277,7 +300,6 @@ export default function SourceViewDataPage() {
             pageSize: pageSize
           }}
           onPaginationModelChange={(model) => {
-            console.log('Pagination changed:', model);
             handlePageChange(model.page, model.pageSize);
           }}
           loading={loading}
@@ -377,7 +399,6 @@ export default function SourceViewDataPage() {
           pageSize: pageSize
         }}
         onPaginationModelChange={(model) => {
-          console.log('Pagination changed:', model);
           handlePageChange(model.page, model.pageSize);
         }}
         loading={loading}

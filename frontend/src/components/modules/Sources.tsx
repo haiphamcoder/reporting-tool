@@ -96,18 +96,67 @@ export default function Sources() {
         }
     });
 
-    // Check for success parameter in URL
+    // Function to update URL with pagination parameters
+    const updateURLWithPagination = (page: number, size: number) => {
+        const urlParams = new URLSearchParams(location.search);
+        urlParams.set('page', page.toString());
+        urlParams.set('pageSize', size.toString());
+        
+        // Preserve other URL parameters (like success)
+        const newSearch = urlParams.toString();
+        const newPath = `/dashboard/sources${newSearch ? `?${newSearch}` : ''}`;
+        
+        navigate(newPath, { replace: true });
+    };
+
+    // Function to get pagination parameters from URL
+    const getPaginationFromURL = () => {
+        const urlParams = new URLSearchParams(location.search);
+        const page = parseInt(urlParams.get('page') || '0', 10);
+        const size = parseInt(urlParams.get('pageSize') || '10', 10);
+        return { page, size };
+    };
+
+    // Check for success parameter in URL and pagination parameters
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         const successParam = urlParams.get('success');
+        const { page, size } = getPaginationFromURL();
 
         if (successParam === 'updated') {
             setSuccess('Source updated successfully');
             setShowSuccessPopup(true);
-            // Clear the URL parameter
-            navigate('/dashboard/sources', { replace: true });
+            // Clear only the success parameter, keep pagination
+            urlParams.delete('success');
+            const newSearch = urlParams.toString();
+            const newPath = `/dashboard/sources${newSearch ? `?${newSearch}` : ''}`;
+            navigate(newPath, { replace: true });
         }
+
+        // Update pagination state from URL
+        setCurrentPage(page);
+        setPageSize(size);
     }, [location.search, navigate]);
+
+    // Initialize URL with default pagination values on first load
+    useEffect(() => {
+        const urlParams = new URLSearchParams(location.search);
+        const hasPageParam = urlParams.has('page');
+        const hasPageSizeParam = urlParams.has('pageSize');
+        
+        // If URL doesn't have pagination parameters, add default values
+        if (!hasPageParam || !hasPageSizeParam) {
+            const defaultPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
+            const defaultSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
+            
+            urlParams.set('page', defaultPage.toString());
+            urlParams.set('pageSize', defaultSize.toString());
+            
+            const newSearch = urlParams.toString();
+            const newPath = `/dashboard/sources?${newSearch}`;
+            navigate(newPath, { replace: true });
+        }
+    }, []); // Only run once on mount
 
     const fetchSources = async (page: number = 0, pageSize: number = 10) => {
         try {
@@ -159,10 +208,12 @@ export default function Sources() {
     };
 
     useEffect(() => {
-        fetchSources();
+        const { page, size } = getPaginationFromURL();
+        fetchSources(page, size);
     }, []);
 
     const handlePageChange = (page: number, size: number) => {
+        updateURLWithPagination(page, size);
         fetchSources(page, size);
     };
 
