@@ -21,6 +21,7 @@ export const API_CONFIG = {
         SOURCE_GET_SCHEMA: '/data-processing/sources/schema',
         SOURCE_DETAILS: '/reporting/sources/:id',
         CHARTS: '/reporting/charts',
+        REPORTS: '/reporting/reports',
         USER_MANAGEMENT: '/user-management',
     }
 } as const;

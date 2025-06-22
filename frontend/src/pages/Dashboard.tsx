@@ -12,7 +12,7 @@ import Header from "../components/Header";
 import MainGrid from "../components/MainGrid";
 import SourceEditPage from "../pages/SourceEditPage";
 import SourceViewDataPage from "../components/modules/SourceViewDataPage";
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 const xThemeComponents = {
     ...chartsCustomizations,
@@ -22,8 +22,6 @@ const xThemeComponents = {
 };
 
 export default function Dashboard(props: { disableCustomTheme?: boolean }) {
-    const location = useLocation();
-    console.log('Dashboard - location.pathname:', location.pathname);
     
     return (
         <AppTheme {...props} themeComponents={xThemeComponents}>
