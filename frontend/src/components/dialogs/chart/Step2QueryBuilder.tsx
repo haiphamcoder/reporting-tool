@@ -323,7 +323,26 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 }
 
                 // 1. Gọi API convertQuery
-                const convertRes = await chartApi.convertQuery(queryOption);
+                // Chuẩn hóa group_by giống fields
+                const normalizedGroupBy = (queryOption.group_by || []).map(gb => {
+                    const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === gb);
+                    if (f) {
+                        return {
+                            field_name: f.field_name,
+                            data_type: f.field_type,
+                            alias: f.alias || '',
+                            source_id: f.source_id,
+                            source_name: f.source_name,
+                            field_mapping: f.field_mapping
+                        };
+                    }
+                    return { field_name: gb };
+                });
+                const queryOptionWithNormalizedGroupBy = {
+                    ...queryOption,
+                    group_by: normalizedGroupBy
+                };
+                const convertRes = await chartApi.convertQuery(queryOptionWithNormalizedGroupBy);
                 if (!convertRes.success || !convertRes.result) {
                     throw new Error(convertRes.message || 'Failed to convert query');
                 }
@@ -334,7 +353,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                     data_type: f.data_type,
                     alias: f.alias || ''
                 }));
-                // 3. Gọi API previewData
+                // 3. Gọi API previewData (KHÔNG truyền group_by)
                 const previewRes = await chartApi.previewData({ sql_query, fields });
                 if (previewRes.success) {
                     setPreviewData(previewRes.result);
@@ -354,8 +373,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 config: {
                     type: 'table' as ChartType, // Default type for preview
                     mode: chartMode,
-                    ...(chartMode === 'basic' ? { query_option: queryOption } : {}), 
-                    ...(chartMode === 'advanced' && { sql_query: sqlQuery })
+                    ...((chartMode as string) === 'basic' ? { query_option: queryOption } : {}),
+                    ...((chartMode as string) === 'advanced' ? { sql_query: sqlQuery } : {})
                 }
             };
 
@@ -924,18 +943,34 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                     <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
                         Group By
                     </Typography>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Group By Fields"
-                        value={queryOption.group_by?.join(', ') || ''}
-                        onChange={(e) => onQueryOptionChange({
-                            ...queryOption,
-                            group_by: e.target.value.split(',').map(f => f.trim()).filter(f => f)
-                        })}
-                        placeholder="field1, field2, field3"
-                        helperText="Separate multiple fields with commas"
-                    />
+                    <FormControl fullWidth>
+                        <InputLabel>Group By Fields</InputLabel>
+                        <Select
+                            multiple
+                            size="small"
+                            value={queryOption.group_by || []}
+                            onChange={(e) => {
+                                const value = e.target.value as string[];
+                                onQueryOptionChange({
+                                    ...queryOption,
+                                    group_by: value
+                                });
+                            }}
+                            label="Group By Fields"
+                            renderValue={(selected) =>
+                                (selected as string[]).map(sel => {
+                                    const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === sel);
+                                    return f ? `${f.source_name}.${f.field_mapping}` : sel;
+                                }).join(', ')
+                            }
+                        >
+                            {allSourceFields.map((f, i) => (
+                                <MenuItem key={i} value={`${f.source_id}.${f.field_mapping}`}>
+                                    {`${f.source_name}.${f.field_mapping}`}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </CardContent>
             </Card>
 
@@ -1026,15 +1061,15 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 </Alert>
             )}
 
-            {chartMode === 'basic' ? renderBasicMode() : renderAdvancedMode()}
-
-            {/* Data Preview */}
+            {/* HIỂN THỊ PREVIEW DATA NGAY DƯỚI NÚT */}
             {previewData && (
                 <DataPreview
                     data={previewData}
                     showSuccess={true}
                 />
             )}
+
+            {chartMode === 'basic' ? renderBasicMode() : renderAdvancedMode()}
         </Box>
     );
 };

@@ -35,7 +35,7 @@ public class QueryOption {
     private Pagination pagination;
 
     @JsonProperty("group_by")
-    private List<String> groupBy;
+    private List<Field> groupBy;
 
     @JsonProperty("aggregations")
     private List<Aggregation> aggregations;

@@ -75,7 +75,18 @@ public class QueryOptionToSqlConverter {
         // GROUP BY clause
         if (queryOption.getGroupBy() != null && !queryOption.getGroupBy().isEmpty()) {
             sql.append(" GROUP BY ")
-               .append(String.join(", ", queryOption.getGroupBy()));
+               .append(queryOption.getGroupBy().stream()
+                    .map(field -> {
+                        String sourceId = field.getSourceId();
+                        String tableName = sourceTableNames.get(sourceId);
+                        String fieldMapping = field.getFieldMapping();
+                        String alias = field.getAlias();
+                        if (alias != null && !alias.isEmpty()) {
+                            return String.format("%s", alias);
+                        }
+                        return String.format("%s.%s", tableName, fieldMapping);
+                    })
+                    .collect(Collectors.joining(", ")));
         }
 
         // HAVING clause (for aggregations)

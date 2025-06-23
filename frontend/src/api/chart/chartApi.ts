@@ -195,7 +195,7 @@ export const chartApi = {
     },
 
     // Preview data with SQL query and fields
-    previewData: async (body: { sql_query: string; fields: any[] }): Promise<any> => {
+    previewData: async (body: { sql_query: string; fields: any[]; group_by?: any[] }): Promise<any> => {
         try {
             const response = await fetch(`${API_CONFIG.BASE_URL}/data-processing/charts/preview-data`, {
                 method: 'POST',

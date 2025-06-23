@@ -20,11 +20,25 @@ interface DataPreviewProps {
 }
 
 const DataPreview: React.FC<DataPreviewProps> = ({ data, showSuccess = false }) => {
-    if (!data || !data.columns || !data.rows) {
-        return null;
+    // Hỗ trợ cả kiểu cũ (columns/rows) và kiểu mới (schema/records)
+    let columns: string[] = [];
+    let rows: any[] = [];
+
+    if (data) {
+        if (data.columns && data.rows) {
+            // Kiểu cũ
+            columns = data.columns;
+            rows = data.rows;
+        } else if (data.schema && data.records) {
+            // Kiểu mới
+            columns = data.schema.filter((col: any) => !col.is_hidden).map((col: any) => col.field_name);
+            rows = data.records;
+        }
     }
 
-    const { columns, rows } = data;
+    if (!columns.length || !rows.length) {
+        return null;
+    }
 
     return (
         <Box sx={{ mt: 2 }}>
@@ -61,22 +75,22 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data, showSuccess = false }) 
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows.slice(0, 10).map((row: any[], rowIndex: number) => (
+                            {rows.slice(0, 10).map((row: any, rowIndex: number) => (
                                 <TableRow key={rowIndex}>
-                                    {row.map((cell: any, cellIndex: number) => (
+                                    {columns.map((col, cellIndex) => (
                                         <TableCell key={cellIndex}>
-                                            {typeof cell === 'boolean' ? (
+                                            {typeof row[col] === 'boolean' ? (
                                                 <Chip 
-                                                    label={cell ? 'Yes' : 'No'} 
-                                                    color={cell ? 'success' : 'default'}
+                                                    label={row[col] ? 'Yes' : 'No'} 
+                                                    color={row[col] ? 'success' : 'default'}
                                                     size="small"
                                                 />
-                                            ) : cell === null || cell === undefined ? (
+                                            ) : row[col] === null || row[col] === undefined ? (
                                                 <Typography variant="body2" color="text.secondary">
                                                     null
                                                 </Typography>
                                             ) : (
-                                                String(cell)
+                                                String(row[col])
                                             )}
                                         </TableCell>
                                     ))}
