@@ -321,8 +321,32 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 if (!queryOption.fields || queryOption.fields.length === 0) {
                     throw new Error('Please add at least one field');
                 }
+
+                // 1. Gọi API convertQuery
+                const convertRes = await chartApi.convertQuery(queryOption);
+                if (!convertRes.success || !convertRes.result) {
+                    throw new Error(convertRes.message || 'Failed to convert query');
+                }
+                const sql_query = convertRes.result;
+                // 2. Chuẩn bị fields cho API previewData (chỉ lấy field_name, data_type, alias)
+                const fields = (queryOption.fields || []).map(f => ({
+                    field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
+                    data_type: f.data_type,
+                    alias: f.alias || ''
+                }));
+                // 3. Gọi API previewData
+                const previewRes = await chartApi.previewData({ sql_query, fields });
+                if (previewRes.success) {
+                    setPreviewData(previewRes.result);
+                    onPreviewData(previewRes.result);
+                    onPreviewSuccess(true);
+                } else {
+                    throw new Error(previewRes.message || 'Failed to preview data');
+                }
+                return;
             }
 
+            // Advanced mode giữ nguyên
             // Create chart data for preview
             const chartData = {
                 name: 'Preview Chart',
@@ -330,7 +354,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 config: {
                     type: 'table' as ChartType, // Default type for preview
                     mode: chartMode,
-                    ...(chartMode === 'basic' && { query_option: queryOption }),
+                    ...(chartMode === 'basic' ? { query_option: queryOption } : {}), 
                     ...(chartMode === 'advanced' && { sql_query: sqlQuery })
                 }
             };

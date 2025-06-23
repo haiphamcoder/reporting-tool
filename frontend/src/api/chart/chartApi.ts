@@ -168,4 +168,50 @@ export const chartApi = {
         }
     },
     
+    // Convert queryOption to SQL query
+    convertQuery: async (queryOption: any): Promise<{ success: boolean; result?: string; message?: string }> => {
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/reporting/charts/convert-query`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(queryOption),
+            });
+            const data = await response.json();
+            return {
+                success: data.success,
+                result: data.result,
+                message: data.message
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Failed to convert query'
+            };
+        }
+    },
+
+    // Preview data with SQL query and fields
+    previewData: async (body: { sql_query: string; fields: any[] }): Promise<any> => {
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/data-processing/charts/preview-data`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+            return response.json();
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Failed to preview data'
+            };
+        }
+    },
 }; 

@@ -57,7 +57,7 @@ public class DataProcessingController {
         return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
     }
 
-    @GetMapping("/charts/preview-data")
+    @PostMapping("/charts/preview-data")
     public ResponseEntity<ApiResponse<Object>> getPreviewData(
             @CookieValue(value = "user-id", required = true) Long userId,
             @RequestBody(required = true) GetChartPreviewDataRequest request,
