@@ -1,6 +1,8 @@
 package com.haiphamcoder.reporting.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -15,6 +17,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenExce
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
+import com.haiphamcoder.reporting.domain.model.QueryOption.Join;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
@@ -121,6 +124,23 @@ public class ChartServiceImpl implements ChartService {
         if (sourceUserId != userId) {
             throw new ForbiddenException("You are not allowed to access this source");
         }
-        return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName());
+        Map<String, String> sourceTableNames = new HashMap<>();
+        sourceTableNames.put(source.get().getId().toString(), source.get().getTableName());
+
+        List<Join> joins = queryOption.getJoins();
+        if (joins != null && !joins.isEmpty()) {
+            for (Join join : joins) {
+                Optional<Source> joinSource = sourceRepository.getSourceById(Long.parseLong(join.getTable()));
+                if (joinSource.isEmpty()) {
+                    throw new ResourceNotFoundException("Source", join.getTable());
+                }
+                long joinSourceUserId = joinSource.get().getUserId();
+                if (joinSourceUserId != userId) {
+                    throw new ForbiddenException("You are not allowed to access this source");
+                }
+                sourceTableNames.put(joinSource.get().getId().toString(), joinSource.get().getTableName());
+            }
+        }
+        return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
     }
 }

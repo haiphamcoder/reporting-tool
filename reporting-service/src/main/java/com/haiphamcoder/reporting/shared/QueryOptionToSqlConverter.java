@@ -1,19 +1,18 @@
 package com.haiphamcoder.reporting.shared;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class QueryOptionToSqlConverter {
 
-    public static String convertToSql(QueryOption queryOption, String tableName) {
-        if (queryOption == null || !StringUtils.hasText(tableName)) {
-            throw new IllegalArgumentException("QueryOption and tableName must not be null or empty");
+    public static String convertToSql(QueryOption queryOption, String mainTableName, Map<String, String> sourceTableNames) {
+        if (queryOption == null || sourceTableNames == null || sourceTableNames.isEmpty() || !StringUtils.hasText(mainTableName)) {
+            throw new IllegalArgumentException("QueryOption and sourceTableNames must not be null or empty");
         }
 
         StringBuilder sql = new StringBuilder();
@@ -23,12 +22,14 @@ public class QueryOptionToSqlConverter {
         if (queryOption.getFields() != null && !queryOption.getFields().isEmpty()) {
             sql.append(queryOption.getFields().stream()
                     .map(field -> {
-                        String fieldName = field.getFieldName();
+                        String sourceId = field.getSourceId();
+                        String tableName = sourceTableNames.get(sourceId);
+                        String fieldMapping = field.getFieldMapping();
                         String alias = field.getAlias();
                         if (alias != null && !alias.isEmpty()) {
-                            return String.format("%s AS %s", fieldName, alias);
+                            return String.format("%s.%s AS %s", tableName, fieldMapping, alias);
                         }
-                        return fieldName;
+                        return String.format("%s.%s", tableName, fieldMapping);
                     })
                     .collect(Collectors.joining(", ")));
         } else {
@@ -36,23 +37,19 @@ public class QueryOptionToSqlConverter {
         }
 
         // FROM clause
-        sql.append(" FROM ").append(tableName);
+        sql.append(" FROM ").append(mainTableName);
 
         // JOIN clauses
         if (queryOption.getJoins() != null && !queryOption.getJoins().isEmpty()) {
             for (QueryOption.Join join : queryOption.getJoins()) {
                 sql.append(" ").append(join.getType()).append(" JOIN ")
-                   .append(join.getTable());
-                
-                if (StringUtils.hasText(join.getAlias())) {
-                    sql.append(" AS ").append(join.getAlias());
-                }
+                   .append(sourceTableNames.get(join.getTable()));
 
                 if (join.getConditions() != null && !join.getConditions().isEmpty()) {
                     sql.append(" ON ");
                     List<String> conditions = new ArrayList<>();
                     for (QueryOption.JoinCondition condition : join.getConditions()) {
-                        String joinCondition = buildJoinCondition(condition);
+                        String joinCondition = buildJoinCondition(condition, sourceTableNames);
                         if (joinCondition != null) {
                             conditions.add(joinCondition);
                         }
@@ -67,7 +64,7 @@ public class QueryOptionToSqlConverter {
             sql.append(" WHERE ");
             List<String> conditions = new ArrayList<>();
             for (QueryOption.Filter filter : queryOption.getFilters()) {
-                String condition = buildFilterCondition(filter);
+                String condition = buildFilterCondition(filter, sourceTableNames);
                 if (condition != null) {
                     conditions.add(condition);
                 }
@@ -116,7 +113,7 @@ public class QueryOptionToSqlConverter {
         return sql.toString();
     }
 
-    private static String buildJoinCondition(QueryOption.JoinCondition condition) {
+    private static String buildJoinCondition(QueryOption.JoinCondition condition, Map<String, String> sourceTableNames) {
         if (condition == null || !StringUtils.hasText(condition.getLeftField()) || 
             !StringUtils.hasText(condition.getRightField()) || 
             !StringUtils.hasText(condition.getOperator())) {
@@ -126,24 +123,28 @@ public class QueryOptionToSqlConverter {
         String operator = condition.getOperator().toUpperCase();
         String leftField = condition.getLeftField();
         String rightField = condition.getRightField();
+        String leftSourceId = condition.getLeftSourceId();
+        String rightSourceId = condition.getRightSourceId();
+        String leftTableName = sourceTableNames.get(leftSourceId);
+        String rightTableName = sourceTableNames.get(rightSourceId);
 
         switch (operator) {
             case "EQ":
-                return String.format("%s = %s", leftField, rightField);
+                return String.format("%s.%s = %s.%s", leftTableName, leftField, rightTableName, rightField);
             case "GT":
-                return String.format("%s > %s", leftField, rightField);
+                return String.format("%s.%s > %s.%s", leftTableName, leftField, rightTableName, rightField);
             case "GTE":
-                return String.format("%s >= %s", leftField, rightField);
+                return String.format("%s.%s >= %s.%s", leftTableName, leftField, rightTableName, rightField);
             case "LT":
-                return String.format("%s < %s", leftField, rightField);
+                return String.format("%s.%s < %s.%s", leftTableName, leftField, rightTableName, rightField);
             case "LTE":
-                return String.format("%s <= %s", leftField, rightField);
+                return String.format("%s.%s <= %s.%s", leftTableName, leftField, rightTableName, rightField);
             default:
                 return null;
         }
     }
 
-    private static String buildFilterCondition(QueryOption.Filter filter) {
+    private static String buildFilterCondition(QueryOption.Filter filter, Map<String, String> sourceTableNames) {
         if (filter == null || !StringUtils.hasText(filter.getField()) || 
             !StringUtils.hasText(filter.getOperator()) || filter.getValue() == null) {
             return null;
@@ -152,26 +153,28 @@ public class QueryOptionToSqlConverter {
         String operator = filter.getOperator().toUpperCase();
         Object value = filter.getValue();
         String field = filter.getField();
+        String sourceId = filter.getSourceId();
+        String tableName = sourceTableNames.get(sourceId);
 
         switch (operator) {
             case "EQ":
-                return String.format("%s = %s", field, formatValue(value));
+                return String.format("%s.%s = %s", tableName, field, formatValue(value));
             case "NEQ":
-                return String.format("%s != %s", field, formatValue(value));
+                return String.format("%s.%s != %s", tableName, field, formatValue(value));
             case "GT":
-                return String.format("%s > %s", field, formatValue(value));
+                return String.format("%s.%s > %s", tableName, field, formatValue(value));
             case "GTE":
-                return String.format("%s >= %s", field, formatValue(value));
+                return String.format("%s.%s >= %s", tableName, field, formatValue(value));
             case "LT":
-                return String.format("%s < %s", field, formatValue(value));
+                return String.format("%s.%s < %s", tableName, field, formatValue(value));
             case "LTE":
-                return String.format("%s <= %s", field, formatValue(value));
+                return String.format("%s.%s <= %s", tableName, field, formatValue(value));
             case "LIKE":
-                return String.format("%s LIKE %s", field, formatValue("%" + value + "%"));
+                return String.format("%s.%s LIKE %s", tableName, field, formatValue("%" + value + "%"));
             case "IN":
                 if (value instanceof List) {
                     List<?> values = (List<?>) value;
-                    return String.format("%s IN (%s)", field, 
+                    return String.format("%s.%s IN (%s)", tableName, field, 
                         values.stream()
                             .map(QueryOptionToSqlConverter::formatValue)
                             .collect(Collectors.joining(", ")));
@@ -210,162 +213,5 @@ public class QueryOptionToSqlConverter {
             return value.toString();
         }
         return "'" + value.toString() + "'";
-    }
-
-    public static void main(String[] args) throws JsonProcessingException {
-        // Test case 1: Basic query with fields and filters
-        QueryOption basicQuery = QueryOption.builder()
-            .fields(Arrays.asList(
-                new QueryOption.Field("id", "INTEGER", "user_id"),
-                new QueryOption.Field("name", "VARCHAR", "user_name"),
-                new QueryOption.Field("email", "VARCHAR", null)
-            ))
-            .filters(Arrays.asList(
-                new QueryOption.Filter("status", "EQ", "active"),
-                new QueryOption.Filter("age", "GT", 18)
-            ))
-            .build();
-        String queryOptionString = MapperUtils.objectMapper.writeValueAsString(basicQuery);
-        System.out.println(queryOptionString);
-        System.out.println("Test Case 1 - Basic Query:");
-        System.out.println(convertToSql(basicQuery, "users"));
-        System.out.println("\n");
-
-        // Test case 2: Query with joins
-        QueryOption joinQuery = QueryOption.builder()
-            .fields(Arrays.asList(
-                new QueryOption.Field("u.id", "INTEGER", "user_id"),
-                new QueryOption.Field("u.name", "VARCHAR", "user_name"),
-                new QueryOption.Field("o.id", "INTEGER", "order_id"),
-                new QueryOption.Field("o.amount", "DECIMAL", "order_amount")
-            ))
-            .joins(Arrays.asList(
-                QueryOption.Join.builder()
-                    .table("orders")
-                    .type("LEFT")
-                    .alias("o")
-                    .conditions(Arrays.asList(
-                        QueryOption.JoinCondition.builder()
-                            .leftField("u.id")
-                            .rightField("o.user_id")
-                            .operator("EQ")
-                            .build()
-                    ))
-                    .build()
-            ))
-            .filters(Arrays.asList(
-                new QueryOption.Filter("u.status", "EQ", "active"),
-                new QueryOption.Filter("o.created_at", "GT", "2024-01-01")
-            ))
-            .build();
-        queryOptionString = MapperUtils.objectMapper.writeValueAsString(joinQuery);
-        System.out.println(queryOptionString);
-        System.out.println("Test Case 2 - Query with Joins:");
-        System.out.println(convertToSql(joinQuery, "users u"));
-        System.out.println("\n");
-
-        // Test case 3: Query with group by and aggregations
-        QueryOption aggregationQuery = QueryOption.builder()
-            .fields(Arrays.asList(
-                new QueryOption.Field("department", "VARCHAR", null),
-                new QueryOption.Field("COUNT(*)", "INTEGER", "employee_count"),
-                new QueryOption.Field("AVG(salary)", "DECIMAL", "avg_salary")
-            ))
-            .groupBy(Arrays.asList("department"))
-            .aggregations(Arrays.asList(
-                new QueryOption.Aggregation("salary", "AVG", "avg_salary"),
-                new QueryOption.Aggregation("id", "COUNT", "employee_count")
-            ))
-            .filters(Arrays.asList(
-                new QueryOption.Filter("status", "EQ", "active")
-            ))
-            .build();
-        queryOptionString = MapperUtils.objectMapper.writeValueAsString(aggregationQuery);
-        System.out.println(queryOptionString);
-        System.out.println("Test Case 3 - Query with Group By and Aggregations:");
-        System.out.println(convertToSql(aggregationQuery, "employees"));
-        System.out.println("\n");
-
-        // Test case 4: Query with pagination and sorting
-        QueryOption paginationQuery = QueryOption.builder()
-            .fields(Arrays.asList(
-                new QueryOption.Field("id", "INTEGER", null),
-                new QueryOption.Field("name", "VARCHAR", null),
-                new QueryOption.Field("created_at", "TIMESTAMP", null)
-            ))
-            .sort(Arrays.asList(
-                new QueryOption.Sort("created_at", "DESC"),
-                new QueryOption.Sort("name", "ASC")
-            ))
-            .pagination(new QueryOption.Pagination(2, 10, null))
-            .build();
-        queryOptionString = MapperUtils.objectMapper.writeValueAsString(paginationQuery);
-        System.out.println(queryOptionString);
-        System.out.println("Test Case 4 - Query with Pagination and Sorting:");
-        System.out.println(convertToSql(paginationQuery, "users"));
-        System.out.println("\n");
-
-        // Test case 5: Complex query with multiple joins and conditions
-        QueryOption complexQuery = QueryOption.builder()
-            .fields(Arrays.asList(
-                new QueryOption.Field("u.id", "INTEGER", "user_id"),
-                new QueryOption.Field("u.name", "VARCHAR", "user_name"),
-                new QueryOption.Field("o.id", "INTEGER", "order_id"),
-                new QueryOption.Field("p.name", "VARCHAR", "product_name"),
-                new QueryOption.Field("c.name", "VARCHAR", "category_name")
-            ))
-            .joins(Arrays.asList(
-                QueryOption.Join.builder()
-                    .table("orders")
-                    .type("LEFT")
-                    .alias("o")
-                    .conditions(Arrays.asList(
-                        QueryOption.JoinCondition.builder()
-                            .leftField("u.id")
-                            .rightField("o.user_id")
-                            .operator("EQ")
-                            .build()
-                    ))
-                    .build(),
-                QueryOption.Join.builder()
-                    .table("products")
-                    .type("INNER")
-                    .alias("p")
-                    .conditions(Arrays.asList(
-                        QueryOption.JoinCondition.builder()
-                            .leftField("o.product_id")
-                            .rightField("p.id")
-                            .operator("EQ")
-                            .build()
-                    ))
-                    .build(),
-                QueryOption.Join.builder()
-                    .table("categories")
-                    .type("LEFT")
-                    .alias("c")
-                    .conditions(Arrays.asList(
-                        QueryOption.JoinCondition.builder()
-                            .leftField("p.category_id")
-                            .rightField("c.id")
-                            .operator("EQ")
-                            .build()
-                    ))
-                    .build()
-            ))
-            .filters(Arrays.asList(
-                new QueryOption.Filter("u.status", "EQ", "active"),
-                new QueryOption.Filter("o.created_at", "GT", "2024-01-01"),
-                new QueryOption.Filter("p.price", "GT", 100),
-                new QueryOption.Filter("c.name", "IN", Arrays.asList("Electronics", "Books"))
-            ))
-            .sort(Arrays.asList(
-                new QueryOption.Sort("o.created_at", "DESC")
-            ))
-            .pagination(new QueryOption.Pagination(1, 20, null))
-            .build();
-        queryOptionString = MapperUtils.objectMapper.writeValueAsString(complexQuery);
-        System.out.println(queryOptionString);
-        System.out.println("Test Case 5 - Complex Query with Multiple Joins:");
-        System.out.println(convertToSql(complexQuery, "users u"));
     }
 }

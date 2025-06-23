@@ -58,6 +58,16 @@ public class QueryOption {
 
         @JsonProperty("alias")
         private String alias;
+
+        @JsonProperty("source_id")
+        private String sourceId;
+
+        @JsonProperty("source_name")
+        private String sourceName;
+
+        @JsonProperty("field_mapping")
+        private String fieldMapping;
+
     }
 
     @Data
@@ -75,6 +85,18 @@ public class QueryOption {
 
         @JsonProperty("value")
         private Object value;
+
+        @JsonProperty("data_type")
+        private String dataType;
+
+        @JsonProperty("source_id")
+        private String sourceId;
+
+        @JsonProperty("source_name")
+        private String sourceName;
+
+        @JsonProperty("field_mapping")
+        private String fieldMapping;
     }
 
     @Data
@@ -152,6 +174,13 @@ public class QueryOption {
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class JoinCondition {
+
+        @JsonProperty("left_source_id")
+        private String leftSourceId;
+
+        @JsonProperty("right_source_id")
+        private String rightSourceId;
+
         @JsonProperty("left_field")
         private String leftField;
 

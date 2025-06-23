@@ -14,12 +14,19 @@ export interface FieldConfig {
     field_name: string;
     data_type: string;
     alias: string;
+    source_id?: string;
+    source_name?: string;
+    field_mapping?: string;
 }
 
 export interface FilterConfig {
     field: string;
     operator: 'EQ' | 'NE' | 'GT' | 'GTE' | 'LT' | 'LTE' | 'LIKE' | 'IN' | 'NOT_IN';
     value: string | number | boolean | Array<string | number>;
+    data_type?: string;
+    source_id?: string;
+    source_name?: string;
+    field_mapping?: string;
 }
 
 export interface SortConfig {

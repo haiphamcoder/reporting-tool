@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -51,6 +51,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
     const [previewData, setPreviewData] = useState<any>(null);
     const [sources, setSources] = useState<any[]>([]);
     const [sourcesLoading, setSourcesLoading] = useState(false);
+    const [sourceMappings, setSourceMappings] = useState<{ [sourceId: string]: any[] }>({}); // { sourceId: mapping[] }
+    const [allSourceFields, setAllSourceFields] = useState<any[]>([]); // [{ source_id, source_name, field_mapping, field_type }]
 
     // Load sources on component mount
     useEffect(() => {
@@ -60,6 +62,16 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 const response = await chartApi.getSourcesList();
                 if (response.success && response.data) {
                     setSources(response.data);
+                    // Tổng hợp tất cả các field từ field_mapping của tất cả các source, kèm source_id và source_name
+                    const allFields = response.data.flatMap((source: any) =>
+                        (source.field_mapping || []).map((field: any) => ({
+                            source_id: source.id,
+                            source_name: source.name,
+                            field_name: field.field_name,
+                            data_type: field.data_type
+                        }))
+                    );
+                    setAllSourceFields(allFields);
                 }
             } catch (error) {
                 console.error('Failed to load sources:', error);
@@ -69,7 +81,71 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
         };
 
         loadSources();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Hàm lấy chi tiết source và lưu mapping vào state
+    const fetchSourceMapping = useCallback(async (sourceId: string, sourceName: string) => {
+        if (!sourceId || sourceMappings[sourceId]) return;
+        try {
+            const detail = await chartApi.getDetailsSource(sourceId);
+            console.log('detail', detail);
+            const mapping = detail.mapping || [];
+            setSourceMappings(prev => ({ ...prev, [sourceId]: mapping.map((m: any) => ({ ...m, source_id: sourceId, source_name: sourceName })) }));
+        } catch (e) {
+            // handle error nếu cần
+        }
+    }, [sourceMappings]);
+
+    // Khi chọn main table hoặc join table, fetch mapping nếu chưa có
+    useEffect(() => {
+        // Main table
+        if (queryOption.table) {
+            const mainSource = sources.find(s => s.id === queryOption.table);
+            if (mainSource) fetchSourceMapping(mainSource.id, mainSource.name);
+        }
+        // Join tables
+        (queryOption.joins || []).forEach(join => {
+            if (join.table) {
+                const joinSource = sources.find(s => s.id === join.table);
+                if (joinSource) fetchSourceMapping(joinSource.id, joinSource.name);
+            }
+        });
+    }, [queryOption.table, queryOption.joins, sources, fetchSourceMapping]);
+
+    // Tổng hợp field cho combobox từ các source đã chọn (main + join)
+    useEffect(() => {
+        let fields: any[] = [];
+        // Main table
+        if (queryOption.table && sourceMappings[queryOption.table]) {
+            const mainSource = sources.find(s => s.id === queryOption.table);
+            fields = fields.concat(
+                sourceMappings[queryOption.table].map(f => ({
+                    source_id: queryOption.table,
+                    source_name: mainSource?.name || '',
+                    field_mapping: f.field_mapping,
+                    field_name: f.field_name,
+                    field_type: f.field_type
+                }))
+            );
+        }
+        // Join tables
+        (queryOption.joins || []).forEach(join => {
+            if (join.table && sourceMappings[join.table]) {
+                const joinSource = sources.find(s => s.id === join.table);
+                fields = fields.concat(
+                    sourceMappings[join.table].map(f => ({
+                        source_id: join.table,
+                        source_name: joinSource?.name || '',
+                        field_mapping: f.field_mapping,
+                        field_name: f.field_name,
+                        field_type: f.field_type
+                    }))
+                );
+            }
+        });
+        setAllSourceFields(fields);
+    }, [queryOption.table, queryOption.joins, sourceMappings, sources]);
 
     const handleAddField = () => {
         const newField: FieldConfig = {
@@ -275,6 +351,59 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
             onPreviewSuccess(false);
         } finally {
             setPreviewLoading(false);
+        }
+    };
+
+    // Khi user chọn field mới, tự động cập nhật data_type tương ứng
+    const handleFieldNameChange = (index: number, value: string) => {
+        // value dạng: source_id.field_mapping
+        const [source_id, ...fieldMappingParts] = value.split('.');
+        const field_mapping = fieldMappingParts.join('.');
+        const found = allSourceFields.find(f => f.source_id === source_id && f.field_mapping === field_mapping);
+        if (found) {
+            handleUpdateField(index, {
+                field_name: found.field_name,
+                data_type: found.field_type,
+                source_id: found.source_id,
+                source_name: found.source_name,
+                field_mapping: found.field_mapping
+            });
+        }
+    };
+
+    // Lấy danh sách operator phù hợp với data_type
+    const getOperatorsByDataType = (dataType?: string): FilterConfig['operator'][] => {
+        if (!dataType) return ['EQ', 'NE'];
+        const type = dataType.toLowerCase();
+        if (type.includes('char') || type.includes('text') || type === 'string') {
+            return ['EQ', 'NE', 'LIKE', 'IN', 'NOT_IN'];
+        }
+        if (type.includes('int') || type.includes('float') || type.includes('double') || type === 'number' || type === 'decimal') {
+            return ['EQ', 'NE', 'GT', 'GTE', 'LT', 'LTE', 'IN', 'NOT_IN'];
+        }
+        if (type.includes('date') || type.includes('time')) {
+            return ['EQ', 'NE', 'GT', 'GTE', 'LT', 'LTE'];
+        }
+        if (type === 'boolean' || type === 'bool') {
+            return ['EQ', 'NE'];
+        }
+        return ['EQ', 'NE'];
+    };
+
+    // Khi user chọn field cho filter, tự động lưu data_type
+    const handleFilterFieldChange = (index: number, value: string) => {
+        const [source_id, ...fieldMappingParts] = value.split('.');
+        const field_mapping = fieldMappingParts.join('.');
+        const found = allSourceFields.find(f => f.source_id === source_id && f.field_mapping === field_mapping);
+        if (found) {
+            handleUpdateFilter(index, {
+                field: found.field_name,
+                data_type: found.field_type,
+                source_id: found.source_id,
+                source_name: found.source_name,
+                field_mapping: found.field_mapping,
+                operator: getOperatorsByDataType(found.field_type)[0] // default operator
+            });
         }
     };
 
@@ -491,57 +620,98 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                         </Button>
                     </Box>
 
-                    {queryOption.fields.map((field, index) => (
-                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                            <Grid item xs={4}>
-                                <TextField
-                                    fullWidth
-                                    label="Field Name"
-                                    size="small"
-                                    value={field.field_name}
-                                    onChange={(e) => handleUpdateField(index, { field_name: e.target.value })}
-                                    placeholder="e.g., customer_name, SUM(sales)"
-                                />
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Data Type</InputLabel>
-                                    <Select
-                                        size="small"
-                                        value={field.data_type}
-                                        onChange={(e) => handleUpdateField(index, { data_type: e.target.value })}
+                    {queryOption.fields.map((field, index) => {
+                        // Danh sách field chưa được chọn ở các dòng khác
+                        const selectedFieldKeys = queryOption.fields
+                            .filter((_, i) => i !== index)
+                            .map(f => f.source_id && f.field_mapping ? `${f.source_id}.${f.field_mapping}` : '');
+                        const availableFields = allSourceFields.filter(f => !selectedFieldKeys.includes(`${f.source_id}.${f.field_mapping}`));
+                        // Xác định trạng thái loading mapping
+                        const mainTableSelected = !!queryOption.table;
+                        const mainTableMappingLoaded = queryOption.table && sourceMappings[queryOption.table];
+                        const joinTableIds = (queryOption.joins || []).map(j => j.table).filter(Boolean);
+                        const joinMappingsLoaded = joinTableIds.every(jid => sourceMappings[jid]);
+                        const mappingLoading = mainTableSelected && (!mainTableMappingLoaded || !joinMappingsLoaded);
+                        // Sửa lại: chỉ disable khi chưa chọn bảng hoặc mapping đang loading
+                        const disableFieldSelect = !mainTableSelected || mappingLoading;
+                        return (
+                            <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                                <Grid item xs={4}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Field Name</InputLabel>
+                                        <Select
+                                            size="small"
+                                            value={field.source_id && field.field_mapping ? `${field.source_id}.${field.field_mapping}` : ''}
+                                            label="Field Name"
+                                            onChange={(e) => handleFieldNameChange(index, e.target.value)}
+                                            disabled={disableFieldSelect}
+                                            renderValue={selected => {
+                                                if (mappingLoading) return 'Đang tải fields...';
+                                                if (!mainTableSelected) return 'Chọn bảng để lấy field';
+                                                if (!selected) return '';
+                                                const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === selected);
+                                                return f ? `${f.source_name}.${f.field_mapping}` : '';
+                                            }}
+                                        >
+                                            {mappingLoading && (
+                                                <MenuItem disabled>
+                                                    <CircularProgress size={18} sx={{ mr: 1 }} /> Đang tải fields...
+                                                </MenuItem>
+                                            )}
+                                            {!mainTableSelected && (
+                                                <MenuItem disabled>Chọn bảng để lấy field</MenuItem>
+                                            )}
+                                            {availableFields.length === 0 && !mappingLoading && mainTableSelected && (
+                                                <MenuItem disabled>Không còn field để chọn</MenuItem>
+                                            )}
+                                            {availableFields.map((f, i) => (
+                                                <MenuItem key={i} value={`${f.source_id}.${f.field_mapping}`}>
+                                                    {`${f.source_name}.${f.field_mapping}`}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {/* Debug: Hiển thị số lượng field thực tế */}
+                                        <Box sx={{ mt: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {`Số field khả dụng: ${allSourceFields.length}`}
+                                            </Typography>
+                                        </Box>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={3}>
+                                    <TextField
+                                        fullWidth
                                         label="Data Type"
+                                        size="small"
+                                        value={field.data_type || ''}
+                                        InputProps={{ readOnly: true }}
+                                        disabled
+                                    />
+                                </Grid>
+                                <Grid item xs={3}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        label="Alias"
+                                        value={field.alias}
+                                        onChange={(e) => handleUpdateField(index, { alias: e.target.value })}
+                                        placeholder="Display name"
+                                        disabled={disableFieldSelect || !(field.source_id && field.field_mapping)}
+                                    />
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => handleRemoveField(index)}
+                                        color="error"
+                                        sx={{ alignSelf: 'center', justifySelf: 'center' }}
                                     >
-                                        <MenuItem value="VARCHAR">VARCHAR</MenuItem>
-                                        <MenuItem value="INTEGER">INTEGER</MenuItem>
-                                        <MenuItem value="DECIMAL">DECIMAL</MenuItem>
-                                        <MenuItem value="DATE">DATE</MenuItem>
-                                        <MenuItem value="BOOLEAN">BOOLEAN</MenuItem>
-                                    </Select>
-                                </FormControl>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={3}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Alias"
-                                    value={field.alias}
-                                    onChange={(e) => handleUpdateField(index, { alias: e.target.value })}
-                                    placeholder="Display name"
-                                />
-                            </Grid>
-                            <Grid item xs={2}>
-                                <IconButton
-                                    size="small"
-                                    onClick={() => handleRemoveField(index)}
-                                    color="error"
-                                    sx={{ alignSelf: 'center', justifySelf: 'center' }}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    ))}
+                        );
+                    })}
                 </CardContent>
             </Card>
 
@@ -633,60 +803,94 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                         </Button>
                     </Box>
 
-                    {(queryOption.filters || []).map((filter, index) => (
-                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                            <Grid item xs={3}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Field"
-                                    value={filter.field}
-                                    onChange={(e) => handleUpdateFilter(index, { field: e.target.value })}
-                                    placeholder="Field name"
-                                />
-                            </Grid>
-                            <Grid item xs={2}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Operator</InputLabel>
-                                    <Select
-                                        value={filter.operator}
+                    {(queryOption.filters || []).map((filter, index) => {
+                        // Danh sách field chưa được chọn ở các filter khác
+                        const selectedFieldKeys = (queryOption.filters || [])
+                            .filter((_, i) => i !== index)
+                            .map(f => f.source_id && f.field_mapping ? `${f.source_id}.${f.field_mapping}` : '');
+                        const availableFields = allSourceFields.filter(f => !selectedFieldKeys.includes(`${f.source_id}.${f.field_mapping}`));
+                        const disableFieldSelect = !queryOption.table || Object.keys(sourceMappings).length === 0;
+                        const operatorOptions = getOperatorsByDataType(filter.data_type);
+                        return (
+                            <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                                <Grid item xs={3}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Field</InputLabel>
+                                        <Select
+                                            size="small"
+                                            value={filter.source_id && filter.field_mapping ? `${filter.source_id}.${filter.field_mapping}` : ''}
+                                            label="Field"
+                                            onChange={(e) => handleFilterFieldChange(index, e.target.value)}
+                                            disabled={disableFieldSelect}
+                                            renderValue={selected => {
+                                                if (!queryOption.table) return 'Chọn bảng để lấy field';
+                                                if (!selected) return '';
+                                                const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === selected);
+                                                return f ? `${f.source_name}.${f.field_mapping}` : '';
+                                            }}
+                                        >
+                                            {!queryOption.table && (
+                                                <MenuItem disabled>Chọn bảng để lấy field</MenuItem>
+                                            )}
+                                            {availableFields.length === 0 && queryOption.table && (
+                                                <MenuItem disabled>Không còn field để chọn</MenuItem>
+                                            )}
+                                            {availableFields.map((f, i) => (
+                                                <MenuItem key={i} value={`${f.source_id}.${f.field_mapping}`}>{`${f.source_name}.${f.field_mapping}`}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Operator</InputLabel>
+                                        <Select
+                                            value={filter.operator}
+                                            size="small"
+                                            onChange={(e) => handleUpdateFilter(index, { operator: e.target.value as any })}
+                                            label="Operator"
+                                            disabled={!filter.data_type}
+                                        >
+                                            {operatorOptions.map(op => (
+                                                <MenuItem key={op} value={op}>{
+                                                    op === 'EQ' ? '=' :
+                                                    op === 'NE' ? '≠' :
+                                                    op === 'GT' ? '>' :
+                                                    op === 'GTE' ? '≥' :
+                                                    op === 'LT' ? '<' :
+                                                    op === 'LTE' ? '≤' :
+                                                    op === 'LIKE' ? 'LIKE' :
+                                                    op === 'IN' ? 'IN' :
+                                                    op === 'NOT_IN' ? 'NOT IN' : op
+                                                }</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={5}>
+                                    <TextField
+                                        fullWidth
                                         size="small"
-                                        onChange={(e) => handleUpdateFilter(index, { operator: e.target.value as any })}
-                                        label="Operator"
+                                        label="Value"
+                                        value={filter.value}
+                                        onChange={(e) => handleUpdateFilter(index, { value: e.target.value })}
+                                        placeholder="Filter value"
+                                        disabled={!filter.data_type}
+                                    />
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => handleRemoveFilter(index)}
+                                        color="error"
+                                        sx={{ alignSelf: 'center', justifySelf: 'center' }}
                                     >
-                                        <MenuItem value="EQ">=</MenuItem>
-                                        <MenuItem value="NE">≠</MenuItem>
-                                        <MenuItem value="GT">&gt;</MenuItem>
-                                        <MenuItem value="GTE">≥</MenuItem>
-                                        <MenuItem value="LT">&lt;</MenuItem>
-                                        <MenuItem value="LTE">≤</MenuItem>
-                                        <MenuItem value="LIKE">LIKE</MenuItem>
-                                        <MenuItem value="IN">IN</MenuItem>
-                                    </Select>
-                                </FormControl>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={5}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Value"
-                                    value={filter.value}
-                                    onChange={(e) => handleUpdateFilter(index, { value: e.target.value })}
-                                    placeholder="Filter value"
-                                />
-                            </Grid>
-                            <Grid item xs={2}>
-                                <IconButton
-                                    size="small"
-                                    onClick={() => handleRemoveFilter(index)}
-                                    color="error"
-                                    sx={{ alignSelf: 'center', justifySelf: 'center' }}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    ))}
+                        );
+                    })}
                 </CardContent>
             </Card>
 

@@ -1,5 +1,6 @@
 import { CreateChartRequest, ChartPreviewResponse } from '../../types/chart';
 import { API_CONFIG } from '../../config/api';
+import { SourceDetail } from '../../types/source';
 
 export const chartApi = {
     // Create new chart
@@ -144,5 +145,27 @@ export const chartApi = {
                 message: error instanceof Error ? error.message : 'Failed to fetch sources'
             };
         }
-    }
+    },
+
+    getDetailsSource: async (sourceId: string): Promise<SourceDetail> => {
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response.json().then(data => data.result);
+        } catch (error) {
+            console.error('Error fetching source details:', error);
+            throw error;
+        }
+    },
+    
 }; 
