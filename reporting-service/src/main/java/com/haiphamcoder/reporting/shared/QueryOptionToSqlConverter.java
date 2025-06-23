@@ -24,9 +24,11 @@ public class QueryOptionToSqlConverter {
             sql.append(queryOption.getFields().stream()
                     .map(field -> {
                         String fieldName = field.getFieldName();
-                        return field.getAlias() != null ? 
-                            String.format("%s AS %s", fieldName, field.getAlias()) : 
-                            fieldName;
+                        String alias = field.getAlias();
+                        if (alias != null && !alias.isEmpty()) {
+                            return String.format("%s AS %s", fieldName, alias);
+                        }
+                        return fieldName;
                     })
                     .collect(Collectors.joining(", ")));
         } else {

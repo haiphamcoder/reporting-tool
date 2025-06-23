@@ -10,15 +10,20 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
+import com.haiphamcoder.reporting.domain.entity.Source;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.repository.ChartRepository;
+import com.haiphamcoder.reporting.repository.SourceRepository;
 import com.haiphamcoder.reporting.service.ChartService;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.Pair;
+import com.haiphamcoder.reporting.shared.QueryOptionToSqlConverter;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -30,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChartServiceImpl implements ChartService {
     private final ChartRepository chartRepository;
+    private final SourceRepository sourceRepository;
 
     @Override
     public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, Integer page, Integer limit) {
@@ -105,4 +111,16 @@ public class ChartServiceImpl implements ChartService {
         return ChartMapper.toChartDto(savedChart);
     }
 
+    @Override
+    public String convertQueryToSql(Long userId, QueryOption queryOption) {
+        Optional<Source> source = sourceRepository.getSourceById(Long.parseLong(queryOption.getTable()));
+        if (source.isEmpty()) {
+            throw new ResourceNotFoundException("Source", queryOption.getTable());
+        }
+        long sourceUserId = source.get().getUserId();
+        if (sourceUserId != userId) {
+            throw new ForbiddenException("You are not allowed to access this source");
+        }
+        return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName());
+    }
 }

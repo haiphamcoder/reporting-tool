@@ -19,6 +19,9 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QueryOption {
 
+    @JsonProperty("table")
+    private String table;
+
     @JsonProperty("fields")
     private List<Field> fields;
 

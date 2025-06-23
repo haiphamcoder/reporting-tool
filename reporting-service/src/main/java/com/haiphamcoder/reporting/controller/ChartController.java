@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllChartsResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -47,6 +48,13 @@ public class ChartController {
                 .metadata(charts.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Charts fetched successfully"));
+    }
+
+    @PostMapping("/convert-query")
+    public ResponseEntity<ApiResponse<Object>> convertQuery(@CookieValue(name = "user-id") Long userId,
+            @RequestBody QueryOption queryOption) {
+        String sql = chartService.convertQueryToSql(userId, queryOption);
+        return ResponseEntity.ok(ApiResponse.success(sql, "Query converted successfully"));
     }
 
     @GetMapping("/{chart-id}")
