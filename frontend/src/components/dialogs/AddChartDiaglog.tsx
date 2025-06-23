@@ -209,10 +209,35 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
     const handlePreviewData = (data: any) => {
         setPreviewData(data);
 
-        // Auto-populate chart configuration based on available fields
-        if (data?.columns?.length > 0) {
-            const fields = data.columns;
+        // Hỗ trợ cả kiểu cũ (columns/rows) và kiểu mới (schema/records)
+        let fields: string[] = [];
+        
+        if (data) {
+            if (data.columns && data.rows) {
+                // Kiểu cũ
+                fields = data.columns;
+            } else if (data.schema && data.records) {
+                // Kiểu mới
+                fields = data.schema
+                    .filter((col: any) => !col.is_hidden)
+                    .map((col: any) => col.field_name);
+            } else if (data.result && data.result.columns) {
+                // Có thể API trả về { result: { columns: [], rows: [] } }
+                fields = data.result.columns;
+            } else if (data.data && data.data.columns) {
+                // Có thể API trả về { data: { columns: [], rows: [] } }
+                fields = data.data.columns;
+            } else if (data.records && data.records.length > 0) {
+                // Fallback: lấy fields từ record đầu tiên
+                fields = Object.keys(data.records[0]);
+            } else if (data.rows && data.rows.length > 0) {
+                // Fallback: lấy fields từ row đầu tiên
+                fields = Object.keys(data.rows[0]);
+            }
+        }
 
+        // Auto-populate chart configuration based on available fields
+        if (fields.length > 0) {
             switch (chartType) {
                 case 'bar':
                     setBarChartConfig({

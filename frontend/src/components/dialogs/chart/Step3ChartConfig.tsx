@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Typography,
@@ -14,11 +14,33 @@ import {
     FormControlLabel,
     Slider,
     Divider,
-    Alert
+    Alert,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    IconButton
 } from '@mui/material';
 import {
-    ShowChart as ChartIcon
+    ShowChart as ChartIcon,
+    Preview as PreviewIcon,
+    Close as CloseIcon
 } from '@mui/icons-material';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+    LineElement,
+    PointElement,
+    Filler
+} from 'chart.js';
+import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
 import { 
     ChartType, 
     BarChartConfig, 
@@ -26,6 +48,20 @@ import {
     LineChartConfig, 
     AreaChartConfig, 
     TableConfig} from '../../../types/chart';
+
+// Register Chart.js components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+    LineElement,
+    PointElement,
+    Filler
+);
 
 interface Step3ChartConfigProps {
     chartType: ChartType;
@@ -56,7 +92,355 @@ const Step3ChartConfig: React.FC<Step3ChartConfigProps> = ({
     onAreaChartConfigChange,
     onTableConfigChange
 }) => {
-    const availableFields = previewData?.columns || [];
+    const [previewOpen, setPreviewOpen] = useState(false);
+    
+    // Hỗ trợ cả kiểu cũ (columns/rows) và kiểu mới (schema/records)
+    let availableFields: string[] = [];
+    
+    if (previewData) {
+        if (previewData.columns && previewData.rows) {
+            // Kiểu cũ
+            availableFields = previewData.columns;
+        } else if (previewData.schema && previewData.records) {
+            // Kiểu mới
+            availableFields = previewData.schema
+                .filter((col: any) => !col.is_hidden)
+                .map((col: any) => col.field_name);
+        } else if (previewData.result && previewData.result.columns) {
+            // Có thể API trả về { result: { columns: [], rows: [] } }
+            availableFields = previewData.result.columns;
+        } else if (previewData.data && previewData.data.columns) {
+            // Có thể API trả về { data: { columns: [], rows: [] } }
+            availableFields = previewData.data.columns;
+        } else if (previewData.records && previewData.records.length > 0) {
+            // Fallback: lấy fields từ record đầu tiên
+            availableFields = Object.keys(previewData.records[0]);
+        } else if (previewData.rows && previewData.rows.length > 0) {
+            // Fallback: lấy fields từ row đầu tiên
+            availableFields = Object.keys(previewData.rows[0]);
+        }
+    }
+
+    // Generate chart data for preview
+    const generateChartData = () => {
+        if (!previewData || availableFields.length === 0) return null;
+
+        let data: any[] = [];
+        let labels: string[] = [];
+
+        // Extract data based on structure
+        if (previewData.rows && previewData.rows.length > 0) {
+            data = previewData.rows.slice(0, 10); // Limit to 10 rows for preview
+        } else if (previewData.records && previewData.records.length > 0) {
+            data = previewData.records.slice(0, 10); // Limit to 10 rows for preview
+        }
+
+        if (data.length === 0) return null;
+
+        // Generate labels from first field
+        const firstField = availableFields[0];
+        labels = data.map(row => String(row[firstField] || 'N/A'));
+
+        return { data, labels };
+    };
+
+    const renderBarChartPreview = () => {
+        const chartData = generateChartData();
+        if (!chartData) return <Typography>No data available for preview</Typography>;
+
+        const { data, labels } = chartData;
+        const yField = barChartConfig.y_axis || availableFields[1] || availableFields[0];
+        
+        const chartConfig = {
+            labels,
+            datasets: [{
+                label: barChartConfig.y_axis_label || yField,
+                data: data.map(row => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                stack: barChartConfig.stacked ? 'stack1' : undefined,
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: (barChartConfig.orientation === 'horizontal' ? 'y' : 'x') as 'x' | 'y',
+            plugins: {
+                legend: {
+                    position: 'top' as const,
+                },
+                title: {
+                    display: true,
+                    text: 'Bar Chart Preview'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: barChartConfig.orientation === 'horizontal' 
+                            ? (barChartConfig.x_axis_label || barChartConfig.x_axis || availableFields[0])
+                            : (barChartConfig.y_axis_label || yField)
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: barChartConfig.orientation === 'horizontal'
+                            ? (barChartConfig.y_axis_label || yField)
+                            : (barChartConfig.x_axis_label || barChartConfig.x_axis || availableFields[0])
+                    }
+                }
+            }
+        };
+
+        return (
+            <Box sx={{ height: 400 }}>
+                <Bar data={chartConfig} options={options} />
+            </Box>
+        );
+    };
+
+    const renderPieChartPreview = () => {
+        const chartData = generateChartData();
+        if (!chartData) return <Typography>No data available for preview</Typography>;
+
+        const { data } = chartData;
+        const labelField = pieChartConfig.label_field || availableFields[0];
+        const valueField = pieChartConfig.value_field || availableFields[1] || availableFields[0];
+        
+        const chartConfig = {
+            labels: data.map(row => String(row[labelField] || 'N/A')),
+            datasets: [{
+                data: data.map(row => {
+                    const value = row[valueField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                ],
+                borderWidth: 1,
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top' as const,
+                    display: pieChartConfig.show_legend !== false,
+                },
+                title: {
+                    display: true,
+                    text: 'Pie Chart Preview'
+                }
+            }
+        };
+
+        const ChartComponent = pieChartConfig.donut ? Doughnut : Pie;
+        return (
+            <Box sx={{ height: 400 }}>
+                <ChartComponent data={chartConfig} options={options} />
+            </Box>
+        );
+    };
+
+    const renderLineChartPreview = () => {
+        const chartData = generateChartData();
+        if (!chartData) return <Typography>No data available for preview</Typography>;
+
+        const { data, labels } = chartData;
+        const yField = lineChartConfig.y_axis || availableFields[1] || availableFields[0];
+        
+        const chartConfig = {
+            labels,
+            datasets: [{
+                label: lineChartConfig.y_axis_label || yField,
+                data: data.map(row => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: lineChartConfig.fill_area ? 'rgba(75, 192, 192, 0.2)' : 'transparent',
+                borderWidth: 2,
+                fill: lineChartConfig.fill_area || false,
+                tension: lineChartConfig.smooth ? 0.4 : 0,
+                pointRadius: lineChartConfig.show_points !== false ? 4 : 0,
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top' as const,
+                },
+                title: {
+                    display: true,
+                    text: 'Line Chart Preview'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: lineChartConfig.y_axis_label || yField
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: lineChartConfig.x_axis_label || lineChartConfig.x_axis || availableFields[0]
+                    }
+                }
+            }
+        };
+
+        return (
+            <Box sx={{ height: 400 }}>
+                <Line data={chartConfig} options={options} />
+            </Box>
+        );
+    };
+
+    const renderAreaChartPreview = () => {
+        const chartData = generateChartData();
+        if (!chartData) return <Typography>No data available for preview</Typography>;
+
+        const { data, labels } = chartData;
+        const yField = areaChartConfig.y_axis || availableFields[1] || availableFields[0];
+        
+        const chartConfig = {
+            labels,
+            datasets: [{
+                label: areaChartConfig.y_axis_label || yField,
+                data: data.map(row => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
+                borderColor: 'rgba(255, 159, 64, 1)',
+                backgroundColor: `rgba(255, 159, 64, ${areaChartConfig.opacity || 0.7})`,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+            }]
+        };
+
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top' as const,
+                },
+                title: {
+                    display: true,
+                    text: 'Area Chart Preview'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: areaChartConfig.y_axis_label || yField
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: areaChartConfig.x_axis_label || areaChartConfig.x_axis || availableFields[0]
+                    }
+                }
+            }
+        };
+
+        return (
+            <Box sx={{ height: 400 }}>
+                <Line data={chartConfig} options={options} />
+            </Box>
+        );
+    };
+
+    const renderTablePreview = () => {
+        if (!previewData) return <Typography>No data available for preview</Typography>;
+
+        let data: any[] = [];
+        if (previewData.rows && previewData.rows.length > 0) {
+            data = previewData.rows.slice(0, 5); // Limit to 5 rows for preview
+        } else if (previewData.records && previewData.records.length > 0) {
+            data = previewData.records.slice(0, 5); // Limit to 5 rows for preview
+        }
+
+        if (data.length === 0) return <Typography>No data available for preview</Typography>;
+
+        return (
+            <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ backgroundColor: '#f5f5f5' }}>
+                            {availableFields.map((field, index) => (
+                                <th key={index} style={{ 
+                                    padding: '8px', 
+                                    border: '1px solid #ddd',
+                                    textAlign: 'left',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {field}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.map((row, rowIndex) => (
+                            <tr key={rowIndex} style={{ 
+                                backgroundColor: rowIndex % 2 === 0 ? '#ffffff' : '#f9f9f9' 
+                            }}>
+                                {availableFields.map((field, colIndex) => (
+                                    <td key={colIndex} style={{ 
+                                        padding: '8px', 
+                                        border: '1px solid #ddd' 
+                                    }}>
+                                        {String(row[field] || '')}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </Box>
+        );
+    };
+
+    const renderChartPreview = () => {
+        switch (chartType) {
+            case 'bar':
+                return renderBarChartPreview();
+            case 'pie':
+                return renderPieChartPreview();
+            case 'line':
+                return renderLineChartPreview();
+            case 'area':
+                return renderAreaChartPreview();
+            case 'table':
+                return renderTablePreview();
+            default:
+                return <Typography>Unknown chart type</Typography>;
+        }
+    };
 
     const renderBarChartConfig = () => (
         <Box>
@@ -669,6 +1053,15 @@ const Step3ChartConfig: React.FC<Step3ChartConfigProps> = ({
                 <Typography variant="h6">
                     Chart Configuration
                 </Typography>
+                <Box sx={{ flex: 1 }} />
+                <Button
+                    variant="outlined"
+                    startIcon={<PreviewIcon />}
+                    onClick={() => setPreviewOpen(true)}
+                    disabled={!previewData || availableFields.length === 0}
+                >
+                    Preview Chart
+                </Button>
             </Box>
 
             {!previewData && (
@@ -677,13 +1070,54 @@ const Step3ChartConfig: React.FC<Step3ChartConfigProps> = ({
                 </Alert>
             )}
 
-            {previewData && (
+            {previewData && availableFields.length === 0 && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                    No fields found in the preview data. Please check your query in Step 2.
+                </Alert>
+            )}
+
+            {previewData && availableFields.length > 0 && (
                 <Card>
                     <CardContent>
                         {renderChartConfig()}
                     </CardContent>
                 </Card>
             )}
+
+            {/* Preview Dialog */}
+            <Dialog
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        minHeight: '70vh',
+                        maxHeight: '90vh'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6">
+                            Chart Preview - {chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart
+                        </Typography>
+                        <IconButton onClick={() => setPreviewOpen(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ p: 2 }}>
+                        {renderChartPreview()}
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPreviewOpen(false)}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
