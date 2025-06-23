@@ -11,8 +11,8 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.service.CSVProcessingService;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;

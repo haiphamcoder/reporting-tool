@@ -1,12 +1,8 @@
-package com.haiphamcoder.dataprocessing.domain.model;
-
-import java.util.List;
+package com.haiphamcoder.dataprocessing.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,16 +11,23 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChartData {
+public class Mapping {
 
-    @JsonProperty("schema")
-    private List<Mapping> schema;
+    @JsonProperty("field_name")
+    private String fieldName;
 
-    @JsonProperty("records")
-    private List<JsonNode> records;
+    @JsonProperty("field_mapping")
+    private String fieldMapping;
+
+    @JsonProperty("field_type")
+    private String fieldType;
+
+    @JsonProperty("is_hidden")
+    @Builder.Default
+    private Boolean isHidden = false;
 
 }

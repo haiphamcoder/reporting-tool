@@ -7,12 +7,13 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
-import com.haiphamcoder.dataprocessing.domain.model.ChartData;
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
+import com.haiphamcoder.dataprocessing.domain.model.GetChartPreviewDataRequest;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
@@ -56,14 +57,14 @@ public class DataProcessingController {
         return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
     }
 
-    @GetMapping("/charts/{id}/data")
-    public ResponseEntity<ApiResponse<Object>> getChartData(
-        @CookieValue(value = "user-id", required = true) Long userId,
-        @PathVariable("id") Long chartId,
-        @RequestParam(value = "page", defaultValue = "0") Integer page,
-        @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
-        ChartData chartData = rawDataService.getChartData(chartId, page, limit);
-        return ResponseEntity.ok().body(ApiResponse.success(chartData, "Chart data fetched successfully"));
+    @GetMapping("/charts/preview-data")
+    public ResponseEntity<ApiResponse<Object>> getPreviewData(
+            @CookieValue(value = "user-id", required = true) Long userId,
+            @RequestBody(required = true) GetChartPreviewDataRequest request,
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+        PreviewData previewData = rawDataService.getChartPreviewData(request, page, limit);
+        return ResponseEntity.ok().body(ApiResponse.success(previewData, "Preview data fetched successfully"));
     }
 
 }

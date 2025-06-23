@@ -9,8 +9,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.read.TidbReader;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.write.TidbWriter;
@@ -74,6 +74,16 @@ public class StorageServiceImpl implements StorageService {
             return tidbReader.getPreviewData(tableName, mappings, page, limit);
         } catch (Exception e) {
             log.error("Get preview data failed! {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public List<JSONObject> getPreviewDataByQuery(String sqlQuery) {
+        try (TidbReader tidbReader = new TidbReader(url, username, password)) {
+            return tidbReader.getPreviewDataByQuery(sqlQuery);
+        } catch (Exception e) {
+            log.error("Get preview data by query failed! {}", e.getMessage());
             return new ArrayList<>();
         }
     }

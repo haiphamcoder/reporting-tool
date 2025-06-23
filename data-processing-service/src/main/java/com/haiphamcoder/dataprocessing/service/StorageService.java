@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 
 public interface StorageService {
 
@@ -14,5 +14,7 @@ public interface StorageService {
     List<Mapping> createStorageSource(SourceDto sourceDto);
 
     List<JSONObject> getPreviewData(SourceDto sourceDto, Integer page, Integer limit);
+
+    List<JSONObject> getPreviewDataByQuery(String sqlQuery);
 
 }

@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Component;
 
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.shared.concurrent.TaskManager;

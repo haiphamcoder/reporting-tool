@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.TidbAdapterImpl;
 
 @Slf4j

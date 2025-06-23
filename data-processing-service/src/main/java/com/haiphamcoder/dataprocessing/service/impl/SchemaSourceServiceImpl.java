@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.dataprocessing.config.CommonConstants;
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.exception.ConnectorTypeNotSupportException;
 import com.haiphamcoder.dataprocessing.domain.exception.SourceNotFoundException;
 import com.haiphamcoder.dataprocessing.service.CSVProcessingService;

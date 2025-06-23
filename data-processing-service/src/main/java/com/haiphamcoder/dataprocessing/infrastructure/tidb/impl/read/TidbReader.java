@@ -6,10 +6,11 @@ import java.sql.Statement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONObject;
 
-import com.haiphamcoder.dataprocessing.domain.dto.SourceDto.Mapping;
+import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.infrastructure.tidb.impl.TidbAdapterImpl;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,12 +44,12 @@ public class TidbReader extends TidbAdapterImpl {
         }
     }
 
-    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer page,Integer limit)
+    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer page, Integer limit)
             throws SQLException {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ");
         mappings.forEach(mapping -> {
-            if (mapping.getIsHidden() == false){
+            if (mapping.getIsHidden() == false) {
                 sql.append(mapping.getFieldMapping() + ",");
             }
         });
@@ -59,12 +60,11 @@ public class TidbReader extends TidbAdapterImpl {
         sql.append(limit);
         sql.append(" OFFSET ");
         sql.append(page * limit);
-        
+
         CustomResultSet resultSet = executeQuery(sql.toString());
         List<Map<String, Object>> data = resultSet.getRows();
         List<JSONObject> records = new LinkedList<>();
         for (Map<String, Object> row : data) {
-            log.info("Row: {}", row);
             JSONObject record = new JSONObject();
             for (Mapping mapping : mappings) {
                 if (mapping.getIsHidden() == false) {
@@ -73,7 +73,22 @@ public class TidbReader extends TidbAdapterImpl {
             }
             records.add(record);
         }
-        log.info("Records: {}", records);
+        return records;
+    }
+
+    public List<JSONObject> getPreviewDataByQuery(String sqlQuery) throws SQLException {
+        CustomResultSet resultSet = executeQuery(sqlQuery);
+        List<Map<String, Object>> data = resultSet.getRows();
+
+        List<JSONObject> records = new LinkedList<>();
+        for (Map<String, Object> row : data) {
+            log.info("Row: {}", row);
+            JSONObject record = new JSONObject();
+            for (Entry<String, Object> entry : row.entrySet()) {
+                record.put(entry.getKey(), entry.getValue());
+            }
+            records.add(record);
+        }
         return records;
     }
 
