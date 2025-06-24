@@ -10,7 +10,8 @@ import {
     InputAdornment,
     IconButton,
     Stack,
-    CssBaseline
+    CssBaseline,
+    FormLabel
 } from '@mui/material';
 import { Visibility, VisibilityOff, LockOutlined, LogoutRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -198,79 +199,86 @@ const ChangePasswordPage: React.FC = () => {
                             </Alert>
                         )}
 
-                        <Stack spacing={3}>
-                            <TextField
-                                fullWidth
-                                label="Current Password"
-                                type={showOldPassword ? 'text' : 'password'}
-                                value={oldPassword}
-                                onChange={(e) => setOldPassword(e.target.value)}
-                                required
-                                disabled={isSubmitting}
-                                variant="outlined"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={handleClickShowOldPassword}
-                                                edge="end"
-                                                disabled={isSubmitting}
-                                            >
-                                                {showOldPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="New Password"
-                                type={showNewPassword ? 'text' : 'password'}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                required
-                                disabled={isSubmitting}
-                                variant="outlined"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={handleClickShowNewPassword}
-                                                edge="end"
-                                                disabled={isSubmitting}
-                                            >
-                                                {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                helperText="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Confirm New Password"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                disabled={isSubmitting}
-                                variant="outlined"
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={handleClickShowConfirmPassword}
-                                                edge="end"
-                                                disabled={isSubmitting}
-                                            >
-                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                        <Stack spacing={2}>
+                            <Box>
+                                <FormLabel htmlFor="current-password" required>Current Password</FormLabel>
+                                <TextField
+                                    id="current-password"
+                                    fullWidth
+                                    type={showOldPassword ? 'text' : 'password'}
+                                    value={oldPassword}
+                                    onChange={(e) => setOldPassword(e.target.value)}
+                                    required
+                                    disabled={isSubmitting}
+                                    variant="outlined"
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={handleClickShowOldPassword}
+                                                    edge="end"
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {showOldPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Box>
+                            <Box>
+                                <FormLabel htmlFor="new-password" required>New Password</FormLabel>
+                                <TextField
+                                    id="new-password"
+                                    fullWidth
+                                    type={showNewPassword ? 'text' : 'password'}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                    disabled={isSubmitting}
+                                    variant="outlined"
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={handleClickShowNewPassword}
+                                                    edge="end"
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    helperText="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+                                />
+                            </Box>
+                            <Box>
+                                <FormLabel htmlFor="confirm-password" required>Confirm New Password</FormLabel>
+                                <TextField
+                                    id="confirm-password"
+                                    fullWidth
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                    disabled={isSubmitting}
+                                    variant="outlined"
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={handleClickShowConfirmPassword}
+                                                    edge="end"
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                            </Box>
 
                             <Button
                                 type="submit"

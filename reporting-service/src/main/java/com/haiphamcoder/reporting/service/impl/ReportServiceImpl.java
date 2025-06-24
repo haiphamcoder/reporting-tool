@@ -128,7 +128,6 @@ public class ReportServiceImpl implements ReportService {
         ReportDto reportDto = ReportDto.builder()
                 .name(createReportRequest.getName())
                 .description(createReportRequest.getDescription())
-                .chartIds(createReportRequest.getChartIds())
                 .build();
         Report report = ReportMapper.toEntity(reportDto);
         report.setId(SnowflakeIdGenerator.getInstance().generateId());
@@ -138,7 +137,12 @@ public class ReportServiceImpl implements ReportService {
         if (savedReport.isEmpty()) {
             throw new ReportPersistenceException("Create report failed");
         }
-        return ReportMapper.toReportDto(savedReport.get());
+
+        addChartsToReport(savedReport.get().getId(),
+                createReportRequest.getChartIds().stream().map(Long::parseLong).toList());
+        ReportDto savedReportDto = ReportMapper.toReportDto(savedReport.get());
+        savedReportDto.setChartIds(createReportRequest.getChartIds());
+        return savedReportDto;
     }
 
     @Override

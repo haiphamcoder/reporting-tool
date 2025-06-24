@@ -16,6 +16,7 @@ import { ReportSummary } from '../../types/report';
 import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import AddReportDialog from '../dialogs/AddReportDialog';
 
 interface ReportsMetadata {
     total_elements: number;
@@ -49,6 +50,8 @@ export default function Reports() {
     // Dialog states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [reportToDelete, setReportToDelete] = useState<ReportSummary | null>(null);
+    // Add Report dialog state
+    const [addDialogOpen, setAddDialogOpen] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -178,8 +181,7 @@ export default function Reports() {
     const handleRowDoubleClick = async (params: GridRowParams<ReportSummary>) => {
         if (params.row) {
             const clickedReportId = params.row.id.toString();
-
-            navigate(`/dashboard/reports/${clickedReportId}/view-data`);
+            navigate(`/dashboard/reports/${clickedReportId}/view`);
         }
     }
 
@@ -194,8 +196,7 @@ export default function Reports() {
     };
 
     const handleAddClick = () => {
-        console.log('Add new chart');
-        // Handle add logic here
+        setAddDialogOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
@@ -329,7 +330,7 @@ export default function Reports() {
     return (
         <Stack gap={2}>
             <Typography variant="h4" component="h2" gutterBottom>
-                Charts
+                Reports
             </Typography>
             <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
                 <Button
@@ -424,6 +425,17 @@ export default function Reports() {
                 title="Delete Report"
                 message={`Are you sure you want to delete "${reportToDelete?.name}"? This action cannot be undone.`}
                 severity="error"
+            />
+
+            <AddReportDialog
+                open={addDialogOpen}
+                onClose={() => setAddDialogOpen(false)}
+                onSuccess={() => {
+                    setAddDialogOpen(false);
+                    fetchReports(currentPage, pageSize);
+                    setSuccess('Report created successfully');
+                    setShowSuccessPopup(true);
+                }}
             />
         </Stack>
     );
