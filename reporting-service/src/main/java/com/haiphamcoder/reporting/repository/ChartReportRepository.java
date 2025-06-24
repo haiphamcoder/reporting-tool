@@ -12,5 +12,7 @@ public interface ChartReportRepository {
     List<ChartReport> getChartReportsByReportId(Long reportId);
 
     void save(ChartReport chartReport);
-    
+
+    void deleteByChartIdAndReportId(Long chartId, Long reportId);
+
 }

@@ -9,7 +9,6 @@ CREATE TABLE
         id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID duy nhất cho mỗi report',
         name VARCHAR(255) NOT NULL COMMENT 'Tên của report',
         description VARCHAR(255) COMMENT 'Mô tả của report',
-        config TEXT NOT NULL COMMENT 'Cấu hình của report',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái xóa của report',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',

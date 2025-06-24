@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllReportsResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.ReportService;
@@ -38,7 +40,7 @@ public class ReportController {
                         .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
-                        .numberOfCharts(report.getCharts().size())
+                        .numberOfCharts(report.getCharts() != null ? report.getCharts().size() : 0)
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())
@@ -58,8 +60,8 @@ public class ReportController {
     @PutMapping("/{report-id}")
     public ResponseEntity<ApiResponse<Object>> update(@CookieValue(name = "user-id") Long userId,
             @PathVariable("report-id") Long reportId,
-            @RequestBody ReportDto reportDto) {
-        ReportDto updatedReport = reportService.updateReport(userId, reportId, reportDto);
+            @RequestBody UpdateReportRequest updateReportRequest) {
+        ReportDto updatedReport = reportService.updateReport(userId, reportId, updateReportRequest);
         return ResponseEntity.ok(ApiResponse.success(updatedReport, "Report updated successfully"));
     }
 
@@ -72,8 +74,8 @@ public class ReportController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> create(@CookieValue(name = "user-id") Long userId,
-            @RequestBody ReportDto reportDto) {
-        ReportDto createdReport = reportService.createReport(userId, reportDto);
+            @RequestBody CreateReportRequest createReportRequest) {
+        ReportDto createdReport = reportService.createReport(userId, createReportRequest);
         return ResponseEntity.ok(ApiResponse.success(createdReport, "Report created successfully"));
     }
 

@@ -3,6 +3,7 @@ package com.haiphamcoder.reporting.domain.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,15 +39,14 @@ public class ReportDto {
     @JsonProperty("charts")
     private List<ChartDto> charts;
 
-    @JsonProperty("shared_users")
-    private List<String> sharedUserIds;
-
     @JsonProperty("is_deleted")
     private Boolean isDeleted;
 
     @JsonProperty("created_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     @JsonProperty("modified_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modifiedAt;
 }

@@ -7,13 +7,13 @@ import jakarta.persistence.AttributeConverter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 
 @Slf4j
-public class MapStringConverter implements AttributeConverter<Map<String, Object>, String> {
+public class StringListConverter implements AttributeConverter<List<String>, String> {
 
     @Override
-    public String convertToDatabaseColumn(Map<String, Object> attribute) {
+    public String convertToDatabaseColumn(List<String> attribute) {
         if (attribute == null) {
             return null;
         }
@@ -26,16 +26,17 @@ public class MapStringConverter implements AttributeConverter<Map<String, Object
     }
 
     @Override
-    public Map<String, Object> convertToEntityAttribute(String dbData) {
+    public List<String> convertToEntityAttribute(String dbData) {
         if (dbData == null) {
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         try {
-            return MapperUtils.objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {
+            return MapperUtils.objectMapper.readValue(dbData, new TypeReference<List<String>>() {
             });
         } catch (Exception e) {
             log.error("Error converting String to Map: {}", e.getMessage(), e);
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
     }
+
 }

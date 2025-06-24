@@ -1,9 +1,8 @@
 package com.haiphamcoder.reporting.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +12,9 @@ import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ReportPersistenceException;
+import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
@@ -38,7 +40,14 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, Integer page, Integer limit) {
         Page<Report> reports = reportRepository.getReportsByUserId(userId, page, limit);
-        return new Pair<>(reports.stream().map(ReportMapper::toReportDto).toList(),
+        return new Pair<>(reports.stream().map(report -> {
+            List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
+            List<Chart> charts = chartReports.stream()
+                    .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
+            ReportDto reportDto = ReportMapper.toReportDto(report);
+            reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
+            return reportDto;
+        }).toList(),
                 Metadata.builder()
                         .totalElements(reports.getTotalElements())
                         .numberOfElements(reports.getNumberOfElements())
@@ -56,23 +65,48 @@ public class ReportServiceImpl implements ReportService {
         }
         ReportDto reportDto = ReportMapper.toReportDto(report.get());
         List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
-        List<Chart> charts = chartReports.stream().map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).collect(Collectors.toList());
-        reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList()));
+        List<Chart> charts = chartReports.stream()
+                .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
+        reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
         return reportDto;
     }
 
     @Override
-    public ReportDto updateReport(Long userId, Long reportId, ReportDto reportDto) {
+    public ReportDto updateReport(Long userId, Long reportId, UpdateReportRequest updateReportRequest) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), reportDto);
+        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), ReportDto.builder()
+                .id(reportId.toString())
+                .name(updateReportRequest.getName())
+                .description(updateReportRequest.getDescription())
+                .chartIds(updateReportRequest.getChartIds())
+                .build());
+
+        removeAllChartsFromReport(reportId);
+        addChartsToReport(reportId, updateReportRequest.getChartIds().stream().map(Long::parseLong).toList());
+
         Optional<Report> updatedReport = reportRepository.updateReport(ReportMapper.toEntity(updatedReportDto));
         if (updatedReport.isEmpty()) {
-            throw new RuntimeException("Update report failed");
+            throw new ReportPersistenceException("Update report failed");
         }
         return ReportMapper.toReportDto(updatedReport.get());
+    }
+
+    private void removeAllChartsFromReport(Long reportId) {
+        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
+        chartReports.forEach(chartReport -> chartReportRepository.deleteByChartIdAndReportId(chartReport.getChartId(),
+                reportId));
+    }
+
+    private void addChartsToReport(Long reportId, List<Long> chartIds) {
+        chartIds.forEach(chartId -> {
+            ChartReport chartReport = new ChartReport();
+            chartReport.setReportId(reportId);
+            chartReport.setChartId(chartId);
+            chartReportRepository.save(chartReport);
+        });
     }
 
     @Override
@@ -86,18 +120,23 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ReportDto createReport(Long userId, ReportDto reportDto) {
-        if (StringUtils.isNullOrEmpty(reportDto.getName())) {
+    public ReportDto createReport(Long userId, CreateReportRequest createReportRequest) {
+        if (StringUtils.isNullOrEmpty(createReportRequest.getName())) {
             throw new InvalidInputException("name");
         }
 
+        ReportDto reportDto = ReportDto.builder()
+                .name(createReportRequest.getName())
+                .description(createReportRequest.getDescription())
+                .chartIds(createReportRequest.getChartIds())
+                .build();
         Report report = ReportMapper.toEntity(reportDto);
         report.setId(SnowflakeIdGenerator.getInstance().generateId());
         report.setUserId(userId);
 
         Optional<Report> savedReport = reportRepository.createReport(report);
         if (savedReport.isEmpty()) {
-            throw new RuntimeException("Create report failed");
+            throw new ReportPersistenceException("Create report failed");
         }
         return ReportMapper.toReportDto(savedReport.get());
     }
@@ -115,6 +154,8 @@ public class ReportServiceImpl implements ReportService {
         ChartReport chartReport = new ChartReport();
         chartReport.setReportId(reportId);
         chartReport.setChartId(chartId);
+        chartReport.setCreatedAt(LocalDateTime.now());
+        chartReport.setModifiedAt(LocalDateTime.now());
         chartReportRepository.save(chartReport);
     }
 

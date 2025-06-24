@@ -16,7 +16,6 @@ public class ReportMapper {
                 builder.name(report.getName());
                 builder.userId(report.getUserId() != null ? report.getUserId().toString() : null);
                 builder.description(report.getDescription());
-                builder.chartIds(report.getChartIds());
                 builder.isDeleted(report.getIsDeleted());
                 builder.createdAt(report.getCreatedAt());
                 builder.modifiedAt(report.getModifiedAt());
@@ -34,8 +33,8 @@ public class ReportMapper {
                 if (reportDto.getDescription() != null) {
                         builder.description(reportDto.getDescription());
                 }
-                if (reportDto.getChartIds() != null) {
-                        builder.chartIds(reportDto.getChartIds());
+                if (!StringUtils.isNullOrEmpty(reportDto.getUserId())) {
+                        builder.userId(Long.parseLong(reportDto.getUserId()));
                 }
                 if (reportDto.getIsDeleted() != null) {
                         builder.isDeleted(reportDto.getIsDeleted());
