@@ -30,6 +30,11 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AddIcon from '@mui/icons-material/Add';
 import AddChartToReportDialog from '../dialogs/AddChartToReportDialog';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import Fab from '@mui/material/Fab';
+import ExportPdfDialog from './ExportPdfDialog';
 
 ChartJS.register(
     CategoryScale,
@@ -298,6 +303,9 @@ const ReportViewPage: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [report, setReport] = useState<ReportDetail | null>(null);
     const [addChartDialogOpen, setAddChartDialogOpen] = useState(false);
+    const reportContentRef = React.useRef<HTMLDivElement>(null);
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
+    const [exportOptions, setExportOptions] = useState<any>(null);
 
     const fetchReport = async () => {
         setLoading(true);
@@ -328,6 +336,103 @@ const ReportViewPage: React.FC = () => {
 
     const handleAddChartSuccess = () => {
         fetchReport();
+    };
+
+    // Export PDF handler (nhận options từ dialog)
+    const handleExportPDF = async (options?: {
+        printTitle: boolean;
+        printDescription: boolean;
+        selectedChartIds: string[];
+        scale: number;
+        layout?: 'vertical' | '2col' | '3col';
+    }) => {
+        if (!reportContentRef.current || !report) return;
+        if (!options) {
+            setExportDialogOpen(true);
+            return;
+        }
+        setExportDialogOpen(false);
+        // Tạo DOM tạm để export
+        const temp = document.createElement('div');
+        temp.style.padding = '32px';
+        temp.style.background = 'white';
+        temp.style.width = reportContentRef.current.offsetWidth + 'px';
+        // Title
+        if (options.printTitle) {
+            const title = document.createElement('h2');
+            title.innerText = report.name;
+            title.style.textAlign = 'center';
+            title.style.margin = '0 0 8px 0';
+            title.style.fontSize = '2rem';
+            title.style.fontWeight = '700';
+            temp.appendChild(title);
+        }
+        // Description
+        if (options.printDescription && report.description) {
+            const desc = document.createElement('div');
+            desc.innerText = report.description;
+            desc.style.textAlign = 'left';
+            desc.style.margin = '0 0 24px 0';
+            desc.style.fontSize = '16px';
+            temp.appendChild(desc);
+        }
+        // Charts: chụp từng chart thành ảnh rồi gắn vào DOM tạm
+        const chartsToExport = report.charts.filter((c: any) => options.selectedChartIds.includes(c.id));
+        const html2canvas = (await import('html2canvas')).default;
+        // Tạo container cho chart theo layout
+        const chartContainer = document.createElement('div');
+        let columns = 1;
+        if (options.layout === '2col') columns = 2;
+        if (options.layout === '3col') columns = 3;
+        chartContainer.style.display = columns === 1 ? 'block' : 'grid';
+        if (columns > 1) {
+            chartContainer.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            chartContainer.style.gap = '24px';
+        }
+        chartContainer.style.marginTop = '16px';
+        for (const chart of chartsToExport) {
+            const chartNode = reportContentRef.current?.querySelector(`[data-chart-id="${chart.id}"]`);
+            if (chartNode) {
+                const canvasNode = chartNode.querySelector('canvas');
+                if (canvasNode) {
+                    const chartImgCanvas = await html2canvas(chartNode as HTMLElement, { scale: options.scale });
+                    const img = document.createElement('img');
+                    img.src = chartImgCanvas.toDataURL('image/png');
+                    img.style.display = 'block';
+                    img.style.margin = columns === 1 ? '0 auto 32px auto' : '0 auto';
+                    img.style.maxWidth = '100%';
+                    img.style.width = '100%';
+                    img.style.height = 'auto';
+                    chartContainer.appendChild(img);
+                }
+            }
+        }
+        temp.appendChild(chartContainer);
+        temp.style.position = 'fixed';
+        temp.style.left = '-99999px';
+        temp.style.top = '0';
+        document.body.appendChild(temp);
+        // Chụp DOM tạm này
+        const jsPDF = (await import('jspdf')).default;
+        const canvas = await html2canvas(temp, { scale: options.scale });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const maxImgWidth = Math.min(pageWidth - 40, canvas.width);
+        const imgWidth = maxImgWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let position = 20;
+        pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+        let remainingHeight = imgHeight + position - pageHeight;
+        while (remainingHeight > 0) {
+            position = position - pageHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight);
+            remainingHeight -= pageHeight;
+        }
+        pdf.save(`${report?.name || 'report'}.pdf`);
+        document.body.removeChild(temp);
     };
 
     return (
@@ -376,7 +481,7 @@ const ReportViewPage: React.FC = () => {
                     Add Chart
                 </Button>
             </Stack>
-            <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
+            <Box ref={reportContentRef} sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
                 {loading ? (
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
                         <CircularProgress />
@@ -396,7 +501,7 @@ const ReportViewPage: React.FC = () => {
                                         else if (report.charts.length >= 3) gridProps = { xs: 12, sm: 6, md: 4, lg: 4 };
                                         return (
                                             <Grid item key={chart.id} {...gridProps}>
-                                                <Paper sx={{ p: 2, height: '100%' }} elevation={2}>
+                                                <Paper sx={{ p: 2, height: '100%' }} elevation={2} data-chart-id={chart.id}>
                                                     <ChartPreviewInReport chart={chart} />
                                                 </Paper>
                                             </Grid>
@@ -414,6 +519,28 @@ const ReportViewPage: React.FC = () => {
                 reportId={report?.id || ''}
                 existingChartIds={report?.charts?.map((c: any) => c.id) || []}
                 onSuccess={handleAddChartSuccess}
+            />
+            {/* Floating Action Button for Export PDF */}
+            <Fab
+                color="primary"
+                aria-label="export-pdf"
+                onClick={() => handleExportPDF()}
+                sx={{
+                    position: 'fixed',
+                    bottom: { xs: 16, md: 32 },
+                    right: { xs: 16, md: 32 },
+                    zIndex: 1200
+                }}
+            >
+                <PictureAsPdfIcon />
+            </Fab>
+            {/* Export PDF Dialog */}
+            <ExportPdfDialog
+                open={exportDialogOpen}
+                onClose={() => setExportDialogOpen(false)}
+                onExport={handleExportPDF}
+                charts={report?.charts?.map((c: any) => ({ id: c.id, name: c.name })) || []}
+                defaultScale={3}
             />
         </Stack>
     );
