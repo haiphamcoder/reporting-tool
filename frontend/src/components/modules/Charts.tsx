@@ -182,7 +182,7 @@ export default function Charts() {
         if (params.row) {
             const clickedChartId = params.row.id.toString();
 
-            navigate(`/dashboard/charts/${clickedChartId}/view-data`);
+            navigate(`/dashboard/charts/${clickedChartId}/view`);
         }
     }
 

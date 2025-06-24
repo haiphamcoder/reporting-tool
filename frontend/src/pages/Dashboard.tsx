@@ -12,6 +12,7 @@ import Header from "../components/Header";
 import MainGrid from "../components/MainGrid";
 import SourceEditPage from "../pages/SourceEditPage";
 import SourceViewDataPage from "../components/modules/SourceViewDataPage";
+import ChartViewPage from "../components/modules/ChartViewPage";
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 const xThemeComponents = {
@@ -52,6 +53,7 @@ export default function Dashboard(props: { disableCustomTheme?: boolean }) {
                             <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
                             <Route path="/sources/:source_id/view-data" element={<SourceViewDataPage />} />
                             <Route path="/sources/:sourceId/edit" element={<SourceEditPage />} />
+                            <Route path="/charts/:chartId/view" element={<ChartViewPage />} />
                             <Route path="/:section" element={<MainGrid />} />
                         </Routes>
                     </Stack>

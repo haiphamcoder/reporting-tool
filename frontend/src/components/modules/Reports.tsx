@@ -348,7 +348,7 @@ export default function Reports() {
                     startIcon={<AddIcon />}
                     sx={{ minWidth: '140px', maxWidth: '140px' }}
                 >
-                    Add Chart
+                    Add Report
                 </Button>
             </Stack>
             {loading ? (
