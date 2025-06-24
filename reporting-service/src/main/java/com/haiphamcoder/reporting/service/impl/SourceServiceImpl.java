@@ -95,8 +95,9 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, Integer page, Integer limit) {
-        Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, page, limit);
+    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit) {
+        Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, search, page, limit);
+        
         return new Pair<>(sources.stream()
                 .map(SourceMapper::toDto)
                 .toList(),

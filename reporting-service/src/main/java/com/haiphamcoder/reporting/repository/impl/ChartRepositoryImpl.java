@@ -23,6 +23,10 @@ import lombok.RequiredArgsConstructor;
 interface ChartJpaRepository extends JpaRepository<Chart, Long> {
     Page<Chart> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
 
+    @Query("SELECT c FROM Chart c WHERE c.userId = :userId AND c.isDeleted = :isDeleted AND (c.name LIKE %:search% OR c.description LIKE %:search%)")
+    Page<Chart> findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(@Param("userId") Long userId,
+            @Param("isDeleted") Boolean isDeleted, @Param("search") String search, Pageable pageable);
+
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     @Query("SELECT COUNT(c) FROM Chart c WHERE c.userId = :userId AND DATE(c.createdAt) = DATE(:date)")
@@ -37,6 +41,18 @@ public class ChartRepositoryImpl implements ChartRepository {
     @Override
     public Page<Chart> getAllChartsByUserId(Long userId, Integer page, Integer limit) {
         return chartJpaRepository.findAllByUserIdAndIsDeleted(userId, false, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Chart> getAllChartsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit) {
+        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
+        
+        if (normalizedSearch == null) {
+            return chartJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
+        } else {
+            return chartJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
+                    normalizedSearch, PageRequest.of(page, limit));
+        }
     }
 
     @Override

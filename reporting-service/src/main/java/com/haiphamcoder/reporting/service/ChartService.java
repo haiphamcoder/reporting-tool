@@ -10,7 +10,7 @@ import com.haiphamcoder.reporting.shared.Pair;
 
 public interface ChartService {
 
-    Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, Integer page, Integer limit);
+    Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page, Integer limit);
 
     ChartDto getChartById(Long userId,Long chartId);
 

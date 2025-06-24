@@ -22,7 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Repository
 interface SourceJpaRepository extends JpaRepository<Source, Long> {
-    Page<Source> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
+    @Query("SELECT s FROM Source s WHERE s.userId = :userId AND s.isDeleted = :isDeleted AND (s.name LIKE %:search% OR s.description LIKE %:search%)")
+    Page<Source> findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(@Param("userId") Long userId,
+            @Param("isDeleted") Boolean isDeleted, @Param("search") String search, Pageable pageable);
+
+    @Query("SELECT s FROM Source s WHERE s.userId = :userId AND s.isDeleted = :isDeleted")
+    Page<Source> findAllByUserIdAndIsDeleted(@Param("userId") Long userId,
+            @Param("isDeleted") Boolean isDeleted, Pageable pageable);
 
     Optional<Source> findByIdAndUserId(Long id, Long userId);
 
@@ -53,8 +59,16 @@ public class SourceRepositoryImpl implements SourceRepository {
     }
 
     @Override
-    public Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Integer page, Integer limit) {
-        return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
+    public Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page,
+            Integer limit) {
+        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
+        
+        if (normalizedSearch == null) {
+            return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
+        } else {
+            return sourceJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
+                    normalizedSearch, PageRequest.of(page, limit));
+        }
     }
 
     @Override
@@ -97,5 +111,5 @@ public class SourceRepositoryImpl implements SourceRepository {
         Source savedSource = sourceJpaRepository.save(source);
         return Optional.of(savedSource);
     }
-    
+
 }

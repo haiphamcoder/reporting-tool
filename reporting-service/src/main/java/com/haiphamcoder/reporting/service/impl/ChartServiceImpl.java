@@ -41,8 +41,8 @@ public class ChartServiceImpl implements ChartService {
     private final SourceRepository sourceRepository;
 
     @Override
-    public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, Integer page, Integer limit) {
-        Page<Chart> charts = chartRepository.getAllChartsByUserId(userId, page, limit);
+    public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page, Integer limit) {
+        Page<Chart> charts = chartRepository.getAllChartsByUserId(userId, search, page, limit);
         return new Pair<>(charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList()),
                 Metadata.builder()
                         .totalElements(charts.getTotalElements())

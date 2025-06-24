@@ -38,8 +38,8 @@ public class ReportServiceImpl implements ReportService {
     private final ChartReportRepository chartReportRepository;
 
     @Override
-    public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, Integer page, Integer limit) {
-        Page<Report> reports = reportRepository.getReportsByUserId(userId, page, limit);
+    public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page, Integer limit) {
+        Page<Report> reports = reportRepository.getReportsByUserId(userId, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
             List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
             List<Chart> charts = chartReports.stream()

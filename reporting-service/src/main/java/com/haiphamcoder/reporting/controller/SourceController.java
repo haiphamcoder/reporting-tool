@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RequestMapping("/sources")
 @RequiredArgsConstructor
 public class SourceController {
+    
     private final SourceService sourceService;
 
     @PostMapping(path = "/init", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -45,9 +46,12 @@ public class SourceController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse<Object>> getSources(@CookieValue(name = "user-id") Long userId,
+            @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        Pair<List<SourceDto>, Metadata> sources = sourceService.getAllSourcesByUserId(userId, page, limit);
+        
+        Pair<List<SourceDto>, Metadata> sources = sourceService.getAllSourcesByUserId(userId, search, page, limit);
+                
         GetAllSourcesResponse response = GetAllSourcesResponse.builder()
                 .data(sources.getFirst().stream().map(source -> GetAllSourcesResponse.Record.builder()
                         .id(source.getId())

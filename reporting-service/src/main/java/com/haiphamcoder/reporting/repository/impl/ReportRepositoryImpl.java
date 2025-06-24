@@ -23,6 +23,10 @@ import lombok.RequiredArgsConstructor;
 interface ReportJpaRepository extends JpaRepository<Report, Long> {
     Page<Report> findAllByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Pageable pageable);
 
+    @Query("SELECT r FROM Report r WHERE r.userId = :userId AND r.isDeleted = :isDeleted AND (r.name LIKE %:search% OR r.description LIKE %:search%)")
+    Page<Report> findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(@Param("userId") Long userId,
+            @Param("isDeleted") Boolean isDeleted, @Param("search") String search, Pageable pageable);
+
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     @Query("SELECT COUNT(r) FROM Report r WHERE r.userId = :userId AND DATE(r.createdAt) = DATE(:date)")
@@ -43,6 +47,18 @@ public class ReportRepositoryImpl implements ReportRepository {
     @Override
     public Page<Report> getReportsByUserId(Long userId, Integer page, Integer limit) {
         return reportJpaRepository.findAllByUserIdAndIsDeleted(userId, false, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Report> getReportsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit) {
+        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
+        
+        if (normalizedSearch == null) {
+            return reportJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
+        } else {
+            return reportJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
+                    normalizedSearch, PageRequest.of(page, limit));
+        }
     }
 
     @Override

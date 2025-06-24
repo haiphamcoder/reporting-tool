@@ -10,7 +10,7 @@ import com.haiphamcoder.reporting.shared.Pair;
 
 public interface ReportService {
 
-    Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, Integer page, Integer limit);
+    Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page, Integer limit);
 
     ReportDto getReportById(Long userId, Long reportId);
 

@@ -12,6 +12,12 @@ public interface ReportRepository {
     Optional<Report> getReportById(Long id);
 
     Page<Report> getReportsByUserId(Long userId, Integer page, Integer limit);
+    
+    Page<Report> getReportsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit);
+    
+    default Page<Report> getReportsByUserId(Long userId, String search, Integer page, Integer limit) {
+        return getReportsByUserIdAndIsDeleted(userId, false, search, page, limit);
+    }
 
     Long getTotalReportByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 

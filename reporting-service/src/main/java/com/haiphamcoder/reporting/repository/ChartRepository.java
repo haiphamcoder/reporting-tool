@@ -11,6 +11,12 @@ public interface ChartRepository {
 
     Page<Chart> getAllChartsByUserId(Long userId, Integer page, Integer limit);
     
+    Page<Chart> getAllChartsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit);
+    
+    default Page<Chart> getAllChartsByUserId(Long userId, String search, Integer page, Integer limit) {
+        return getAllChartsByUserIdAndIsDeleted(userId, false, search, page, limit);
+    }
+    
     Optional<Chart> getChartById(Long id);
 
     Long getTotalChartByUserIdAndIsDeleted(Long userId, Boolean isDeleted);

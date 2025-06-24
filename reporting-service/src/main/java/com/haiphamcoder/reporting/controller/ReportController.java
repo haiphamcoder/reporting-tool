@@ -32,9 +32,10 @@ public class ReportController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id") Long userId,
+            @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
-        Pair<List<ReportDto>, Metadata> reports = reportService.getAllReportsByUserId(userId, page, limit);
+        Pair<List<ReportDto>, Metadata> reports = reportService.getAllReportsByUserId(userId, search, page, limit);
         GetAllReportsResponse response = GetAllReportsResponse.builder()
                 .data(reports.getFirst().stream().map(report -> GetAllReportsResponse.Record.builder()
                         .id(report.getId())

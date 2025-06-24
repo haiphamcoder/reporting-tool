@@ -19,7 +19,7 @@ public interface SourceService {
 
     public SourceDto getSourceById(Long sourceId);
 
-    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, Integer page, Integer limit);
+    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit);
 
     public SourceDto createSource(SourceDto sourceDto);
 

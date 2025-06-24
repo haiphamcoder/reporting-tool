@@ -13,10 +13,11 @@ public interface SourceRepository {
 
     boolean checkSourceName(Long userId, String sourceName);
 
-    Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, Integer page, Integer limit);
+    Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page,
+            Integer limit);
 
-    default Page<Source> getAllSourcesByUserId(Long userId, Integer page, Integer limit) {
-        return getAllSourcesByUserIdAndIsDeleted(userId, false, page, limit);
+    default Page<Source> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit) {
+        return getAllSourcesByUserIdAndIsDeleted(userId, false, search, page, limit);
     }
 
     Optional<Source> deleteSourceById(Long id);
