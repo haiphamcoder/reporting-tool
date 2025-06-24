@@ -38,7 +38,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, Integer page, Integer limit) {
         Page<Report> reports = reportRepository.getReportsByUserId(userId, page, limit);
-        return new Pair<>(reports.stream().map(ReportMapper::toReportDto).collect(Collectors.toList()),
+        return new Pair<>(reports.stream().map(ReportMapper::toReportDto).toList(),
                 Metadata.builder()
                         .totalElements(reports.getTotalElements())
                         .numberOfElements(reports.getNumberOfElements())

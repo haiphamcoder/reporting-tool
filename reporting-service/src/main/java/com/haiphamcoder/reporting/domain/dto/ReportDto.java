@@ -6,7 +6,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,8 +32,8 @@ public class ReportDto {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("config")
-    private ObjectNode config;
+    @JsonProperty("chart_ids")
+    private List<String> chartIds;
 
     @JsonProperty("charts")
     private List<ChartDto> charts;

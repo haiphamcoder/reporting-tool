@@ -1,12 +1,9 @@
 package com.haiphamcoder.reporting.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.dto.ReportDto.ReportDtoBuilder;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.entity.Report.ReportBuilder;
-import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
 import lombok.experimental.UtilityClass;
@@ -19,13 +16,7 @@ public class ReportMapper {
                 builder.name(report.getName());
                 builder.userId(report.getUserId() != null ? report.getUserId().toString() : null);
                 builder.description(report.getDescription());
-                try {
-                        builder.config(!StringUtils.isNullOrEmpty(report.getConfig())
-                                        ? MapperUtils.objectMapper.readValue(report.getConfig(), ObjectNode.class)
-                                        : MapperUtils.objectMapper.createObjectNode());
-                } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                }
+                builder.chartIds(report.getChartIds());
                 builder.isDeleted(report.getIsDeleted());
                 builder.createdAt(report.getCreatedAt());
                 builder.modifiedAt(report.getModifiedAt());
@@ -43,12 +34,8 @@ public class ReportMapper {
                 if (reportDto.getDescription() != null) {
                         builder.description(reportDto.getDescription());
                 }
-                if (reportDto.getConfig() != null) {
-                        try {
-                                builder.config(MapperUtils.objectMapper.writeValueAsString(reportDto.getConfig()));
-                        } catch (JsonProcessingException e) {
-                                e.printStackTrace();
-                        }
+                if (reportDto.getChartIds() != null) {
+                        builder.chartIds(reportDto.getChartIds());
                 }
                 if (reportDto.getIsDeleted() != null) {
                         builder.isDeleted(reportDto.getIsDeleted());
@@ -74,8 +61,8 @@ public class ReportMapper {
                 if (reportDto.getDescription() != null) {
                         result.setDescription(reportDto.getDescription());
                 }
-                if (reportDto.getConfig() != null) {
-                        result.setConfig(reportDto.getConfig());
+                if (reportDto.getChartIds() != null) {
+                        result.setChartIds(reportDto.getChartIds());
                 }
                 if (reportDto.getIsDeleted() != null) {
                         result.setIsDeleted(reportDto.getIsDeleted());

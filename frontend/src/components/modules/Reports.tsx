@@ -241,8 +241,8 @@ export default function Reports() {
         { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
         { field: 'description', headerName: 'Description', flex: 1, minWidth: 200 },
         {
-            field: 'chart_number',
-            headerName: 'Chart Number',
+            field: 'number_of_charts',
+            headerName: 'Number of Charts',
             flex: 1,
             minWidth: 150,
             renderCell: (params: GridRenderCellParams<ReportSummary>) => (

@@ -1,6 +1,7 @@
 package com.haiphamcoder.reporting.domain.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -47,7 +48,8 @@ public class Report {
     private String description;
 
     @Column(name = "config", nullable = false)
-    private String config;
+    @JsonProperty("chart_ids")
+    private List<String> chartIds;
 
     @Column(name = "is_deleted", nullable = false)
     @Builder.Default

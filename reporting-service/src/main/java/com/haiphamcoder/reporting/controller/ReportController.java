@@ -38,6 +38,7 @@ public class ReportController {
                         .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
+                        .numberOfCharts(report.getCharts().size())
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())
