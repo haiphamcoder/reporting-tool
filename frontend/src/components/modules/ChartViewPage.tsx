@@ -1,52 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
     Typography,
-    Stack,
     Button,
+    Stack,
     CircularProgress,
     Alert,
-    Card,
-    CardContent,
     IconButton,
-    Chip
-} from '@mui/material';
+    Chip,
+    Card,
+    CardContent} from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
     Refresh as RefreshIcon,
-    ShowChart as ChartIcon
-} from '@mui/icons-material';
-import { useNavigate, useParams } from 'react-router-dom';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-} from 'chart.js';
+    ShowChart as ShowChartIcon} from '@mui/icons-material';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
 import { API_CONFIG } from '../../config/api';
 import { ChartType } from '../../types/chart';
-
-// Register Chart.js components
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-);
 
 interface ChartDetail {
     id: string;
@@ -610,7 +581,7 @@ export default function ChartViewPage() {
                                 {chartDetail.name}
                             </Typography>
                             <Chip
-                                icon={<ChartIcon />}
+                                icon={<ShowChartIcon />}
                                 label={(chartDetail.config.type || chartDetail.type).toUpperCase()}
                                 color="primary"
                                 variant="outlined"

@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
+    Button,
     Grid,
-    Card,
-    CardContent,
     TextField,
     FormControl,
     InputLabel,
@@ -13,33 +12,19 @@ import {
     Switch,
     FormControlLabel,
     Slider,
+    Card,
+    CardContent,
     Divider,
+    IconButton,
     Alert,
-    Button,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import {
-    ShowChart as ChartIcon,
-    Preview as PreviewIcon,
-    Close as CloseIcon
-} from '@mui/icons-material';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-} from 'chart.js';
+    ShowChart as ShowChartIcon} from '@mui/icons-material';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
 import { 
     ChartType, 
@@ -48,20 +33,6 @@ import {
     LineChartConfig, 
     AreaChartConfig, 
     TableConfig} from '../../../types/chart';
-
-// Register Chart.js components
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-);
 
 interface Step3ChartConfigProps {
     chartType: ChartType;
@@ -1049,14 +1020,14 @@ const Step3ChartConfig: React.FC<Step3ChartConfigProps> = ({
     return (
         <Box sx={{ p: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <ChartIcon />
+                <ShowChartIcon />
                 <Typography variant="h6">
                     Chart Configuration
                 </Typography>
                 <Box sx={{ flex: 1 }} />
                 <Button
                     variant="outlined"
-                    startIcon={<PreviewIcon />}
+                    startIcon={<ShowChartIcon />}
                     onClick={() => setPreviewOpen(true)}
                     disabled={!previewData || availableFields.length === 0}
                 >

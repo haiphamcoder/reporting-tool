@@ -16,7 +16,7 @@ import AppTheme from '../theme/AppTheme';
 import ColorSchemeToggle from '../theme/ColorSchemeToggle';
 import ForgotPasswordDialog from '../components/ForgotPasswordDialog';
 import MuiCard from '@mui/material/Card';
-import CDPLogo from '../assets/logo.svg';
+import Logo from '../assets/logo.svg';
 import { useNavigate } from 'react-router-dom';
 import { GoogleIcon } from '../components/CustomIcons';
 import { API_CONFIG } from '../config/api';
@@ -176,7 +176,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
             <SignInContainer direction="column" justifyContent="space-between">
                 <ColorSchemeToggle sx={{ position: 'fixed', top: '1rem', right: '1rem' }} />
                 <Card variant="outlined">
-                    <img src={CDPLogo} height={25} width={150} alt="CDP Logo" />
+                    <img src={Logo} height={25} width={150} alt="Logo" />
                     <Typography
                         component="h1"
                         variant="h4"
@@ -222,7 +222,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                                     error={passwordError}
                                     helperText={passwordErrorMessage}
                                     name="password"
-                                    placeholder="••••••"
+                                    placeholder="••••••••"
                                     type="password"
                                     id="password"
                                     autoComplete="current-password"

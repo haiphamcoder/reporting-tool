@@ -3,7 +3,6 @@ import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import MenuButton from './MenuButton';
 import ColorSchemeToggle from '../theme/ColorSchemeToggle';
 
-import Search from './Search';
 import { Avatar, Box, Typography } from '@mui/material';
 import OptionsMenu from './OptionsMenu';
 import { useState, useEffect } from 'react';
@@ -39,7 +38,7 @@ export default function Header() {
       spacing={2}
     >
       <Stack direction="row" sx={{ gap: 1, alignItems: 'center' }}>
-        <Search />
+        {/* <Search /> */}
         {/* <CustomDatePicker /> */}
         <MenuButton showBadge aria-label="Open notifications">
           <NotificationsRoundedIcon />

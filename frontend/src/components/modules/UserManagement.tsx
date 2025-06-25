@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -35,6 +35,7 @@ import { GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-da
 import CustomizedDataGrid from '../CustomizedDataGrid';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import { useLocation } from 'react-router-dom';
+import Search from '../Search';
 
 interface User {
   id: string; // Changed from user_id to id
@@ -67,7 +68,7 @@ interface UserMetadata {
 }
 
 export default function UserManagement() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
 
@@ -96,25 +97,35 @@ export default function UserManagement() {
     password: ''
   });
 
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
+
   // Function to update URL with pagination parameters
-  const updateURLWithPagination = (page: number, size: number) => {
+  const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set('page', page.toString());
     urlParams.set('pageSize', size.toString());
     
+    if (search) {
+      urlParams.set('search', search);
+    } else {
+      urlParams.delete('search');
+    }
+    
     // Preserve other URL parameters
     const newSearch = urlParams.toString();
-    const newPath = `/dashboard/user-management${newSearch ? `?${newSearch}` : ''}`;
+    const newPath = `${location.pathname}${newSearch ? `?${newSearch}` : ''}`;
     
     window.history.replaceState(null, '', newPath);
-  };
+  }, [location.search, location.pathname]);
 
   // Function to get pagination parameters from URL
   const getPaginationFromURL = () => {
     const urlParams = new URLSearchParams(location.search);
     const page = parseInt(urlParams.get('page') || '0', 10);
     const size = parseInt(urlParams.get('pageSize') || '10', 10);
-    return { page, size };
+    const search = urlParams.get('search') || '';
+    return { page, size, search };
   };
 
   // Initialize URL with default pagination values on first load
@@ -122,6 +133,10 @@ export default function UserManagement() {
     const urlParams = new URLSearchParams(location.search);
     const hasPageParam = urlParams.has('page');
     const hasPageSizeParam = urlParams.has('pageSize');
+    const search = urlParams.get('search') || '';
+    
+    // Update search term from URL
+    setSearchTerm(search);
     
     // If URL doesn't have pagination parameters, add default values
     if (!hasPageParam || !hasPageSizeParam) {
@@ -132,17 +147,24 @@ export default function UserManagement() {
       urlParams.set('pageSize', defaultSize.toString());
       
       const newSearch = urlParams.toString();
-      const newPath = `/dashboard/user-management?${newSearch}`;
+      const newPath = `${location.pathname}?${newSearch}`;
       window.history.replaceState(null, '', newPath);
     }
-  }, []); // Only run once on mount
+  }, [location.pathname]); // Add location.pathname to dependencies
 
-  const fetchUsers = async (page: number = 0, pageSize: number = 10) => {
+  const fetchUsers = useCallback(async (page: number = 0, pageSize: number = 10, search: string = '') => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.USER_MANAGEMENT}?page=${page}&size=${pageSize}`, {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('size', pageSize.toString());
+      if (search.trim()) {
+        params.append('search', search.trim());
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.USER_MANAGEMENT}?${params.toString()}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -176,12 +198,18 @@ export default function UserManagement() {
       setError(error instanceof Error ? error.message : 'Failed to fetch users');
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    const { page, size } = getPaginationFromURL();
-    fetchUsers(page, size);
-  }, [location.search]); // Listen to location.search changes
+    const { page, size, search } = getPaginationFromURL();
+    fetchUsers(page, size, search);
+  }, [fetchUsers]); // Listen to fetchUsers changes
+
+  // Update search term when URL changes (e.g., browser back/forward)
+  useEffect(() => {
+    const { search } = getPaginationFromURL();
+    setSearchTerm(search);
+  }, [location.search]);
 
   useEffect(() => {
     console.log('Users state changed:', users);
@@ -191,10 +219,24 @@ export default function UserManagement() {
     console.log('Metadata state changed:', metadata);
   }, [metadata]);
 
-  const handlePageChange = (model: GridPaginationModel) => {
-    updateURLWithPagination(model.page, model.pageSize);
-    fetchUsers(model.page, model.pageSize);
-  };
+  const handlePageChange = useCallback((model: GridPaginationModel) => {
+    updateURLWithPagination(model.page, model.pageSize, searchTerm);
+    fetchUsers(model.page, model.pageSize, searchTerm);
+  }, [searchTerm, updateURLWithPagination, fetchUsers]);
+
+  const handleSearchChange = useCallback((searchTerm: string) => {
+    // Update local state
+    setSearchTerm(searchTerm);
+    
+    // Reset to first page when searching
+    const newPage = 0;
+    updateURLWithPagination(newPage, metadata.page_size, searchTerm);
+    fetchUsers(newPage, metadata.page_size, searchTerm);
+  }, [metadata.page_size, fetchUsers, updateURLWithPagination]);
+
+  const handleRefresh = useCallback(() => {
+    fetchUsers(metadata.current_page, metadata.page_size, searchTerm);
+  }, [metadata.current_page, metadata.page_size, searchTerm, fetchUsers]);
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -276,7 +318,7 @@ export default function UserManagement() {
       if (data.success) {
         setSuccess(editingUser ? 'User updated successfully' : 'User created successfully');
         setDialogOpen(false);
-        fetchUsers(metadata.current_page, metadata.page_size);
+        fetchUsers(metadata.current_page, metadata.page_size, searchTerm);
       } else {
         setError(data.message || 'Failed to save user');
       }
@@ -309,7 +351,7 @@ export default function UserManagement() {
         setSuccess('User deleted successfully');
         setDeleteDialogOpen(false);
         setUserToDelete(null);
-        fetchUsers(metadata.current_page, metadata.page_size);
+        fetchUsers(metadata.current_page, metadata.page_size, searchTerm);
       } else {
         setError(data.message || 'Failed to delete user');
       }
@@ -471,6 +513,15 @@ export default function UserManagement() {
     },
   ];
 
+  // Show loading while authentication is being checked
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   // If user is not admin, show access denied message
   if (!isAdmin) {
     return (
@@ -558,24 +609,31 @@ export default function UserManagement() {
       <Typography variant="h4" component="h2" gutterBottom>
         Users
       </Typography>
-      <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={() => fetchUsers(metadata.current_page, metadata.page_size)}
-          disabled={loading}
-          sx={{ minWidth: '120px' }}
-        >
-          Refresh
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddUser}
-          sx={{ minWidth: '140px', maxWidth: '140px' }}
-        >
-          Add User
-        </Button>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+        <Search 
+          value={searchTerm}
+          onSearchChange={handleSearchChange}
+          placeholder="Search users..."
+        />
+        <Stack direction="row" gap={1}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading}
+            sx={{ minWidth: '120px' }}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddUser}
+            sx={{ minWidth: '140px', maxWidth: '140px' }}
+          >
+            Add User
+          </Button>
+        </Stack>
       </Stack>
 
       {error && (
@@ -601,7 +659,7 @@ export default function UserManagement() {
           </Typography>
           <Button
             variant="outlined"
-            onClick={() => fetchUsers(0, 10)}
+            onClick={() => fetchUsers(0, 10, searchTerm)}
             sx={{ mt: 2 }}
           >
             Try Again

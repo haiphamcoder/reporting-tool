@@ -211,6 +211,7 @@ const ChangePasswordPage: React.FC = () => {
                                     required
                                     disabled={isSubmitting}
                                     variant="outlined"
+                                    placeholder="••••••••"
                                     InputProps={{
                                         endAdornment: (
                                             <InputAdornment position="end">
@@ -237,6 +238,7 @@ const ChangePasswordPage: React.FC = () => {
                                     required
                                     disabled={isSubmitting}
                                     variant="outlined"
+                                    placeholder="••••••••"
                                     InputProps={{
                                         endAdornment: (
                                             <InputAdornment position="end">
@@ -264,6 +266,7 @@ const ChangePasswordPage: React.FC = () => {
                                     required
                                     disabled={isSubmitting}
                                     variant="outlined"
+                                    placeholder="••••••••"
                                     InputProps={{
                                         endAdornment: (
                                             <InputAdornment position="end">

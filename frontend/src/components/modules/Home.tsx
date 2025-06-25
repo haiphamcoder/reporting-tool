@@ -2,10 +2,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid2';
 import Stack from '@mui/material/Stack';
 import Statistic from '../Statistic';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Legend, Tooltip } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Legend, Tooltip);
 
 const chartData = {
   labels: ['CSV', 'Excel', 'Google Sheets', 'API'],

@@ -8,6 +8,7 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { StatisticsProvider } from './context/StatisticsContext';
+import './config/chartjs'; // Import Chart.js configuration early
 
 ReactDOM.createRoot(document.querySelector("#root")!).render(
   <React.StrictMode>

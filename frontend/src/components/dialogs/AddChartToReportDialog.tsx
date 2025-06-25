@@ -7,6 +7,7 @@ import {
     Button,
     List,
     ListItem,
+    ListItemButton,
     ListItemText,
     ListItemIcon,
     Checkbox,
@@ -137,27 +138,28 @@ const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, o
                                 charts.map((chart) => {
                                     const disabled = existingChartIds.includes(chart.id);
                                     return (
-                                        <ListItem
-                                            key={chart.id}
-                                            onClick={() => handleToggleChart(chart.id)}
-                                            disabled={disabled}
-                                            sx={disabled ? { opacity: 0.5 } : {}}
-                                        >
-                                            <ListItemIcon>
-                                                <Checkbox
-                                                    edge="start"
-                                                    checked={selectedChartIds.includes(chart.id) || disabled}
-                                                    tabIndex={-1}
-                                                    disableRipple
-                                                    inputProps={{ 'aria-labelledby': `checkbox-list-label-${chart.id}` }}
-                                                    disabled={disabled}
+                                        <ListItem key={chart.id} disablePadding>
+                                            <ListItemButton
+                                                onClick={() => handleToggleChart(chart.id)}
+                                                disabled={disabled}
+                                                sx={disabled ? { opacity: 0.5 } : {}}
+                                            >
+                                                <ListItemIcon>
+                                                    <Checkbox
+                                                        edge="start"
+                                                        checked={selectedChartIds.includes(chart.id) || disabled}
+                                                        tabIndex={-1}
+                                                        disableRipple
+                                                        inputProps={{ 'aria-labelledby': `checkbox-list-label-${chart.id}` }}
+                                                        disabled={disabled}
+                                                    />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    id={`checkbox-list-label-${chart.id}`}
+                                                    primary={chart.name}
+                                                    secondary={chart.description}
                                                 />
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                id={`checkbox-list-label-${chart.id}`}
-                                                primary={chart.name}
-                                                secondary={chart.description}
-                                            />
+                                            </ListItemButton>
                                         </ListItem>
                                     );
                                 })

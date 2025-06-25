@@ -3,51 +3,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
     Typography,
+    Button,
+    Stack,
     CircularProgress,
     Alert,
+    IconButton,
     Grid,
-    Paper,
-    Stack,
-    Button,
-    IconButton
-} from '@mui/material';
-import { API_CONFIG } from '../../config/api';
+    Paper} from '@mui/material';
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-} from 'chart.js';
+    ArrowBack as ArrowBackIcon,
+    Refresh as RefreshIcon,
+    Add as AddIcon} from '@mui/icons-material';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import AddIcon from '@mui/icons-material/Add';
+import { API_CONFIG } from '../../config/api';
 import AddChartToReportDialog from '../dialogs/AddChartToReportDialog';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Fab from '@mui/material/Fab';
 import ExportPdfDialog from './ExportPdfDialog';
-
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    LineElement,
-    PointElement,
-    Filler
-);
 
 interface ReportDetail {
     id: string;
@@ -305,7 +277,6 @@ const ReportViewPage: React.FC = () => {
     const [addChartDialogOpen, setAddChartDialogOpen] = useState(false);
     const reportContentRef = React.useRef<HTMLDivElement>(null);
     const [exportDialogOpen, setExportDialogOpen] = useState(false);
-    const [exportOptions, setExportOptions] = useState<any>(null);
 
     const fetchReport = async () => {
         setLoading(true);
@@ -476,7 +447,6 @@ const ReportViewPage: React.FC = () => {
                     color="primary"
                     startIcon={<AddIcon />}
                     onClick={() => setAddChartDialogOpen(true)}
-                    disabled={loading}
                 >
                     Add Chart
                 </Button>
@@ -495,7 +465,7 @@ const ReportViewPage: React.FC = () => {
                                 <Alert severity="info">No charts in this report.</Alert>
                             ) : (
                                 <Grid container spacing={2}>
-                                    {report.charts.map((chart, idx) => {
+                                    {report.charts.map((chart, _idx) => {
                                         let gridProps = { xs: 12, sm: 12, md: 12, lg: 12 };
                                         if (report.charts.length === 2) gridProps = { xs: 12, sm: 6, md: 6, lg: 6 };
                                         else if (report.charts.length >= 3) gridProps = { xs: 12, sm: 6, md: 4, lg: 4 };

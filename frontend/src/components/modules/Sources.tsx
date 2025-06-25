@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
@@ -18,6 +18,7 @@ import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SourceSummary } from '../../types/source';
+import Search from '../Search';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -54,6 +55,9 @@ export default function Sources() {
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
+
+    // Search state
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Add source dialog states
     const [addStep, setAddStep] = useState(1);
@@ -97,72 +101,88 @@ export default function Sources() {
     });
 
     // Function to update URL with pagination parameters
-    const updateURLWithPagination = (page: number, size: number) => {
+    const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
         const urlParams = new URLSearchParams(location.search);
         urlParams.set('page', page.toString());
         urlParams.set('pageSize', size.toString());
         
+        if (search) {
+            urlParams.set('search', search);
+        } else {
+            urlParams.delete('search');
+        }
+
         // Preserve other URL parameters (like success)
         const newSearch = urlParams.toString();
         const newPath = `/dashboard/sources${newSearch ? `?${newSearch}` : ''}`;
-        
+
         navigate(newPath, { replace: true });
-    };
+    }, [location.search, navigate]);
 
     // Function to get pagination parameters from URL
     const getPaginationFromURL = () => {
         const urlParams = new URLSearchParams(location.search);
         const page = parseInt(urlParams.get('page') || '0', 10);
         const size = parseInt(urlParams.get('pageSize') || '10', 10);
-        return { page, size };
+        const search = urlParams.get('search') || '';
+        return { page, size, search };
     };
 
     // Check for success parameter in URL and pagination parameters
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         const successParam = urlParams.get('success');
-        const { page, size } = getPaginationFromURL();
+        const { page, size, search } = getPaginationFromURL();
 
         if (successParam === 'updated') {
             setSuccess('Source updated successfully');
             setShowSuccessPopup(true);
-            // Clear only the success parameter, keep pagination
+            // Clear only the success parameter, keep pagination and search
             urlParams.delete('success');
             const newSearch = urlParams.toString();
             const newPath = `/dashboard/sources${newSearch ? `?${newSearch}` : ''}`;
             navigate(newPath, { replace: true });
         }
 
-        // Update pagination state from URL
+        // Update pagination and search state from URL
         setCurrentPage(page);
         setPageSize(size);
+        setSearchTerm(search);
     }, [location.search, navigate]);
 
-    // Initialize URL with default pagination values on first load
+    // Initialize URL with default pagination values on first load (only if missing)
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         const hasPageParam = urlParams.has('page');
         const hasPageSizeParam = urlParams.has('pageSize');
-        
-        // If URL doesn't have pagination parameters, add default values
+
+        // Only add default pagination parameters if they're missing
         if (!hasPageParam || !hasPageSizeParam) {
-            const defaultPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
-            const defaultSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
-            
-            urlParams.set('page', defaultPage.toString());
-            urlParams.set('pageSize', defaultSize.toString());
-            
+            const currentPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
+            const currentSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
+
+            urlParams.set('page', currentPage.toString());
+            urlParams.set('pageSize', currentSize.toString());
+
             const newSearch = urlParams.toString();
             const newPath = `/dashboard/sources?${newSearch}`;
             navigate(newPath, { replace: true });
         }
     }, []); // Only run once on mount
 
-    const fetchSources = async (page: number = 0, pageSize: number = 10) => {
+    const fetchSources = useCallback(async (page: number = 0, pageSize: number = 10, search: string = '') => {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?page=${page}&limit=${pageSize}`, {
+            
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('limit', pageSize.toString());
+            if (search.trim()) {
+                params.append('search', search.trim());
+            }
+            
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?${params.toString()}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -205,17 +225,24 @@ export default function Sources() {
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        const { page, size } = getPaginationFromURL();
-        fetchSources(page, size);
     }, []);
 
-    const handlePageChange = (page: number, size: number) => {
-        updateURLWithPagination(page, size);
-        fetchSources(page, size);
-    };
+    useEffect(() => {
+        const { page, size, search } = getPaginationFromURL();
+        fetchSources(page, size, search);
+    }, [fetchSources]);
+
+    const handlePageChange = useCallback((page: number, size: number) => {
+        updateURLWithPagination(page, size, searchTerm);
+        fetchSources(page, size, searchTerm);
+    }, [searchTerm, updateURLWithPagination, fetchSources]);
+
+    const handleSearchChange = useCallback((searchTerm: string) => {
+        // Reset to first page when searching
+        const newPage = 0;
+        updateURLWithPagination(newPage, pageSize, searchTerm);
+        fetchSources(newPage, pageSize, searchTerm);
+    }, [pageSize, fetchSources, updateURLWithPagination]);
 
     const handleRowDoubleClick = async (params: GridRowParams<SourceSummary>) => {
         if (params.row) {
@@ -263,7 +290,7 @@ export default function Sources() {
                 setShowSuccessPopup(true);
                 setDeleteDialogOpen(false);
                 setSourceToDelete(null);
-                fetchSources(metadata.current_page, metadata.page_size);
+                fetchSources(metadata.current_page, metadata.page_size, searchTerm);
             } else {
                 setError(data.message || 'Failed to delete source');
                 setShowErrorPopup(true);
@@ -279,9 +306,9 @@ export default function Sources() {
         setAddDialogOpen(true);
     };
 
-    const handleRefresh = () => {
-        fetchSources(metadata.current_page, metadata.page_size);
-    };
+    const handleRefresh = useCallback(() => {
+        fetchSources(metadata.current_page, metadata.page_size, searchTerm);
+    }, [metadata.current_page, metadata.page_size, searchTerm, fetchSources]);
 
     const handleAddNext = async () => {
         if (addStep === 1) {
@@ -318,7 +345,7 @@ export default function Sources() {
                     const data = await response.json();
                     if (data.success) {
                         // Refresh sources list
-                        fetchSources(metadata.current_page, metadata.page_size);
+                        fetchSources(metadata.current_page, metadata.page_size, searchTerm);
                         setSuccess('Source created successfully');
                         setShowSuccessPopup(true);
                         handleAddClose();
@@ -495,25 +522,32 @@ export default function Sources() {
             <Typography variant="h4" component="h2" gutterBottom>
                 Sources
             </Typography>
-            <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    sx={{ minWidth: '120px' }}
-                >
-                    Refresh
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAddClick}
-                    startIcon={<AddIcon />}
-                    sx={{ minWidth: '140px', maxWidth: '140px' }}
-                >
-                    Add Source
-                </Button>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                <Search 
+                    value={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    placeholder="Search sources..."
+                />
+                <Stack direction="row" gap={1}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={handleRefresh}
+                        disabled={loading}
+                        sx={{ minWidth: '120px' }}
+                    >
+                        Refresh
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleAddClick}
+                        startIcon={<AddIcon />}
+                        sx={{ minWidth: '140px', maxWidth: '140px' }}
+                    >
+                        Add Source
+                    </Button>
+                </Stack>
             </Stack>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>

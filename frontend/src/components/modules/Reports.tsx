@@ -8,15 +8,15 @@ import { GridColDef, GridRenderCellParams, GridRowParams } from '@mui/x-data-gri
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
 import { Box, CircularProgress } from '@mui/material';
 import { ReportSummary } from '../../types/report';
 import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import AddReportDialog from '../dialogs/AddReportDialog';
+import Search from '../Search';
 
 interface ReportsMetadata {
     total_elements: number;
@@ -57,46 +57,57 @@ export default function Reports() {
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
 
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+
     // Function to update URL with pagination parameters
-    const updateURLWithPagination = (page: number, size: number) => {
+    const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
         const urlParams = new URLSearchParams(location.search);
         urlParams.set('page', page.toString());
         urlParams.set('pageSize', size.toString());
+        
+        if (search) {
+            urlParams.set('search', search);
+        } else {
+            urlParams.delete('search');
+        }
         
         // Preserve other URL parameters (like success)
         const newSearch = urlParams.toString();
         const newPath = `/dashboard/reports${newSearch ? `?${newSearch}` : ''}`;
         
         navigate(newPath, { replace: true });
-    };
+    }, [location.search, navigate]);
 
     // Function to get pagination parameters from URL
     const getPaginationFromURL = () => {
         const urlParams = new URLSearchParams(location.search);
         const page = parseInt(urlParams.get('page') || '0', 10);
         const size = parseInt(urlParams.get('pageSize') || '10', 10);
-        return { page, size };
+        const search = urlParams.get('search') || '';
+        return { page, size, search };
     };
 
     // Check for success parameter in URL and pagination parameters
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
         const successParam = urlParams.get('success');
-        const { page, size } = getPaginationFromURL();
+        const { page, size, search } = getPaginationFromURL();
 
         if (successParam === 'updated') {
-            setSuccess('Chart updated successfully');
+            setSuccess('Report updated successfully');
             setShowSuccessPopup(true);
-            // Clear only the success parameter, keep pagination
+            // Clear only the success parameter, keep pagination and search
             urlParams.delete('success');
             const newSearch = urlParams.toString();
             const newPath = `/dashboard/reports${newSearch ? `?${newSearch}` : ''}`;
             navigate(newPath, { replace: true });
         }
 
-        // Update pagination state from URL
+        // Update pagination and search state from URL
         setCurrentPage(page);
         setPageSize(size);
+        setSearchQuery(search);
     }, [location.search, navigate]);
 
     // Initialize URL with default pagination values on first load
@@ -119,11 +130,19 @@ export default function Reports() {
         }
     }, []); // Only run once on mount
 
-    const fetchReports = async (page: number = 0, pageSize: number = 10) => {
+    const fetchReports = useCallback(async (page: number = 0, pageSize: number = 10, search: string = '') => {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}?page=${page}&limit=${pageSize}`, {
+            
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            params.append('limit', pageSize.toString());
+            if (search.trim()) {
+                params.append('search', search.trim());
+            }
+            
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}?${params.toString()}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -149,11 +168,11 @@ export default function Reports() {
                 setCurrentPage(page);
                 setPageSize(pageSize);
             } else {
-                setError(data.message || 'Failed to fetch charts');
+                setError(data.message || 'Failed to fetch reports');
                 setShowErrorPopup(true);
             }
         } catch (error) {
-            setError(error instanceof Error ? error.message : 'Failed to fetch charts');
+            setError(error instanceof Error ? error.message : 'Failed to fetch reports');
             setShowErrorPopup(true);
             setReportsData([]);
             setMetadata({
@@ -166,17 +185,24 @@ export default function Reports() {
         } finally {
             setLoading(false);
         }
-    }
-
-    useEffect(() => {
-        const { page, size } = getPaginationFromURL();
-        fetchReports(page, size);
     }, []);
 
-    const handlePageChange = (page: number, size: number) => {
-        updateURLWithPagination(page, size);
-        fetchReports(page, size);
-    };
+    useEffect(() => {
+        const { page, size, search } = getPaginationFromURL();
+        fetchReports(page, size, search);
+    }, [fetchReports]);
+
+    const handlePageChange = useCallback((page: number, size: number) => {
+        updateURLWithPagination(page, size, searchQuery);
+        fetchReports(page, size, searchQuery);
+    }, [searchQuery, updateURLWithPagination, fetchReports]);
+
+    const handleSearchChange = useCallback((searchTerm: string) => {
+        // Reset to first page when searching
+        const newPage = 0;
+        updateURLWithPagination(newPage, pageSize, searchTerm);
+        fetchReports(newPage, pageSize, searchTerm);
+    }, [pageSize, fetchReports, updateURLWithPagination]);
 
     const handleRowDoubleClick = async (params: GridRowParams<ReportSummary>) => {
         if (params.row) {
@@ -222,11 +248,11 @@ export default function Reports() {
             const data = await response.json();
 
             if (data.success) {
-                setSuccess('Source deleted successfully');
+                setSuccess('Report deleted successfully');
                 setShowSuccessPopup(true);
                 setDeleteDialogOpen(false);
                 setReportToDelete(null);
-                fetchReports(metadata.current_page, metadata.page_size);
+                fetchReports(metadata.current_page, metadata.page_size, searchQuery);
             } else {
                 setError(data.message || 'Failed to delete source');
                 setShowErrorPopup(true);
@@ -323,34 +349,41 @@ export default function Reports() {
         },
     ];
 
-    const handleRefresh = () => {
-        fetchReports(currentPage, pageSize);
-    }
+    const handleRefresh = useCallback(() => {
+        fetchReports(metadata.current_page, metadata.page_size, searchQuery);
+    }, [metadata.current_page, metadata.page_size, searchQuery, fetchReports]);
 
     return (
         <Stack gap={2}>
             <Typography variant="h4" component="h2" gutterBottom>
                 Reports
             </Typography>
-            <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    sx={{ minWidth: '120px' }}
-                >
-                    Refresh
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleAddClick}
-                    startIcon={<AddIcon />}
-                    sx={{ minWidth: '140px', maxWidth: '140px' }}
-                >
-                    Add Report
-                </Button>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                <Search 
+                    value={searchQuery}
+                    onSearchChange={handleSearchChange}
+                    placeholder="Search reports..."
+                />
+                <Stack direction="row" gap={1}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={handleRefresh}
+                        disabled={loading}
+                        sx={{ minWidth: '120px' }}
+                    >
+                        Refresh
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleAddClick}
+                        startIcon={<AddIcon />}
+                        sx={{ minWidth: '140px', maxWidth: '140px' }}
+                    >
+                        Add Report
+                    </Button>
+                </Stack>
             </Stack>
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>

@@ -41,7 +41,7 @@ public class ApiGatewayConfiguration {
         public CorsWebFilter corsWebFilter() {
                 CorsConfiguration corsConfig = new CorsConfiguration();
                 corsConfig.setAllowedOrigins(
-                                Arrays.asList("http://localhost:3000", "http://localhost:5173",
+                                Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://localhost:4173",
                                                 "http://reporting-tool.site", "http://localhost"));
                 corsConfig.setMaxAge(3600L);
                 corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

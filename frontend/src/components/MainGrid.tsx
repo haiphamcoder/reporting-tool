@@ -38,6 +38,7 @@ export default function MainGrid() {
       case 'reports':
         return <Reports />;
       case 'users':
+      case 'user-management':
         return <UserManagement />;
       case 'settings':
         return <Settings />;
