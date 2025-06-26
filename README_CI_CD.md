@@ -11,6 +11,7 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 - ✅ **Test kết nối** trước khi triển khai
 - ✅ **Monitoring và logging** chi tiết
 - ✅ **Bảo mật** với SSH keys và secrets
+- ✅ **Frontend checks riêng biệt** để tránh xung đột
 
 ## 📁 Cấu trúc Files
 
@@ -18,7 +19,8 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 .github/workflows/
 ├── deploy.yml              # Workflow triển khai chính
 ├── deploy-status.yml       # Kiểm tra trạng thái sau triển khai
-├── pre-deploy-check.yml    # Kiểm tra code trước triển khai
+├── pre-deploy-check.yml    # Kiểm tra code cơ bản trước triển khai
+├── frontend-check.yml      # Kiểm tra frontend riêng biệt
 └── test-connection.yml     # Test kết nối SSH
 
 scripts/
@@ -80,16 +82,22 @@ git push origin main
 ## 🔧 Quy trình Triển khai
 
 1. **Pre-deploy Check** (tự động)
-   - Kiểm tra code formatting
+   - Kiểm tra cấu trúc file
    - Validate Dockerfile syntax
    - Check for sensitive data
+   - Verify file permissions
 
-2. **Test Connection** (tự động)
+2. **Frontend Check** (tự động, chỉ khi có thay đổi frontend)
+   - Install dependencies
+   - Code linting
+   - Build test
+
+3. **Test Connection** (tự động)
    - Test SSH connection
    - Verify project access
    - Check Docker/Git installation
 
-3. **Deployment** (tự động)
+4. **Deployment** (tự động)
    - Backup current deployment
    - Stop old containers
    - Clean old images
@@ -98,7 +106,7 @@ git push origin main
    - Health checks
    - Rollback if needed
 
-4. **Status Check** (tự động)
+5. **Status Check** (tự động)
    - Verify all services are healthy
    - Display deployment logs
    - Report final status
@@ -176,6 +184,7 @@ curl http://localhost:80                     # Frontend
 | Build failed | Kiểm tra Dockerfile và dependencies |
 | Service unhealthy | Kiểm tra logs và configuration |
 | Rollback failed | Kiểm tra backup và git history |
+| NPM cache error | Frontend checks được tách riêng |
 
 ### Debug Commands
 
@@ -205,6 +214,11 @@ docker volume ls
 - Parallel service deployment
 - Optimized health checks
 - Efficient rollback strategy
+
+### Workflow Optimization
+- Tách frontend checks riêng biệt
+- Path-based triggers
+- Conditional job execution
 
 ## 📞 Hỗ trợ
 

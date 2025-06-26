@@ -25,6 +25,14 @@ jobs:
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
       run: |
         echo "Testing SSH connection to production server..."
+        if [ -z "$HOST" ] || [ -z "$USERNAME" ] || [ -z "$SSH_KEY" ] || [ -z "$PROJECT_PATH" ]; then
+          echo "❌ Missing required secrets. Please configure all required secrets:"
+          echo "   - HOST"
+          echo "   - USERNAME" 
+          echo "   - SSH_PRIVATE_KEY"
+          echo "   - PROJECT_PATH"
+          exit 1
+        fi
         ./scripts/test-connection.sh
         
     - name: Connection test summary

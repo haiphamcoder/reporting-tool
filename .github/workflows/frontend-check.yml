@@ -1,0 +1,47 @@
+name: Frontend Check
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  frontend-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        echo "Installing frontend dependencies..."
+        cd frontend
+        npm ci
+        
+    - name: Check frontend code formatting
+      run: |
+        echo "Checking frontend code formatting..."
+        cd frontend
+        npm run lint
+        
+    - name: Build frontend
+      run: |
+        echo "Building frontend..."
+        cd frontend
+        npm run build
+        
+    - name: Summary
+      run: |
+        echo "✅ Frontend checks completed"
+        echo "Frontend is ready for deployment" 
