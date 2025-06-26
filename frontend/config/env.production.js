@@ -1,7 +1,7 @@
 // Production Environment Configuration
 export const productionConfig = {
   // Frontend Configuration
-  VITE_API_BASE_URL: 'http://api.reporting-tool.site',
+  VITE_API_BASE_URL: 'http://api.reporting-tool.site:8765',
   VITE_FRONTEND_URL: 'http://reporting-tool.site',
   
   // Production Settings
@@ -14,7 +14,7 @@ export const productionConfig = {
   VITE_ENABLE_DEBUG_PANEL: 'false',
   
   // API Endpoints
-  API_GATEWAY_URL: 'http://api.reporting-tool.site',
+  API_GATEWAY_URL: 'http://api.reporting-tool.site:8765',
   EUREKA_URL: 'http://eureka.reporting-tool.site',
   
   // Production Optimizations
