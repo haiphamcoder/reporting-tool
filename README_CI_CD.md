@@ -12,6 +12,7 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 - ✅ **Monitoring và logging** chi tiết
 - ✅ **Bảo mật** với SSH keys và secrets
 - ✅ **Frontend checks riêng biệt** để tránh xung đột
+- ✅ **Environment management** thông minh
 
 ## 📁 Cấu trúc Files
 
@@ -29,6 +30,8 @@ scripts/
 
 docs/
 └── CICD_SETUP.md          # Hướng dẫn chi tiết cấu hình
+
+env.ci.example             # Template biến môi trường cho CI/CD
 ```
 
 ## ⚡ Quick Start
@@ -61,8 +64,9 @@ git clone https://github.com/your-username/reporting-tool.git
 cd reporting-tool
 
 # Cấu hình environment
-cp .env.example .env
-# Chỉnh sửa file .env
+cp env.ci.example .env
+# Chỉnh sửa file .env với giá trị thật
+nano .env
 ```
 
 ### 3. Test Kết nối
@@ -86,6 +90,7 @@ git push origin main
    - Validate Dockerfile syntax
    - Check for sensitive data
    - Verify file permissions
+   - Sử dụng `env.ci.example` cho docker-compose check
 
 2. **Frontend Check** (tự động, chỉ khi có thay đổi frontend)
    - Install dependencies
@@ -96,6 +101,7 @@ git push origin main
    - Test SSH connection
    - Verify project access
    - Check Docker/Git installation
+   - Test environment file và docker-compose syntax
 
 4. **Deployment** (tự động)
    - Backup current deployment
@@ -141,6 +147,36 @@ export PROJECT_PATH="/home/ubuntu/reporting-tool"
 ./scripts/test-connection.sh
 ```
 
+## 🌍 Environment Management
+
+### File env.ci.example
+- **Template** cho CI/CD testing
+- **KHÔNG** chứa thông tin nhạy cảm thật
+- Được commit vào repository
+- Dùng để kiểm tra docker-compose syntax
+
+### File .env (Production)
+- **CHỨA** thông tin nhạy cảm thật
+- **KHÔNG** được commit vào repository
+- Tạo từ `env.ci.example` và chỉnh sửa
+
+### Các biến môi trường cần thiết:
+
+| Variable | Mô tả |
+|----------|-------|
+| `MYSQL_ROOT_PASSWORD` | MySQL root password |
+| `MYSQL_USER` | MySQL user |
+| `MYSQL_PASSWORD` | MySQL password |
+| `MYSQL_DATABASE` | MySQL database name |
+| `JWT_SECRET_KEY` | JWT secret key |
+| `OAUTH2_GOOGLE_CLIENT_ID` | Google OAuth2 client ID |
+| `OAUTH2_GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret |
+| `OAUTH2_GOOGLE_REDIRECT_URI` | Google OAuth2 redirect URI |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+| `TELEGRAM_BOT_USERNAME` | Telegram bot username |
+| `TIDB_USERNAME` | TiDB username |
+| `TIDB_PASSWORD` | TiDB password |
+
 ## 📊 Monitoring
 
 ### Xem Logs Triển khai
@@ -171,6 +207,7 @@ curl http://localhost:80                     # Frontend
 
 ### Environment Variables
 - Không commit file `.env`
+- Sử dụng `env.ci.example` cho CI/CD testing
 - Sử dụng GitHub Secrets
 - Validate environment variables
 
@@ -185,6 +222,7 @@ curl http://localhost:80                     # Frontend
 | Service unhealthy | Kiểm tra logs và configuration |
 | Rollback failed | Kiểm tra backup và git history |
 | NPM cache error | Frontend checks được tách riêng |
+| Environment variables missing | Đảm bảo file .env tồn tại |
 
 ### Debug Commands
 
@@ -201,6 +239,9 @@ docker network inspect reporting-tool-network
 
 # Kiểm tra volumes
 docker volume ls
+
+# Kiểm tra environment
+cat .env
 ```
 
 ## 📈 Tối ưu hóa
@@ -219,6 +260,7 @@ docker volume ls
 - Tách frontend checks riêng biệt
 - Path-based triggers
 - Conditional job execution
+- Environment management thông minh
 
 ## 📞 Hỗ trợ
 

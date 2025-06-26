@@ -203,6 +203,41 @@ test_deploy_script() {
     fi
 }
 
+# Function to test environment file
+test_environment_file() {
+    local ssh_key_file="$1"
+    
+    log "Testing environment file"
+    
+    # Test if .env file exists
+    if ssh -i "$ssh_key_file" -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p "$PORT" "$USERNAME@$HOST" "cd \"$PROJECT_PATH\" && [ -f .env ]"; then
+        log "✅ .env file exists"
+    else
+        warn "⚠️ .env file does not exist, checking for env.ci.example"
+        if ssh -i "$ssh_key_file" -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p "$PORT" "$USERNAME@$HOST" "cd \"$PROJECT_PATH\" && [ -f env.ci.example ]"; then
+            log "✅ env.ci.example exists (will be used for testing)"
+        else
+            error "❌ Neither .env nor env.ci.example exists"
+            return 1
+        fi
+    fi
+}
+
+# Function to test docker-compose syntax
+test_docker_compose() {
+    local ssh_key_file="$1"
+    
+    log "Testing docker-compose syntax"
+    
+    # Test docker-compose syntax
+    if ssh -i "$ssh_key_file" -o ConnectTimeout=10 -o StrictHostKeyChecking=no -p "$PORT" "$USERNAME@$HOST" "cd \"$PROJECT_PATH\" && docker compose -f docker-compose.prod.yml config > /dev/null"; then
+        log "✅ Docker Compose syntax is valid"
+    else
+        error "❌ Docker Compose syntax is invalid"
+        return 1
+    fi
+}
+
 # Main function
 main() {
     log "Starting connection test..."
@@ -263,6 +298,20 @@ main() {
     
     # Test deployment script
     if test_deploy_script "$ssh_key_file"; then
+        ((tests_passed++))
+    else
+        ((tests_failed++))
+    fi
+    
+    # Test environment file
+    if test_environment_file "$ssh_key_file"; then
+        ((tests_passed++))
+    else
+        ((tests_failed++))
+    fi
+    
+    # Test docker-compose syntax
+    if test_docker_compose "$ssh_key_file"; then
         ((tests_passed++))
     else
         ((tests_failed++))

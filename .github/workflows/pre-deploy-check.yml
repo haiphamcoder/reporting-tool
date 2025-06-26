@@ -34,6 +34,11 @@ jobs:
           docker run --rm -i hadolint/hadolint < "$dockerfile" || true
         done
         
+    - name: Prepare environment for docker-compose check
+      run: |
+        echo "Preparing environment for docker-compose syntax check..."
+        cp env.ci.example .env
+        
     - name: Check docker-compose syntax
       run: |
         echo "Checking docker-compose syntax..."
@@ -43,7 +48,7 @@ jobs:
       run: |
         echo "Checking for sensitive data in code..."
         # Check for hardcoded passwords, API keys, etc.
-        if grep -r "password.*=" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target; then
+        if grep -r "password.*=" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=target --exclude=env.ci.example; then
           echo "Warning: Found potential hardcoded passwords"
         fi
         
@@ -62,6 +67,7 @@ jobs:
           "scripts/test-connection.sh"
           "frontend/package.json"
           "frontend/package-lock.json"
+          "env.ci.example"
         )
         
         for file in "${required_files[@]}"; do

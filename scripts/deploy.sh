@@ -30,6 +30,20 @@ error() {
     echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}" | tee -a $LOG_FILE
 }
 
+# Function to check and prepare environment file
+check_environment_file() {
+    if [ ! -f ".env" ]; then
+        if [ -f "env.ci.example" ]; then
+            warn "No .env file found, using env.ci.example for testing"
+            cp env.ci.example .env
+        else
+            error "No .env file found and no env.ci.example available"
+            error "Please create a .env file with proper environment variables"
+            exit 1
+        fi
+    fi
+}
+
 # Function to check if services are healthy
 check_services_health() {
     log "Checking services health..."
@@ -105,6 +119,11 @@ backup_current_deployment() {
     # Backup current images
     docker images | grep $PROJECT_NAME > $BACKUP_DIR/current_images.txt
     
+    # Backup environment file if it exists
+    if [ -f ".env" ]; then
+        cp .env $BACKUP_DIR/
+    fi
+    
     log "Backup created successfully"
 }
 
@@ -124,6 +143,11 @@ rollback_deployment() {
     if [ -f "$BACKUP_DIR/current_commit.txt" ]; then
         log "Restoring from backup..."
         git checkout $(cat $BACKUP_DIR/current_commit.txt)
+        
+        # Restore environment file if it was backed up
+        if [ -f "$BACKUP_DIR/.env" ]; then
+            cp $BACKUP_DIR/.env .env
+        fi
         
         # Rebuild and start containers
         log "Rebuilding and starting containers..."
@@ -146,6 +170,9 @@ rollback_deployment() {
 deploy() {
     log "Starting deployment process..."
     
+    # Check and prepare environment file
+    check_environment_file
+    
     # Create backup
     backup_current_deployment
     
@@ -160,6 +187,9 @@ deploy() {
     # Pull latest code
     log "Pulling latest code..."
     git pull origin main
+    
+    # Check environment file again after pull
+    check_environment_file
     
     # Start new containers
     log "Starting new containers..."
