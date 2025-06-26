@@ -4,10 +4,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "vite --mode development",
+    "dev:local": "vite --mode development",
+    "dev:prod": "vite --mode production",
+    "build": "tsc -b && vite build --mode production",
+    "build:local": "tsc -b && vite build --mode development",
+    "build:prod": "tsc -b && vite build --mode production",
+    "preview": "vite preview",
+    "preview:local": "vite preview --mode development",
+    "preview:prod": "vite preview --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules/.vite",
+    "start": "npm run dev:local"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

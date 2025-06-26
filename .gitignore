@@ -15,8 +15,28 @@ database/tidb/data
 frontend/node_modules/
 frontend/dist/
 frontend/package-lock.json
+frontend/.env*
+frontend/.vite/
 
 authentication-service/config/application.properties
 integrated-service/config/application.properties
 
 source_dump.txt
+
+# Ignore production and secret config files for backend services
+api-gateway/config/application-prod.properties
+authentication-service/config/application-prod.properties
+data-processing-service/config/application-prod.properties
+reporting-service/config/application-prod.properties
+user-management-service/config/application-prod.properties
+integrated-service/config/application-prod.properties
+eureka-discovery-server/config/application-prod.properties
+
+# Ignore all .env.local files in frontend
+frontend/.env.local
+
+# Example: ignore any other secret config
+**/config/*-secret.properties
+
+# Ignore production docker compose files
+docker-compose.prod.yml

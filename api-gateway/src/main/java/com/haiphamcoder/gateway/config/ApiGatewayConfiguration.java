@@ -1,5 +1,6 @@
 package com.haiphamcoder.gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @RequiredArgsConstructor
 public class ApiGatewayConfiguration {
+
+        @Value("${gateway.cors.allowed-origins}")
+        private String allowedOrigins;
 
         @Bean
         public RouteLocator gatewayRouter(RouteLocatorBuilder builder) {
@@ -40,9 +44,7 @@ public class ApiGatewayConfiguration {
         @Bean
         public CorsWebFilter corsWebFilter() {
                 CorsConfiguration corsConfig = new CorsConfiguration();
-                corsConfig.setAllowedOrigins(
-                                Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://localhost:4173",
-                                                "http://reporting-tool.site", "http://localhost"));
+                corsConfig.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
                 corsConfig.setMaxAge(3600L);
                 corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 corsConfig.setAllowedHeaders(Arrays.asList("*"));

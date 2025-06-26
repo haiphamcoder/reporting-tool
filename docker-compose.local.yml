@@ -1,0 +1,285 @@
+services:
+  mysql-server:
+    image: mysql:8.2
+    container_name: mysql-server
+    ports:
+      - "3306:3306"
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: sandbox
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+    command: mysqld --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: [ "CMD", "/usr/bin/mysql", "--user=root", "--password=${MYSQL_ROOT_PASSWORD}", "--execute", "SELECT 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./database/mysql-server/data:/var/lib/mysql
+      - ./database/mysql-server/init:/docker-entrypoint-initdb.d
+      - ./database/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
+    restart: always
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.2
+
+  hdfs-standalone:
+    image: apache/hadoop:3.4.0
+    container_name: hdfs-standalone
+    hostname: hdfs-standalone
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+      - "9864:9864"
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_HEAPSIZE=2048
+    volumes:
+      - ./database/hadoop/dfs/namenode:/hadoop/dfs/namenode
+      - ./database/hadoop/dfs/datanode:/hadoop/dfs/datanode
+      - ./database/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./database/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./database/hadoop/script/start-standalone.sh:/start-standalone.sh
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://hdfs-standalone:9870/" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    command: [ "/bin/bash", "-c", "/start-standalone.sh" ]
+    restart: always
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.3
+
+  tidb-server:
+    image: pingcap/tidb:v8.5.0
+    container_name: tidb-server
+    ports:
+      - "4000:4000"
+    command:
+      - --config=/tidb.toml
+      - --path=/data
+    volumes:
+      - ./database/tidb/tidb.toml:/tidb.toml:ro
+      - ./database/tidb/data:/data
+    restart: always
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.4
+
+  eureka-discovery-server:
+    build: ./eureka-discovery-server
+    container_name: eureka-discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+    ports:
+      - "8761:8761"
+    volumes:
+      - ./eureka-discovery-server/config/application-local.properties:/app/config/application-local.properties
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.5
+    restart: always
+
+  user-management-service:
+    build: ./user-management-service
+    container_name: user-management-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+      - MYSQL_SERVER_HOST=localhost
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - JWT_SECRET_KEY=HQ58ZrkNESj8GM3k3FAM5jq1xIH32TgztewtBlHPca0=
+    ports:
+      - "8092:8080"
+      - "9090:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.8
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+    volumes:
+      - ./user-management-service/config/application-local.properties:/app/config/application-local.properties
+
+  authentication-service:
+    build: ./authentication-service
+    container_name: authentication-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+      - MYSQL_SERVER_HOST=localhost
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - USER_MANAGEMENT_SERVICE_HOST=localhost
+      - USER_MANAGEMENT_SERVICE_PORT=9090
+      - JWT_SECRET_KEY=HQ58ZrkNESj8GM3k3FAM5jq1xIH32TgztewtBlHPca0=
+    ports:
+      - "8091:8080"
+    volumes:
+      - ./authentication-service/config/application-local.properties:/app/config/application-local.properties
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.7
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+
+  reporting-service:
+    build: ./reporting-service
+    container_name: reporting-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+      - MYSQL_SERVER_HOST=localhost
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - JWT_SECRET_KEY=HQ58ZrkNESj8GM3k3FAM5jq1xIH32TgztewtBlHPca0=
+    ports:
+      - "8093:8080"
+      - "9091:9091"
+      - "9092:9092"
+    volumes:
+      - ./reporting-service/config/application-local.properties:/app/config/application-local.properties
+      - ./reporting-service/config/core-site.xml:/app/config/core-site.xml
+      - ./reporting-service/config/hdfs-site.xml:/app/config/hdfs-site.xml
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.9
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+
+  data-processing-service:
+    build: ./data-processing-service
+    container_name: data-processing-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+      - MYSQL_SERVER_HOST=localhost
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - REPORTING_SERVICE_HOST=localhost
+      - TIDB_SERVER_HOST=localhost
+      - TIDB_SERVER_PORT=4000
+      - TIDB_USERNAME=root
+      - TIDB_PASSWORD=
+      - JWT_SECRET_KEY=HQ58ZrkNESj8GM3k3FAM5jq1xIH32TgztewtBlHPca0=
+    ports:
+      - "8094:8080"
+    volumes:
+      - ./data-processing-service/config/application-local.properties:/app/config/application-local.properties
+      - ./data-processing-service/config/core-site.xml:/app/config/core-site.xml
+      - ./data-processing-service/config/hdfs-site.xml:/app/config/hdfs-site.xml
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.10
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+
+  integrated-service:
+    build: ./integrated-service
+    container_name: integrated-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+      - MYSQL_SERVER_HOST=localhost
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=reporting_tool
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - JWT_SECRET_KEY=local-jwt-secret-key-for-integrated-service-development-only
+      - TELEGRAM_BOT_TOKEN=
+      - TELEGRAM_BOT_USERNAME=
+    ports:
+      - "8095:8080"
+    volumes:
+      - ./integrated-service/config/application-local.properties:/app/config/application-local.properties
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.11
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - DISCOVERY_SERVER_URL=http://localhost:8761
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./api-gateway/config/application-local.properties:/app/config/application-local.properties
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.6
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.local
+    container_name: reporting-tool-frontend
+    environment:
+      - NODE_ENV=development
+      - VITE_APP_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8765
+      - VITE_FRONTEND_URL=http://localhost:3000
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    restart: always
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.12
+
+networks:
+  reporting-tool-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.80.0/24
+          gateway: 172.19.80.1
