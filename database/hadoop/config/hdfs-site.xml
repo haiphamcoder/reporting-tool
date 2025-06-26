@@ -21,8 +21,8 @@
         <value>false</value>
         <description>Disable permission checking.</description>
     </property>
-    <!-- RPC and HTTP addresses for NameNode -->
-    <property>
+
+    <!-- <property>
         <name>dfs.namenode.rpc-address</name>
         <value>0.0.0.0:9000</value>
         <description>The address and port for the NameNode RPC server.</description>
@@ -32,7 +32,6 @@
         <value>0.0.0.0:9870</value>
         <description>The address and port for the NameNode HTTP server.</description>
     </property>
-    <!-- RPC and HTTP addresses for DataNode -->
     <property>
         <name>dfs.datanode.address</name>
         <value>0.0.0.0:9866</value>
@@ -43,7 +42,6 @@
         <value>0.0.0.0:9864</value>
         <description>The address and port for the DataNode HTTP server.</description>
     </property>
-    <!-- Hostname configurations for Docker -->
     <property>
         <name>dfs.client.use.datanode.hostname</name>
         <value>true</value>
@@ -53,5 +51,5 @@
         <name>dfs.datanode.use.datanode.hostname</name>
         <value>true</value>
         <description>Whether datanodes should use hostnames when connecting to other datanodes for data transfer.</description>
-    </property>
+    </property> -->
 </configuration>

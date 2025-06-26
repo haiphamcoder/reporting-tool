@@ -1,24 +1,10 @@
-# Define required directories
-REQUIRED_DIRS := database/hadoop/dfs/namenode database/hadoop/dfs/datanode database/mysql-server/data database/tidb/data
-
-# Create directories
-init:
-	@echo "Creating required directories..."
-	@mkdir -p $(REQUIRED_DIRS)
-	@chmod 777 database/hadoop/dfs/namenode
-	@sudo chown -R 1000:1000 database/hadoop/dfs/namenode
-	@chmod 777 database/hadoop/dfs/datanode
-	@sudo chown -R 1000:1000 database/hadoop/dfs/datanode
-	@chmod 777 database/mysql-server/data
-	@chmod 777 database/tidb/data
-	@echo "Directories created successfully!"
-
 clean-data:
-	@echo "Cleaning up and creating required directories..."
-	@sudo rm -rf database/hadoop/dfs
-	@sudo rm -rf database/mysql-server/data
-	@sudo rm -rf database/tidb/data
-	@echo "Directories cleaned up successfully!"
+	@echo "Cleaning up data..."
+	@docker volume rm reporting-tool_datanode-data
+	@docker volume rm reporting-tool_namenode-data
+	@docker volume rm reporting-tool_mysql-data
+	@docker volume rm reporting-tool_tidb-data
+	@echo "Data cleaned up successfully!"
 
 clean-images:
 	@echo "Cleaning up images..."
@@ -63,9 +49,7 @@ clean-images:
 # Clean up
 clean:
 	@echo "Cleaning up..."
-	@sudo rm -rf database/hadoop/dfs
-	@sudo rm -rf database/mysql-server/data
-	@sudo rm -rf database/tidb/data
+	@make clean-data
 	@if docker image ls | grep -q reporting-tool-eureka-discovery-server; then \
 		docker image rm reporting-tool-eureka-discovery-server; \
 		echo "Removed reporting-tool-eureka-discovery-server image"; \

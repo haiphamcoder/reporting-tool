@@ -2,6 +2,7 @@ services:
   mysql-server:
     image: mysql:8.2
     container_name: mysql-server
+    user: root
     ports:
       - "3306:3306"
     env_file:
@@ -19,7 +20,7 @@ services:
       retries: 5
       start_period: 30s
     volumes:
-      - ./database/mysql-server/data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
       - ./database/mysql-server/init:/docker-entrypoint-initdb.d
       - ./database/mysql-server/my.cnf:/etc/mysql/conf.d/my.cnf
     restart: always
@@ -31,6 +32,7 @@ services:
     image: apache/hadoop:3.4.0
     container_name: hdfs-standalone
     hostname: hdfs-standalone
+    user: root
     ports:
       - "9870:9870"
       - "9000:9000"
@@ -42,8 +44,8 @@ services:
       - HADOOP_HOME=/opt/hadoop
       - HADOOP_HEAPSIZE=2048
     volumes:
-      - ./database/hadoop/dfs/namenode:/hadoop/dfs/namenode
-      - ./database/hadoop/dfs/datanode:/hadoop/dfs/datanode
+      - namenode-data:/hadoop/dfs/namenode
+      - datanode-data:/hadoop/dfs/datanode
       - ./database/hadoop/config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
       - ./database/hadoop/config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
       - ./database/hadoop/script/start-standalone.sh:/start-standalone.sh
@@ -61,6 +63,7 @@ services:
   tidb-server:
     image: pingcap/tidb:v8.5.0
     container_name: tidb-server
+    user: root
     ports:
       - "4000:4000"
     env_file:
@@ -70,7 +73,7 @@ services:
       - --path=/data
     volumes:
       - ./database/tidb/tidb.toml:/tidb.toml:ro
-      - ./database/tidb/data:/data
+      - tidb-data:/data
     restart: always
     networks:
       reporting-tool-network:
@@ -254,8 +257,6 @@ services:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
     ports:
       - "8765:8765"
-    volumes:
-      - ./api-gateway/config/application-local.properties:/app/config/application-local.properties
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
@@ -290,3 +291,9 @@ networks:
       config:
         - subnet: 172.19.80.0/24
           gateway: 172.19.80.1
+
+volumes:
+  namenode-data:
+  datanode-data:
+  tidb-data:
+  mysql-data:
