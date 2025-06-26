@@ -21,24 +21,37 @@
         <value>false</value>
         <description>Disable permission checking.</description>
     </property>
-    <!-- <property>
+    <!-- RPC and HTTP addresses for NameNode -->
+    <property>
+        <name>dfs.namenode.rpc-address</name>
+        <value>0.0.0.0:9000</value>
+        <description>The address and port for the NameNode RPC server.</description>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>0.0.0.0:9870</value>
+        <description>The address and port for the NameNode HTTP server.</description>
+    </property>
+    <!-- RPC and HTTP addresses for DataNode -->
+    <property>
+        <name>dfs.datanode.address</name>
+        <value>0.0.0.0:9866</value>
+        <description>The address and port for the DataNode RPC server.</description>
+    </property>
+    <property>
+        <name>dfs.datanode.http.address</name>
+        <value>0.0.0.0:9864</value>
+        <description>The address and port for the DataNode HTTP server.</description>
+    </property>
+    <!-- Hostname configurations for Docker -->
+    <property>
         <name>dfs.client.use.datanode.hostname</name>
         <value>true</value>
         <description>Whether clients should use datanode hostnames when connecting to datanodes.</description>
-    </property> -->
-    <!-- <property>
+    </property>
+    <property>
         <name>dfs.datanode.use.datanode.hostname</name>
         <value>true</value>
         <description>Whether datanodes should use hostnames when connecting to other datanodes for data transfer.</description>
     </property>
-    <property>
-        <name>dfs.namenode.hostname</name>
-        <value>reporting-tool.site</value>
-        <description>The hostname that the namenode binds to.</description>
-    </property>
-    <property>
-        <name>dfs.datanode.hostname</name>
-        <value>reporting-tool.site</value>
-        <description>The hostname that the datanode binds to.</description>
-    </property> -->
 </configuration>
