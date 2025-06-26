@@ -27,3 +27,17 @@ frontend/.env.local
 .env
 .env.local
 .env.prod
+
+# CI/CD related files
+/tmp/deployment.log
+/tmp/reporting-tool-backup/
+*.log
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+github_actions*
+
+# Docker volumes
+docker-volumes/
