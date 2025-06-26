@@ -14,6 +14,7 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 - ✅ **Frontend checks riêng biệt** để tránh xung đột
 - ✅ **Environment management** thông minh
 - ✅ **Dependency management** cho frontend và backend
+- ✅ **Environment setup** tự động
 
 ## 📁 Cấu trúc Files
 
@@ -23,11 +24,13 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 ├── deploy-status.yml       # Kiểm tra trạng thái sau triển khai
 ├── pre-deploy-check.yml    # Kiểm tra code cơ bản trước triển khai
 ├── frontend-check.yml      # Kiểm tra frontend riêng biệt
+├── setup-environment.yml   # Setup môi trường trên Google Cloud VM
 └── test-connection.yml     # Test kết nối SSH
 
 scripts/
 ├── deploy.sh               # Script triển khai nâng cao
-└── test-connection.sh      # Script test kết nối
+├── test-connection.sh      # Script test kết nối
+└── setup-environment.sh    # Script setup môi trường tự động
 
 docs/
 └── CICD_SETUP.md          # Hướng dẫn chi tiết cấu hình
@@ -52,17 +55,16 @@ Vào **Repository Settings** → **Secrets and variables** → **Actions** và t
 | `PORT` | SSH port (thường là `22`) |
 | `PROJECT_PATH` | Đường dẫn project trên VM |
 
-### 2. Cấu hình Google Cloud VM
+### 2. Setup Environment trên Google Cloud VM
 
+#### Cách 1: Tự động (Khuyến nghị)
+1. Vào **GitHub Actions** → **Setup Environment**
+2. Chọn **Run workflow**
+3. Chọn setup type: **setup**
+4. Click **Run workflow**
+
+#### Cách 2: Thủ công
 ```bash
-# Cài đặt Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-
-# Cài đặt Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
 # Clone repository
 git clone https://github.com/your-username/reporting-tool.git
 cd reporting-tool
@@ -109,10 +111,10 @@ git push origin main
    - Test environment file và docker-compose syntax
 
 4. **Deployment** (tự động)
+   - Pull latest code
    - Backup current deployment
    - Stop old containers
    - Clean old images
-   - Pull latest code
    - Build and start new containers
    - Health checks
    - Rollback if needed
@@ -150,6 +152,16 @@ export SSH_KEY="your-private-key"
 export PROJECT_PATH="/home/ubuntu/reporting-tool"
 
 ./scripts/test-connection.sh
+```
+
+### Script Setup Environment
+
+```bash
+# Setup hoàn chỉnh môi trường
+./scripts/setup-environment.sh setup
+
+# Kiểm tra môi trường
+./scripts/setup-environment.sh check
 ```
 
 ## 🌍 Environment Management
@@ -258,10 +270,19 @@ curl http://localhost:80                     # Frontend
 | NPM cache error | Frontend checks được tách riêng |
 | Environment variables missing | Đảm bảo file .env tồn tại |
 | Package-lock.json missing | Chạy `npm install --package-lock-only` |
+| Scripts not found | Chạy setup environment workflow |
 
 ### Debug Commands
 
 ```bash
+# Kiểm tra git status
+git status
+git log --oneline -5
+
+# Kiểm tra files
+ls -la scripts/
+ls -la
+
 # Kiểm tra containers
 docker compose -f docker-compose.prod.yml ps
 
@@ -281,6 +302,9 @@ cat .env
 # Kiểm tra frontend dependencies
 cd frontend
 npm list
+
+# Kiểm tra environment setup
+./scripts/setup-environment.sh check
 ```
 
 ## 📈 Tối ưu hóa
@@ -301,6 +325,7 @@ npm list
 - Conditional job execution
 - Environment management thông minh
 - Dependency version locking
+- Automated environment setup
 
 ## 📞 Hỗ trợ
 
@@ -309,7 +334,8 @@ Nếu gặp vấn đề:
 1. Kiểm tra logs trong GitHub Actions
 2. Xem deployment logs trên VM
 3. Chạy test connection workflow
-4. Tạo issue với thông tin chi tiết
+4. Chạy setup environment workflow
+5. Tạo issue với thông tin chi tiết
 
 ## 📚 Tài liệu tham khảo
 

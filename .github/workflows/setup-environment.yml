@@ -1,0 +1,52 @@
+name: Setup Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      setup_type:
+        description: 'Setup type'
+        required: true
+        default: 'check'
+        type: choice
+        options:
+        - check
+        - setup
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Environment on Google Cloud VM
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          # Navigate to project directory
+          cd ${{ secrets.PROJECT_PATH }}
+          
+          # Pull latest code first
+          echo "Pulling latest code..."
+          git pull origin main
+          
+          # Check if setup script exists
+          if [ ! -f "scripts/setup-environment.sh" ]; then
+            echo "❌ scripts/setup-environment.sh not found!"
+            echo "Available files in scripts/:"
+            ls -la scripts/ || echo "scripts/ directory not found"
+            exit 1
+          fi
+          
+          # Make script executable and run it
+          chmod +x scripts/setup-environment.sh
+          
+          echo "Running environment setup with type: ${{ github.event.inputs.setup_type }}"
+          ./scripts/setup-environment.sh ${{ github.event.inputs.setup_type }}
+          
+          echo "Environment setup completed!" 

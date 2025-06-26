@@ -11,6 +11,7 @@ Hệ thống CI/CD bao gồm:
 - **Status Monitoring**: Theo dõi và báo cáo trạng thái triển khai
 - **Environment Management**: Quản lý biến môi trường cho CI/CD và production
 - **Dependency Management**: Quản lý dependencies cho frontend và backend
+- **Environment Setup**: Script tự động setup môi trường trên Google Cloud VM
 
 ## Cấu hình GitHub Secrets
 
@@ -137,6 +138,7 @@ Workflow chính để triển khai ứng dụng:
 - Trigger khi push vào nhánh `main`
 - Sử dụng SSH để kết nối đến VM
 - Chạy script triển khai nâng cao
+- Tự động pull code mới nhất trước khi deploy
 
 ### 2. `.github/workflows/deploy-status.yml`
 Workflow kiểm tra trạng thái triển khai:
@@ -157,13 +159,28 @@ Workflow kiểm tra frontend riêng biệt:
 - Chỉ chạy khi có thay đổi trong `frontend/`
 - Kiểm tra dependencies và build
 
-### 5. `scripts/deploy.sh`
+### 5. `.github/workflows/setup-environment.yml`
+Workflow setup môi trường trên Google Cloud VM:
+- Chạy thủ công (workflow_dispatch)
+- Có thể chọn setup hoặc check
+- Tự động cài đặt dependencies nếu cần
+
+### 6. `scripts/deploy.sh`
 Script triển khai nâng cao với các tính năng:
 - Backup deployment hiện tại
 - Rollback tự động nếu có lỗi
 - Health checks cho các service
 - Logging chi tiết
 - Tự động sử dụng `env.ci.example` nếu không có `.env`
+
+### 7. `scripts/setup-environment.sh`
+Script setup môi trường tự động:
+- Cài đặt Docker, Docker Compose, Git, Make
+- Clone repository nếu cần
+- Kiểm tra và tạo file .env
+- Setup file permissions
+- Kiểm tra firewall
+- Test basic functionality
 
 ## Quy trình Triển khai
 
@@ -188,10 +205,10 @@ Khi có code mới được push vào nhánh `main`:
    - Test environment file và docker-compose syntax
 
 4. **Deployment** (tự động)
+   - Pull latest code
    - Backup current deployment
    - Stop old containers
    - Clean old images
-   - Pull latest code
    - Build and start new containers
    - Health checks
    - Rollback if needed
@@ -218,6 +235,29 @@ Script `deploy.sh` hỗ trợ các lệnh sau:
 # Xem logs
 ./scripts/deploy.sh logs
 ```
+
+## Sử dụng Script Setup Environment
+
+Script `setup-environment.sh` hỗ trợ các lệnh sau:
+
+```bash
+# Setup hoàn chỉnh môi trường
+./scripts/setup-environment.sh setup
+
+# Kiểm tra môi trường
+./scripts/setup-environment.sh check
+```
+
+### Setup Environment Workflow
+
+Để setup môi trường trên Google Cloud VM:
+
+1. Vào **GitHub Actions** → **Setup Environment**
+2. Chọn **Run workflow**
+3. Chọn setup type:
+   - **check**: Chỉ kiểm tra môi trường
+   - **setup**: Setup hoàn chỉnh môi trường
+4. Click **Run workflow**
 
 ## Environment Variables Management
 
@@ -304,6 +344,22 @@ curl http://localhost:80                     # Frontend
 - **Rollback Failed**: Kiểm tra backup và git history
 - **Environment Variables Missing**: Đảm bảo file .env tồn tại và có đầy đủ biến
 - **Package-lock.json Missing**: Chạy `npm install --package-lock-only` trong frontend directory
+- **Scripts Not Found**: Chạy setup environment workflow hoặc pull code mới nhất
+
+### 4. Debug Commands
+
+```bash
+# Kiểm tra git status
+git status
+git log --oneline -5
+
+# Kiểm tra files
+ls -la scripts/
+ls -la
+
+# Kiểm tra environment
+./scripts/setup-environment.sh check
+```
 
 ## Bảo mật
 
@@ -349,4 +405,5 @@ curl http://localhost:80                     # Frontend
 Nếu có vấn đề với CI/CD setup, vui lòng:
 1. Kiểm tra logs trong GitHub Actions
 2. Xem deployment logs trên VM
-3. Tạo issue với thông tin chi tiết về lỗi 
+3. Chạy setup environment workflow
+4. Tạo issue với thông tin chi tiết về lỗi 

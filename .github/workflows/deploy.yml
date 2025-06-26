@@ -23,8 +23,43 @@ jobs:
           # Navigate to project directory
           cd ${{ secrets.PROJECT_PATH }}
           
+          # Pull latest code first
+          echo "Pulling latest code..."
+          git pull origin main
+          
+          # Check if scripts exist
+          echo "Checking if deployment scripts exist..."
+          if [ ! -f "scripts/deploy.sh" ]; then
+            echo "❌ scripts/deploy.sh not found!"
+            echo "Available files in scripts/:"
+            ls -la scripts/ || echo "scripts/ directory not found"
+            echo ""
+            echo "Current directory contents:"
+            ls -la
+            echo ""
+            echo "Git status:"
+            git status
+            echo ""
+            echo "Git log (last 5 commits):"
+            git log --oneline -5
+            exit 1
+          fi
+          
+          if [ ! -f "scripts/test-connection.sh" ]; then
+            echo "❌ scripts/test-connection.sh not found!"
+            exit 1
+          fi
+          
           # Make deploy script executable
           chmod +x scripts/deploy.sh
+          chmod +x scripts/test-connection.sh
+          
+          # Check if setup-environment.sh exists and run it
+          if [ -f "scripts/setup-environment.sh" ]; then
+            echo "Running environment setup..."
+            chmod +x scripts/setup-environment.sh
+            ./scripts/setup-environment.sh check
+          fi
           
           # Run deployment script
           echo "Starting deployment process..."
