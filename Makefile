@@ -6,7 +6,9 @@ init:
 	@echo "Creating required directories..."
 	@mkdir -p $(REQUIRED_DIRS)
 	@chmod 777 database/hadoop/dfs/namenode
+	@chown -R 1000:1000 database/hadoop/dfs/namenode
 	@chmod 777 database/hadoop/dfs/datanode
+	@chown -R 1000:1000 database/hadoop/dfs/datanode
 	@chmod 777 database/mysql-server/data
 	@chmod 777 database/tidb/data
 	@echo "Directories created successfully!"
