@@ -1,18 +1,19 @@
 services:
   mysql-server:
-    image: mysql:${MYSQL_VERSION}
+    image: mysql:8.2
     container_name: mysql-server
     ports:
       - "3306:3306"
     env_file:
       - .env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sandbox
-      MYSQL_ALLOW_EMPTY_PASSWORD: true
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     command: mysqld --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: [ "CMD", "/usr/bin/mysql", "--user=root", "--password=root", "--execute", "SELECT 1" ]
+      test: [ "CMD", "/usr/bin/mysql", "--user=root", "--password=${MYSQL_ROOT_PASSWORD}", "--execute", "SELECT 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -27,7 +28,7 @@ services:
         ipv4_address: 172.19.80.2
 
   hdfs-standalone:
-    image: apache/hadoop:${HADOOP_VERSION}
+    image: apache/hadoop:3.4.0
     container_name: hdfs-standalone
     hostname: hdfs-standalone
     ports:
@@ -57,7 +58,7 @@ services:
         ipv4_address: 172.19.80.3
 
   tidb-server:
-    image: pingcap/tidb:${TIDB_VERSION}
+    image: pingcap/tidb:v8.5.0
     container_name: tidb-server
     ports:
       - "4000:4000"
@@ -75,16 +76,14 @@ services:
         ipv4_address: 172.19.80.4
 
   eureka-discovery-server:
-    build:
-      context: ./eureka-discovery-server
-      dockerfile: Dockerfile
+    build: ./eureka-discovery-server
     container_name: eureka-discovery-server
-    hostname: eureka-discovery-server
-    ports:
-      - 8761:8761
+    env_file:
+      - .env
     environment:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8761
+    ports:
+      - "8761:8761"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
@@ -96,74 +95,22 @@ services:
         ipv4_address: 172.19.80.5
     restart: always
 
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    hostname: api-gateway
-    ports:
-      - 8765:8765
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8765
-    networks:
-      reporting-tool-network:
-        ipv4_address: 172.19.80.6
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
-    restart: always
-
-  authentication-service:
-    build:
-      context: ./authentication-service
-      dockerfile: Dockerfile
-    container_name: authentication-service
-    hostname: authentication-service
-    ports:
-      - 8091:8080
-    environment:
-      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8080
-      - MYSQL_SERVER_HOST=mysql-server
-      - MYSQL_SERVER_PORT=3306
-      - MYSQL_DATABASE=reporting_tool
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_POOL_SIZE=5
-      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
-      - USER_MANAGEMENT_SERVICE_PORT=9090
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-    networks:
-      reporting-tool-network:
-        ipv4_address: 172.19.80.7
-    depends_on:
-      eureka-discovery-server:
-        condition: service_healthy
-    restart: always
   user-management-service:
-    build:
-      context: ./user-management-service
-      dockerfile: Dockerfile
+    build: ./user-management-service
     container_name: user-management-service
-    hostname: user-management-service
-    ports:
-      - 8092:8080
+    env_file:
+      - .env
     environment:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8080
       - MYSQL_SERVER_HOST=mysql-server
       - MYSQL_SERVER_PORT=3306
-      - MYSQL_DATABASE=reporting_tool
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_POOL_SIZE=5
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    ports:
+      - "8092:8080"
+      - "9090:9090"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
@@ -178,97 +125,162 @@ services:
         condition: service_healthy
     restart: always
 
-  reporting-service:
-    build:
-      context: ./reporting-service
-      dockerfile: Dockerfile
-    container_name: reporting-service
-    hostname: reporting-service
-    ports:
-      - 8093:8080
+  authentication-service:
+    build: ./authentication-service
+    container_name: authentication-service
+    env_file:
+      - .env
     environment:
+      - SPRING_PROFILES_ACTIVE=local
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8080
       - MYSQL_SERVER_HOST=mysql-server
       - MYSQL_SERVER_PORT=3306
-      - MYSQL_DATABASE=reporting_tool
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_POOL_SIZE=5
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
+      - USER_MANAGEMENT_SERVICE_PORT=9090
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - OAUTH2_GOOGLE_CLIENT_ID=${OAUTH2_GOOGLE_CLIENT_ID}
+      - OAUTH2_GOOGLE_CLIENT_SECRET=${OAUTH2_GOOGLE_CLIENT_SECRET}
+      - OAUTH2_GOOGLE_REDIRECT_URI=${OAUTH2_GOOGLE_REDIRECT_URI}
+    ports:
+      - "8091:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.7
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    restart: always
+
+  reporting-service:
+    build: ./reporting-service
+    container_name: reporting-service
+    env_file:
+      - .env
+    environment:
+      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+      - MYSQL_SERVER_HOST=mysql-server
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    ports:
+      - "8093:8080"
+      - "9091:9091"
+      - "9092:9092"
+    volumes:
+      - ./reporting-service/config/core-site.xml:/app/config/core-site.xml
+      - ./reporting-service/config/hdfs-site.xml:/app/config/hdfs-site.xml
     networks:
       reporting-tool-network:
         ipv4_address: 172.19.80.9
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
+    restart: always
 
   data-processing-service:
-    build:
-      context: ./data-processing-service
-      dockerfile: Dockerfile
+    build: ./data-processing-service
     container_name: data-processing-service
-    hostname: data-processing-service
-    ports:
-      - 8094:8080
+    env_file:
+      - .env
     environment:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8080
       - MYSQL_SERVER_HOST=mysql-server
       - MYSQL_SERVER_PORT=3306
-      - MYSQL_DATABASE=reporting_tool
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=root
-      - MYSQL_POOL_SIZE=5
-      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - REPORTING_SERVICE_HOST=reporting-service
+      - TIDB_SERVER_HOST=tidb-server
+      - TIDB_SERVER_PORT=4000
+      - TIDB_USERNAME=${TIDB_USERNAME}
+      - TIDB_PASSWORD=${TIDB_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    ports:
+      - "8094:8080"
+    volumes:
+      - ./data-processing-service/config/core-site.xml:/app/config/core-site.xml
+      - ./data-processing-service/config/hdfs-site.xml:/app/config/hdfs-site.xml
     networks:
       reporting-tool-network:
         ipv4_address: 172.19.80.10
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
+    restart: always
 
   integrated-service:
-    build:
-      context: ./integrated-service
-      dockerfile: Dockerfile
+    build: ./integrated-service
     container_name: integrated-service
-    hostname: integrated-service
-    ports:
-      - 8095:8080
+    env_file:
+      - .env
     environment:
       - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
-      - PORT=8080
-      - USER_MANAGEMENT_SERVICE_HOST=user-management-service
-      - USER_MANAGEMENT_SERVICE_PORT=9090
-      - DATA_PROCESSING_SERVICE_HOST=data-processing-service
-      - DATA_PROCESSING_SERVICE_PORT=8080
-      - REPORTING_SERVICE_HOST=reporting-service
-      - REPORTING_SERVICE_PORT=8080
-      - STORAGE_SERVICE_HOST=storage-service
+      - MYSQL_SERVER_HOST=mysql-server
+      - MYSQL_SERVER_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
+    ports:
+      - "8095:8080"
     networks:
       reporting-tool-network:
         ipv4_address: 172.19.80.11
     depends_on:
       eureka-discovery-server:
         condition: service_healthy
+    restart: always
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    env_file:
+      - .env
+    environment:
+      - DISCOVERY_SERVER_URL=http://eureka-discovery-server:8761
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./api-gateway/config/application-local.properties:/app/config/application-local.properties
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    networks:
+      reporting-tool-network:
+        ipv4_address: 172.19.80.6
+    restart: always
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     container_name: reporting-tool-frontend
+    environment:
+      - NODE_ENV=production
+      - VITE_APP_ENV=production
+      - VITE_API_BASE_URL=http://api.reporting-tool.site:8765
+      - VITE_FRONTEND_URL=http://reporting-tool.site:80
     ports:
       - "80:80"
-    environment:
-      - VITE_API_BASE_URL=http://api-gateway:8765
-      - VITE_FRONTEND_URL=http://localhost:5173
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    env_file:
+      - .env
+    restart: always
     networks:
       reporting-tool-network:
         ipv4_address: 172.19.80.12
-    restart: always
 
 networks:
   reporting-tool-network:
@@ -277,4 +289,3 @@ networks:
       config:
         - subnet: 172.19.80.0/24
           gateway: 172.19.80.1
-

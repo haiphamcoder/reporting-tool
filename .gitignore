@@ -38,5 +38,7 @@ frontend/.env.local
 # Example: ignore any other secret config
 **/config/*-secret.properties
 
-# Ignore production docker compose files
-docker-compose.prod.yml
+# Ignore all .env files
+.env
+.env.local
+.env.prod
