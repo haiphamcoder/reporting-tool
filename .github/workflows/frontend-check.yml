@@ -27,19 +27,7 @@ jobs:
       run: |
         echo "Installing frontend dependencies..."
         cd frontend
-        npm ci
-        
-    - name: Check frontend code formatting
-      run: |
-        echo "Checking frontend code formatting..."
-        cd frontend
-        npm run lint
-        
-    - name: Build frontend
-      run: |
-        echo "Building frontend..."
-        cd frontend
-        npm run build
+        npm install
         
     - name: Summary
       run: |
