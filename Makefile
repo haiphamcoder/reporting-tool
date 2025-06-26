@@ -1,9 +1,21 @@
 clean-data:
 	@echo "Cleaning up data..."
-	@docker volume rm reporting-tool_datanode-data
-	@docker volume rm reporting-tool_namenode-data
-	@docker volume rm reporting-tool_mysql-data
-	@docker volume rm reporting-tool_tidb-data
+	@if docker volume ls | grep -q reporting-tool_datanode-data; then \
+		docker volume rm reporting-tool_datanode-data; \
+		echo "Removed reporting-tool_datanode-data volume"; \
+	fi
+	@if docker volume ls | grep -q reporting-tool_namenode-data; then \
+		docker volume rm reporting-tool_namenode-data; \
+		echo "Removed reporting-tool_namenode-data volume"; \
+	fi
+	@if docker volume ls | grep -q reporting-tool_mysql-data; then \
+		docker volume rm reporting-tool_mysql-data; \
+		echo "Removed reporting-tool_mysql-data volume"; \
+	fi
+	@if docker volume ls | grep -q reporting-tool_tidb-data; then \
+		docker volume rm reporting-tool_tidb-data; \
+		echo "Removed reporting-tool_tidb-data volume"; \
+	fi
 	@echo "Data cleaned up successfully!"
 
 clean-images:
@@ -49,43 +61,8 @@ clean-images:
 # Clean up
 clean:
 	@echo "Cleaning up..."
-	@make clean-data
-	@if docker image ls | grep -q reporting-tool-eureka-discovery-server; then \
-		docker image rm reporting-tool-eureka-discovery-server; \
-		echo "Removed reporting-tool-eureka-discovery-server image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-api-gateway; then \
-		docker image rm reporting-tool-api-gateway; \
-		echo "Removed reporting-tool-api-gateway image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-user-management-service; then \
-		docker image rm reporting-tool-user-management-service; \
-		echo "Removed reporting-tool-user-management-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-authentication-service; then \
-		docker image rm reporting-tool-authentication-service; \
-		echo "Removed reporting-tool-authentication-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-reporting-service; then \
-		docker image rm reporting-tool-reporting-service; \
-		echo "Removed reporting-tool-reporting-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-storage-service; then \
-		docker image rm reporting-tool-storage-service; \
-		echo "Removed reporting-tool-storage-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-data-processing-service; then \
-		docker image rm reporting-tool-data-processing-service; \
-		echo "Removed reporting-tool-data-processing-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-integrated-service; then \
-		docker image rm reporting-tool-integrated-service; \
-		echo "Removed reporting-tool-integrated-service image"; \
-	fi
-	@if docker image ls | grep -q reporting-tool-frontend; then \
-		docker image rm reporting-tool-frontend; \
-		echo "Removed reporting-tool-frontend image"; \
-	fi
+	@sudo make clean-data
+	@sudo make clean-images
 	@echo "Cleaned up successfully!"
 
 # Docker compose commands
