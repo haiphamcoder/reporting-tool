@@ -13,6 +13,7 @@ Hệ thống CI/CD tự động triển khai ứng dụng lên Google Cloud VM k
 - ✅ **Bảo mật** với SSH keys và secrets
 - ✅ **Frontend checks riêng biệt** để tránh xung đột
 - ✅ **Environment management** thông minh
+- ✅ **Dependency management** cho frontend và backend
 
 ## 📁 Cấu trúc Files
 
@@ -32,6 +33,9 @@ docs/
 └── CICD_SETUP.md          # Hướng dẫn chi tiết cấu hình
 
 env.ci.example             # Template biến môi trường cho CI/CD
+frontend/
+├── package.json           # Frontend dependencies
+└── package-lock.json      # Locked dependency versions
 ```
 
 ## ⚡ Quick Start
@@ -91,6 +95,7 @@ git push origin main
    - Check for sensitive data
    - Verify file permissions
    - Sử dụng `env.ci.example` cho docker-compose check
+   - Verify required files exist (bao gồm package-lock.json)
 
 2. **Frontend Check** (tự động, chỉ khi có thay đổi frontend)
    - Install dependencies
@@ -177,6 +182,30 @@ export PROJECT_PATH="/home/ubuntu/reporting-tool"
 | `TIDB_USERNAME` | TiDB username |
 | `TIDB_PASSWORD` | TiDB password |
 
+## 📦 Dependency Management
+
+### Frontend Dependencies
+- **package.json**: Định nghĩa dependencies và scripts
+- **package-lock.json**: Lock exact versions của dependencies
+- **node_modules/**: Thư mục chứa installed packages (không commit)
+
+### Backend Dependencies
+- **pom.xml**: Maven dependencies cho Java services
+- **target/**: Build output directory (không commit)
+
+### Quản lý Dependencies
+
+```bash
+# Frontend - Cập nhật dependencies
+cd frontend
+npm install
+npm update
+
+# Backend - Cập nhật dependencies
+cd [service-directory]
+mvn clean install
+```
+
 ## 📊 Monitoring
 
 ### Xem Logs Triển khai
@@ -211,6 +240,11 @@ curl http://localhost:80                     # Frontend
 - Sử dụng GitHub Secrets
 - Validate environment variables
 
+### Dependency Security
+- Regular security audits với `npm audit`
+- Update dependencies định kỳ
+- Monitor for known vulnerabilities
+
 ## 🚨 Troubleshooting
 
 ### Lỗi thường gặp
@@ -223,6 +257,7 @@ curl http://localhost:80                     # Frontend
 | Rollback failed | Kiểm tra backup và git history |
 | NPM cache error | Frontend checks được tách riêng |
 | Environment variables missing | Đảm bảo file .env tồn tại |
+| Package-lock.json missing | Chạy `npm install --package-lock-only` |
 
 ### Debug Commands
 
@@ -242,6 +277,10 @@ docker volume ls
 
 # Kiểm tra environment
 cat .env
+
+# Kiểm tra frontend dependencies
+cd frontend
+npm list
 ```
 
 ## 📈 Tối ưu hóa
@@ -261,6 +300,7 @@ cat .env
 - Path-based triggers
 - Conditional job execution
 - Environment management thông minh
+- Dependency version locking
 
 ## 📞 Hỗ trợ
 
@@ -277,6 +317,7 @@ Nếu gặp vấn đề:
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [SSH Key Management](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
 - [Google Cloud VM Setup](https://cloud.google.com/compute/docs/instances)
+- [npm Documentation](https://docs.npmjs.com/)
 
 ---
 

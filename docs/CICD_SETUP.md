@@ -10,6 +10,7 @@ Hệ thống CI/CD bao gồm:
 - **Health Checks**: Kiểm tra trạng thái các service sau khi triển khai
 - **Status Monitoring**: Theo dõi và báo cáo trạng thái triển khai
 - **Environment Management**: Quản lý biến môi trường cho CI/CD và production
+- **Dependency Management**: Quản lý dependencies cho frontend và backend
 
 ## Cấu hình GitHub Secrets
 
@@ -101,7 +102,20 @@ cp env.ci.example .env
 nano .env
 ```
 
-### 4. Cấu hình Firewall
+### 4. Cấu hình Frontend Dependencies
+
+#### File package-lock.json
+File này được tạo tự động khi chạy `npm install`:
+- **ĐƯỢC** commit vào repository để đảm bảo dependency versions
+- Đảm bảo build consistency giữa các environments
+- Nếu file bị thiếu, chạy lệnh sau để tạo:
+
+```bash
+cd frontend
+npm install --package-lock-only
+```
+
+### 5. Cấu hình Firewall
 
 ```bash
 # Mở các port cần thiết
@@ -136,6 +150,7 @@ Workflow kiểm tra code trước triển khai:
 - Validate Dockerfile syntax
 - Check for sensitive data
 - Sử dụng `env.ci.example` cho docker-compose check
+- Verify required files exist (bao gồm package-lock.json)
 
 ### 4. `.github/workflows/frontend-check.yml`
 Workflow kiểm tra frontend riêng biệt:
@@ -159,6 +174,7 @@ Khi có code mới được push vào nhánh `main`:
    - Validate Dockerfile syntax
    - Check for sensitive data
    - Sử dụng `env.ci.example` cho docker-compose check
+   - Verify required files exist
 
 2. **Frontend Check** (tự động, chỉ khi có thay đổi frontend)
    - Install dependencies
@@ -232,6 +248,30 @@ cp env.ci.example .env
 nano .env
 ```
 
+## Dependency Management
+
+### Frontend Dependencies
+- **package.json**: Định nghĩa dependencies và scripts
+- **package-lock.json**: Lock exact versions của dependencies
+- **node_modules/**: Thư mục chứa installed packages (không commit)
+
+### Backend Dependencies
+- **pom.xml**: Maven dependencies cho Java services
+- **target/**: Build output directory (không commit)
+
+### Quản lý Dependencies
+
+```bash
+# Frontend - Cập nhật dependencies
+cd frontend
+npm install
+npm update
+
+# Backend - Cập nhật dependencies
+cd [service-directory]
+mvn clean install
+```
+
 ## Monitoring và Troubleshooting
 
 ### 1. Xem Logs Triển khai
@@ -263,6 +303,7 @@ curl http://localhost:80                     # Frontend
 - **Service Unhealthy**: Kiểm tra logs và configuration
 - **Rollback Failed**: Kiểm tra backup và git history
 - **Environment Variables Missing**: Đảm bảo file .env tồn tại và có đầy đủ biến
+- **Package-lock.json Missing**: Chạy `npm install --package-lock-only` trong frontend directory
 
 ## Bảo mật
 
@@ -281,6 +322,11 @@ curl http://localhost:80                     # Frontend
 - Giới hạn quyền truy cập SSH
 - Sử dụng non-root user khi có thể
 - Monitor SSH access logs
+
+### 4. Dependency Security
+- Regular security audits với `npm audit`
+- Update dependencies định kỳ
+- Monitor for known vulnerabilities
 
 ## Tối ưu hóa
 

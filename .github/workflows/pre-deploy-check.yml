@@ -20,6 +20,11 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
     - name: Check Java code formatting
       run: |
         echo "Checking Java code formatting..."
