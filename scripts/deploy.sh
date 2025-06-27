@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # Deployment script for reporting-tool
-# This script handles deployment with rollback capability
+# This script handles simple deployment: fetch/pull code, stop containers, clean images, start containers
 
 set -e  # Exit on any error
 
 # Configuration
 PROJECT_NAME="reporting-tool"
 COMPOSE_FILE="docker-compose.prod.yml"
-BACKUP_DIR="/tmp/reporting-tool-backup"
 LOG_FILE="/tmp/deployment.log"
 
 # Colors for output
@@ -28,25 +27,6 @@ warn() {
 
 error() {
     echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}" | tee -a $LOG_FILE
-}
-
-# Function to check and prepare environment file
-check_environment_file() {
-    if [ ! -f ".env" ]; then
-        if [ -f ".env.prod" ]; then
-            log "No .env file found, copying .env.prod to .env for production deployment"
-            cp .env.prod .env
-        elif [ -f "env.ci.example" ]; then
-            warn "No .env file found, using env.ci.example for testing"
-            cp env.ci.example .env
-        else
-            error "No .env file found and no .env.prod or env.ci.example available"
-            error "Please create a .env file with proper environment variables"
-            exit 1
-        fi
-    else
-        log "Using existing .env file"
-    fi
 }
 
 # Function to check if services are healthy
@@ -108,118 +88,43 @@ check_services_health() {
     return 0
 }
 
-# Function to backup current deployment
-backup_current_deployment() {
-    log "Creating backup of current deployment..."
-    
-    # Create backup directory
-    mkdir -p $BACKUP_DIR
-    
-    # Backup docker-compose file
-    cp $COMPOSE_FILE $BACKUP_DIR/
-    
-    # Backup current git commit
-    git rev-parse HEAD > $BACKUP_DIR/current_commit.txt
-    
-    # Backup current images
-    docker images | grep $PROJECT_NAME > $BACKUP_DIR/current_images.txt
-    
-    # Backup environment file if it exists
-    if [ -f ".env" ]; then
-        cp .env $BACKUP_DIR/
-    fi
-    
-    log "Backup created successfully"
-}
-
-# Function to rollback deployment
-rollback_deployment() {
-    error "Rolling back deployment..."
-    
-    # Stop current containers
-    log "Stopping current containers..."
-    docker compose -f $COMPOSE_FILE down || true
-    
-    # Clean current images
-    log "Cleaning current images..."
-    make clean-images || true
-    
-    # Restore from backup if available
-    if [ -f "$BACKUP_DIR/current_commit.txt" ]; then
-        log "Restoring from backup..."
-        git checkout $(cat $BACKUP_DIR/current_commit.txt)
-        
-        # Restore environment file if it was backed up
-        if [ -f "$BACKUP_DIR/.env" ]; then
-            cp $BACKUP_DIR/.env .env
-        fi
-        
-        # Rebuild and start containers
-        log "Rebuilding and starting containers..."
-        docker compose -f $COMPOSE_FILE up -d --build
-        
-        # Check health
-        if check_services_health; then
-            log "Rollback completed successfully"
-        else
-            error "Rollback failed - services are not healthy"
-            exit 1
-        fi
-    else
-        error "No backup available for rollback"
-        exit 1
-    fi
-}
-
 # Main deployment function
 deploy() {
     log "Starting deployment process..."
     
-    # Check and prepare environment file
-    check_environment_file
+    # Fetch and pull latest code
+    log "Fetching latest code..."
+    git fetch origin main
     
-    # Create backup
-    backup_current_deployment
+    log "Checking out latest code..."
+    git checkout main
+    
+    log "Pulling latest code..."
+    git pull origin main
     
     # Stop old containers
     log "Stopping old containers..."
     docker compose -f $COMPOSE_FILE down
     
+    # Wait for containers to stop completely
+    log "Waiting for containers to stop..."
+    sleep 10
+    
     # Clean old images
     log "Cleaning old images..."
     make clean-images
-
-    log "Fetching latest code..."
-    git fetch origin main
-
-    log "Checking out latest code..."
-    git checkout main
-
-    log "Pulling latest code..."
-    git pull origin main
-    
-    # Check environment file again after pull
-    check_environment_file
-
-    # Check if .env.prod exists
-    if [ -f ".env.prod" ]; then
-        log "Copying .env.prod to .env..."
-        cp .env.prod .env
-    else
-        error "No .env.prod file found"
-        exit 1
-    fi
     
     # Start new containers
     log "Starting new containers..."
     docker compose -f $COMPOSE_FILE up -d --build
     
+    # Wait for containers to start
+    log "Waiting for containers to start..."
+    sleep 15
+    
     # Check services health
     if check_services_health; then
         log "Deployment completed successfully!"
-        
-        # Clean up backup
-        rm -rf $BACKUP_DIR
         
         # Show final status
         log "Final container status:"
@@ -228,8 +133,7 @@ deploy() {
         return 0
     else
         error "Deployment failed - services are not healthy"
-        rollback_deployment
-        return 1
+        exit 1
     fi
 }
 
@@ -237,9 +141,6 @@ deploy() {
 case "${1:-deploy}" in
     "deploy")
         deploy
-        ;;
-    "rollback")
-        rollback_deployment
         ;;
     "status")
         log "Current deployment status:"
@@ -253,9 +154,8 @@ case "${1:-deploy}" in
         docker compose -f $COMPOSE_FILE logs --tail=50
         ;;
     *)
-        echo "Usage: $0 {deploy|rollback|status|logs}"
-        echo "  deploy   - Deploy the application"
-        echo "  rollback - Rollback to previous deployment"
+        echo "Usage: $0 {deploy|status|logs}"
+        echo "  deploy   - Deploy the application (fetch/pull code, stop containers, clean images, start containers)"
         echo "  status   - Check current deployment status"
         echo "  logs     - Show recent logs"
         exit 1

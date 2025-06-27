@@ -21,52 +21,37 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           # Navigate to project directory
-          cd ${{ secrets.PROJECT_PATH }}
+          cd ./projects/reporting-tool
           
-          # Pull latest code first
+          # Fetch and pull latest code
+          echo "Fetching latest code..."
+          git fetch origin main
+          
           echo "Pulling latest code..."
           git pull origin main
           
-          # Check if scripts exist
-          echo "Checking if deployment scripts exist..."
-          if [ ! -f "scripts/deploy.sh" ]; then
-            echo "❌ scripts/deploy.sh not found!"
-            echo "Available files in scripts/:"
-            ls -la scripts/ || echo "scripts/ directory not found"
-            echo ""
-            echo "Current directory contents:"
-            ls -la
-            echo ""
-            echo "Git status:"
-            git status
-            echo ""
-            echo "Git log (last 5 commits):"
-            git log --oneline -5
-            exit 1
-          fi
+          # Stop old containers
+          echo "Stopping old containers..."
+          docker compose -f docker-compose.prod.yml down
           
-          if [ ! -f "scripts/test-connection.sh" ]; then
-            echo "❌ scripts/test-connection.sh not found!"
-            exit 1
-          fi
+          # Wait for containers to stop completely
+          echo "Waiting for containers to stop..."
+          sleep 10
           
-          # Make deploy script executable
-          chmod +x scripts/deploy.sh
-          chmod +x scripts/test-connection.sh
+          # Clean old images
+          echo "Cleaning old images..."
+          make clean-images
           
-          # Check if setup-environment.sh exists and run it
-          if [ -f "scripts/setup-environment.sh" ]; then
-            echo "Running environment setup..."
-            chmod +x scripts/setup-environment.sh
-            ./scripts/setup-environment.sh check
-          fi
+          # Start new containers
+          echo "Starting new containers..."
+          docker compose -f docker-compose.prod.yml up -d
           
-          # Run deployment script
-          echo "Starting deployment process..."
-          ./scripts/deploy.sh deploy
+          # Wait for containers to start
+          echo "Waiting for containers to start..."
+          sleep 15
           
-          # Check deployment status
-          echo "Checking deployment status..."
-          ./scripts/deploy.sh status
+          # Check container status
+          echo "Checking container status..."
+          docker compose -f docker-compose.prod.yml ps
           
-          echo "Deployment process completed!" 
+          echo "Deployment completed!" 

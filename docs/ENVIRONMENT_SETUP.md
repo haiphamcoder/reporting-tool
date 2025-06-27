@@ -40,9 +40,12 @@ This project uses different environment files for different purposes:
 ### Production Deployment
 1. Code is pushed to `main` branch
 2. GitHub Actions triggers deployment to production server
-3. `scripts/deploy.sh` runs on production server
-4. If `.env` doesn't exist, `.env.prod` is copied to `.env`
-5. Application is deployed with real production values
+3. SSH to server and navigate to `./projects/reporting-tool`
+4. Fetch and pull latest code: `git fetch origin main && git pull origin main`
+5. Stop old containers: `docker compose -f docker-compose.prod.yml down`
+6. Clean old images: `make clean-images`
+7. Start new containers: `docker compose -f docker-compose.prod.yml up -d`
+8. Application runs with existing `.env` file (no environment file copying needed)
 
 ## Setup Instructions
 
@@ -57,11 +60,14 @@ nano .env
 
 ### For Production Server
 ```bash
-# Ensure .env.prod exists with real production values
+# Ensure .env file exists with real production values
 # (This file should be manually created on the server)
 
-# Run deployment
-./scripts/deploy.sh deploy
+# The deployment process will automatically:
+# 1. Fetch and pull latest code
+# 2. Stop old containers
+# 3. Clean old images
+# 4. Start new containers
 ```
 
 ### For CI/CD Testing
@@ -80,13 +86,13 @@ nano .env
 
 ## Troubleshooting
 
-### Missing .env.prod Error
-If you see an error about missing `.env.prod` during deployment:
+### Missing .env Error
+If you see an error about missing `.env` during deployment:
 ```bash
-# Create .env.prod with your production values
-cp env.ci.example .env.prod
-# Edit .env.prod with real production values
-nano .env.prod
+# Create .env with your production values
+cp env.ci.example .env
+# Edit .env with real production values
+nano .env
 ```
 
 ### Environment Variables Not Loading
@@ -95,13 +101,25 @@ If environment variables are not being loaded:
 # Check if .env file exists
 ls -la .env
 
-# Check if .env.prod exists (for production)
-ls -la .env.prod
-
 # Manually copy the appropriate file
-cp .env.prod .env  # for production
-# or
 cp env.ci.example .env  # for development/testing
+```
+
+### Deployment Issues
+If deployment fails:
+```bash
+# Check container status
+docker compose -f docker-compose.prod.yml ps
+
+# Check logs
+docker compose -f docker-compose.prod.yml logs
+
+# Manual deployment steps
+git fetch origin main
+git pull origin main
+docker compose -f docker-compose.prod.yml down
+make clean-images
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ## File Structure Example
