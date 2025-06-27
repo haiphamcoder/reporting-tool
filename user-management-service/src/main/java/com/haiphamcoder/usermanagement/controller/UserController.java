@@ -36,7 +36,7 @@ public class UserController {
 
         @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id", required = true) Long userId,
-                        @RequestParam(name = "search", required = false) String search,
+                        @RequestParam(name = "search", required = false, defaultValue = "") String search,
                         @RequestParam(name = "page", defaultValue = "0") Integer page,
                         @RequestParam(name = "limit", defaultValue = "10") Integer limit) {
                 Pair<List<UserDto>, Metadata> users = userService.getAllUsers(userId, search, page, limit);
