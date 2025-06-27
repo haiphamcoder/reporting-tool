@@ -8,40 +8,43 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminFirstLoginRoute } from './routes/ProtectedRoute';
 import { StatisticsProvider } from './context/StatisticsContext';
+import { NotificationProvider } from './context/NotificationContext';
 import './config/chartjs'; // Import Chart.js configuration early
 
 ReactDOM.createRoot(document.querySelector("#root")!).render(
   <React.StrictMode>
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth/signin" element={<SignInPage />} />
-          <Route path="/auth/signup" element={<SignUpPage />} />
-          <Route path="/change-password" 
-            element={
-              <AdminFirstLoginRoute>
-                <ChangePasswordPage />
-              </AdminFirstLoginRoute>
-            } 
-          />
-          <Route path="/dashboard/*"
-            element={
-              <ProtectedRoute>
-                <StatisticsProvider>
-                  <Dashboard />
-                </StatisticsProvider>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" 
-            element={
-              <ProtectedRoute>
-                <Navigate to="/dashboard" />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth/signin" element={<SignInPage />} />
+            <Route path="/auth/signup" element={<SignUpPage />} />
+            <Route path="/change-password" 
+              element={
+                <AdminFirstLoginRoute>
+                  <ChangePasswordPage />
+                </AdminFirstLoginRoute>
+              } 
+            />
+            <Route path="/dashboard/*"
+              element={
+                <ProtectedRoute>
+                  <StatisticsProvider>
+                    <Dashboard />
+                  </StatisticsProvider>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" 
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/dashboard" />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </NotificationProvider>
     </AuthProvider>
   </React.StrictMode>
 );

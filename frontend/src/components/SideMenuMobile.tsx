@@ -10,6 +10,9 @@ import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useState } from 'react';
+import NotificationDialog from './NotificationDialog';
+import { useNotifications } from '../context/NotificationContext';
 
 interface SideMenuMobileProps {
   open: boolean | undefined;
@@ -18,63 +21,79 @@ interface SideMenuMobileProps {
 
 export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobileProps) {
   const navigate = useNavigate();
-
   const { logout, user } = useAuth();
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const { unreadCount } = useNotifications();
 
   const handleLogout = () => {
     logout();
     navigate('/auth/signin');
   };
 
+  const handleNotificationClick = () => {
+    setNotificationDialogOpen(true);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationDialogOpen(false);
+  };
+
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={toggleDrawer(false)}
-      sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        [`& .${drawerClasses.paper}`]: {
-          backgroundImage: 'none',
-          backgroundColor: 'background.paper',
-        },
-      }}
-    >
-      <Stack
+    <>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={toggleDrawer(false)}
         sx={{
-          maxWidth: '70dvw',
-          height: '100%',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          [`& .${drawerClasses.paper}`]: {
+            backgroundImage: 'none',
+            backgroundColor: 'background.paper',
+          },
         }}
       >
-        <Stack direction="row" sx={{ p: 2, pb: 0, gap: 1 }}>
-          <Stack
-            direction="row"
-            sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}
-          >
-            <Avatar
-              sizes="small"
-              alt={user ? `${user.first_name} ${user.last_name}` : 'User'}
-              src={user ? user.avatar_url : ''}
-              sx={{ width: 24, height: 24 }}
-            />
-            <Typography component="p" variant="h6">
-              {user ? `${user.first_name} ${user.last_name}` : 'User'}
-            </Typography>
+        <Stack
+          sx={{
+            maxWidth: '70dvw',
+            height: '100%',
+          }}
+        >
+          <Stack direction="row" sx={{ p: 2, pb: 0, gap: 1 }}>
+            <Stack
+              direction="row"
+              sx={{ gap: 1, alignItems: 'center', flexGrow: 1, p: 1 }}
+            >
+              <Avatar
+                sizes="small"
+                alt={user ? `${user.first_name} ${user.last_name}` : 'User'}
+                src={user ? user.avatar_url : ''}
+                sx={{ width: 24, height: 24 }}
+              />
+              <Typography component="p" variant="h6">
+                {user ? `${user.first_name} ${user.last_name}` : 'User'}
+              </Typography>
+            </Stack>
+            <MenuButton showBadge={unreadCount > 0} onClick={handleNotificationClick}>
+              <NotificationsRoundedIcon />
+            </MenuButton>
           </Stack>
-          <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton>
-        </Stack>
-        <Divider />
-        <Stack sx={{ flexGrow: 1 }}>
-          <MenuContent collapsed={false} />
           <Divider />
+          <Stack sx={{ flexGrow: 1 }}>
+            <MenuContent collapsed={false} />
+            <Divider />
+          </Stack>
+          <Stack sx={{ p: 2 }}>
+            <Button variant="outlined" fullWidth startIcon={<LogoutRoundedIcon />} onClick={handleLogout}>
+              Logout
+            </Button>
+          </Stack>
         </Stack>
-        <Stack sx={{ p: 2 }}>
-          <Button variant="outlined" fullWidth startIcon={<LogoutRoundedIcon />} onClick={handleLogout}>
-            Logout
-          </Button>
-        </Stack>
-      </Stack>
-    </Drawer>
+      </Drawer>
+
+      <NotificationDialog 
+        open={notificationDialogOpen}
+        onClose={handleNotificationClose}
+      />
+    </>
   );
 }
