@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @Repository
 interface UserJpaRepository extends JpaRepository<User, Long> {
 
-    @Query("SELECT u FROM User u WHERE u.isDeleted = false AND (u.firstName LIKE %:search% OR u.lastName LIKE %:search% OR u.email LIKE %:search%)")
+    @Query("SELECT u FROM User u WHERE u.deleted = false AND (u.firstName LIKE %:search% OR u.lastName LIKE %:search% OR u.email LIKE %:search%)")
     Page<User> findAllByNameOrEmailContainingIgnoreCaseAndIsDeletedFalse(@Param("search") String search,
             Pageable pageable);
 
