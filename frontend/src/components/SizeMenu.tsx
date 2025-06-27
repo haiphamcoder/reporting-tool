@@ -4,10 +4,11 @@ import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import MenuContent from './MenuContent';
-import CDPLogo from '../assets/logo.svg';
+import Logo from '../assets/logo.svg';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Button from '@mui/material/Button';
+import { useNavigate } from 'react-router-dom';
 
 const drawerWidth = 240;
 const collapsedWidth = 60;
@@ -26,10 +27,9 @@ const Drawer = styled(MuiDrawer)<{ collapsed: boolean }>(({ collapsed }) => ({
 
 export default function SideMenu() {
   const [collapsed, setCollapsed] = useState(false);
-
+  const navigate = useNavigate();
   const handleLogoClick = () => {
-    // setCurrentContent('home'); // This line was commented out in the original file, keeping it commented.
-    // navigate('/dashboard/home'); // This line was commented out in the original file, keeping it commented.
+    navigate('/');
   };
 
   return (
@@ -79,7 +79,7 @@ export default function SideMenu() {
           </Box>
         ) : (
           <img
-            src={CDPLogo}
+            src={Logo}
             height={25}
             width={150}
             alt="CDP Logo"

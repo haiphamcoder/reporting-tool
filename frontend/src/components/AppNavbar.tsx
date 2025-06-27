@@ -5,12 +5,13 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import MuiToolbar from '@mui/material/Toolbar';
 import { tabsClasses } from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import SideMenuMobile from './SideMenuMobile';
 import MenuButton from './MenuButton';
 import ColorSchemeToggle from '../theme/ColorSchemeToggle';
+import Logo from '../assets/logo.svg';
+import { useNavigate } from 'react-router-dom';
 
 const Toolbar = styled(MuiToolbar)({
   width: '100%',
@@ -33,6 +34,12 @@ export default function AppNavbar() {
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
+  };
+
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate('/');
   };
 
   return (
@@ -63,10 +70,18 @@ export default function AppNavbar() {
             spacing={1}
             sx={{ justifyContent: 'center', mr: 'auto' }}
           >
-            <CustomIcon />
-            <Typography variant="h4" component="h1" sx={{ color: 'text.primary' }}>
-              Dashboard
-            </Typography>
+            <img
+              src={Logo}
+              height={25}
+              width={150}
+              alt="CDP Logo"
+              style={{ transition: 'width 0.3s, height 0.3s' }}
+              onClick={handleLogoClick}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
+              role="button"
+              tabIndex={0}
+              className="cursor-pointer"
+            />
           </Stack>
           <ColorSchemeToggle />
           <MenuButton aria-label="menu" onClick={toggleDrawer(true)}>
