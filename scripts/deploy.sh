@@ -33,14 +33,19 @@ error() {
 # Function to check and prepare environment file
 check_environment_file() {
     if [ ! -f ".env" ]; then
-        if [ -f "env.ci.example" ]; then
+        if [ -f ".env.prod" ]; then
+            log "No .env file found, copying .env.prod to .env for production deployment"
+            cp .env.prod .env
+        elif [ -f "env.ci.example" ]; then
             warn "No .env file found, using env.ci.example for testing"
             cp env.ci.example .env
         else
-            error "No .env file found and no env.ci.example available"
+            error "No .env file found and no .env.prod or env.ci.example available"
             error "Please create a .env file with proper environment variables"
             exit 1
         fi
+    else
+        log "Using existing .env file"
     fi
 }
 
@@ -183,13 +188,27 @@ deploy() {
     # Clean old images
     log "Cleaning old images..."
     make clean-images
-    
-    # Pull latest code
+
+    log "Fetching latest code..."
+    git fetch origin main
+
+    log "Checking out latest code..."
+    git checkout main
+
     log "Pulling latest code..."
     git pull origin main
     
     # Check environment file again after pull
     check_environment_file
+
+    # Check if .env.prod exists
+    if [ -f ".env.prod" ]; then
+        log "Copying .env.prod to .env..."
+        cp .env.prod .env
+    else
+        error "No .env.prod file found"
+        exit 1
+    fi
     
     # Start new containers
     log "Starting new containers..."

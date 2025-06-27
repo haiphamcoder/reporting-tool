@@ -130,7 +130,7 @@ check_required_files() {
         "scripts/test-connection.sh"
         "frontend/package.json"
         "frontend/package-lock.json"
-        "env.ci.example"
+        ".env.prod"
     )
     
     missing_files=()
@@ -159,12 +159,16 @@ setup_environment() {
     log "Setting up environment file..."
     
     if [ ! -f ".env" ]; then
-        if [ -f "env.ci.example" ]; then
+        if [ -f ".env.prod" ]; then
+            log "Creating .env from .env.prod for production..."
+            cp .env.prod .env
+            log "✅ .env file created from .env.prod"
+        elif [ -f "env.ci.example" ]; then
             log "Creating .env from env.ci.example..."
             cp env.ci.example .env
             warn "Please edit .env file with your production values"
         else
-            error "No env.ci.example found"
+            error "No .env.prod or env.ci.example found"
             return 1
         fi
     else

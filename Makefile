@@ -58,6 +58,27 @@ clean-images:
 	fi
 	@echo "Images cleaned up successfully!"
 
+# Environment management
+env-dev:
+	@echo "Switching to development environment..."
+	@./scripts/switch-env.sh dev
+
+env-prod:
+	@echo "Switching to production environment..."
+	@./scripts/switch-env.sh prod
+
+env-current:
+	@echo "Showing current environment..."
+	@./scripts/switch-env.sh current
+
+env-create-prod:
+	@echo "Creating production environment template..."
+	@./scripts/switch-env.sh create-prod
+
+env-validate:
+	@echo "Validating environment file..."
+	@./scripts/switch-env.sh validate
+
 # Clean up
 clean:
 	@echo "Cleaning up..."
@@ -89,13 +110,23 @@ ps:
 # Display help
 help:
 	@echo "Available commands:"
-	@echo "  make init     : Create required directories"
-	@echo "  make clean   : Clean up logs and tmp directories"
+	@echo ""
+	@echo "Environment Management:"
+	@echo "  make env-dev        : Switch to development environment"
+	@echo "  make env-prod       : Switch to production environment"
+	@echo "  make env-current    : Show current environment"
+	@echo "  make env-create-prod: Create .env.prod template"
+	@echo "  make env-validate   : Validate environment file"
+	@echo ""
+	@echo "Docker Management:"
 	@echo "  make up      : Start docker containers"
 	@echo "  make down    : Stop docker containers"
 	@echo "  make restart : Restart docker containers"
 	@echo "  make logs    : View logs of containers"
 	@echo "  make ps      : List running containers"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  make clean   : Clean up data and images"
 	@echo "  make help    : Display this help"
 
-.PHONY: init clean up down restart logs ps help
+.PHONY: env-dev env-prod env-current env-create-prod env-validate clean up down restart logs ps help
