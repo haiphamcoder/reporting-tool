@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 import com.haiphamcoder.usermanagement.domain.entity.User;
 
 public interface UserRepository {
-    Page<User> getAllUsers(Long userId, Integer page, Integer limit);
+    Page<User> getAllUsers(String search, Integer page, Integer limit);
 
     List<User> getAllUsersByProvider(String provider);
 
