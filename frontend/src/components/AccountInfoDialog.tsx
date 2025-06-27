@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -19,15 +19,23 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import googlePng from '../assets/google.png';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
+import ChangePasswordDialog from './ChangePasswordDialog';
 
 interface AccountInfoDialogProps {
   open: boolean;
   onClose: () => void;
-  onChangePassword?: () => void;
 }
 
-const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose, onChangePassword }) => {
+const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose }) => {
   const { user } = useAuth();
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+
+  // Reset changePasswordOpen when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setChangePasswordOpen(false);
+    }
+  }, [open]);
 
   const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '';
   const avatarFallback = user?.username ? user.username[0].toUpperCase() : '?';
@@ -40,92 +48,114 @@ const AccountInfoDialog: React.FC<AccountInfoDialogProps> = ({ open, onClose, on
     return <AccountCircleIcon sx={{ mr: 1 }} fontSize="small" color="disabled" />;
   }
 
+  const handleChangePassword = () => {
+    setChangePasswordOpen(true);
+  };
+
+  const handleChangePasswordClose = () => {
+    setChangePasswordOpen(false);
+  };
+
+  const handleChangePasswordCancel = () => {
+    setChangePasswordOpen(false); // Back về AccountInfoDialog
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle align="center">Account Information</DialogTitle>
-      <DialogContent dividers>
-        {user ? (
-          <Stack spacing={2} alignItems="center" mb={2}>
-            <Avatar
-              src={user.avatar_url || undefined}
-              sx={{ width: 72, height: 72, fontSize: 32 }}
-            >
-              {(!user.avatar_url && avatarFallback) || '?'}
-            </Avatar>
-            <Typography variant="h6">{fullName || 'No full name'}</Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-            {user.username}
-            </Typography>
-            {getProviderIcon(user.provider)}
-          </Stack>
-        ) : null}
-        <Divider sx={{ mb: 2 }} />
-        {user ? (
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <List dense>
-                <ListItem>
-                  <ListItemText
-                    primary="Email"
-                    secondary={
-                      <Box display="flex" alignItems="center">
-                        <span>{user.email || '-'}</span>
-                        {typeof user.email_verified === 'boolean' && (
-                          <Tooltip title={user.email_verified ? 'Email verified' : 'Email not verified'}>
-                            {user.email_verified ? (
-                              <CheckCircleIcon sx={{ ml: 1.5, fontSize: 18, color: '#43a047 !important' }} />
-                            ) : (
-                              <CancelIcon sx={{ ml: 1.5, fontSize: 18, color: '#e53935 !important' }} />
+      {changePasswordOpen ? (
+        <ChangePasswordDialog 
+          open={changePasswordOpen} 
+          onClose={handleChangePasswordClose}
+          onCancel={handleChangePasswordCancel}
+        />
+      ) : (
+        <>
+          <DialogTitle align="center">Account Information</DialogTitle>
+          <DialogContent dividers>
+            {user ? (
+              <Stack spacing={2} alignItems="center" mb={2}>
+                <Avatar
+                  src={user.avatar_url || undefined}
+                  sx={{ width: 72, height: 72, fontSize: 32 }}
+                >
+                  {(!user.avatar_url && avatarFallback) || '?'}
+                </Avatar>
+                <Typography variant="h6">{fullName || 'No full name'}</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                {user.username}
+                </Typography>
+                {getProviderIcon(user.provider)}
+              </Stack>
+            ) : null}
+            <Divider sx={{ mb: 2 }} />
+            {user ? (
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <List dense>
+                    <ListItem>
+                      <ListItemText
+                        primary="Email"
+                        secondary={
+                          <Box display="flex" alignItems="center">
+                            <span>{user.email || '-'}</span>
+                            {typeof user.email_verified === 'boolean' && (
+                              <Tooltip title={user.email_verified ? 'Email verified' : 'Email not verified'}>
+                                {user.email_verified ? (
+                                  <CheckCircleIcon sx={{ ml: 1.5, fontSize: 18, color: '#43a047 !important' }} />
+                                ) : (
+                                  <CancelIcon sx={{ ml: 1.5, fontSize: 18, color: '#e53935 !important' }} />
+                                )}
+                              </Tooltip>
                             )}
-                          </Tooltip>
-                        )}
-                      </Box>
-                    }
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="User ID" secondary={user.user_id || '-'} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Role" secondary={user.role || '-'} />
-                </ListItem>
-              </List>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <List dense>
-                <ListItem>
-                  <ListItemText primary="First Name" secondary={user.first_name || '-'} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Last Name" secondary={user.last_name || '-'} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Username" secondary={user.username || '-'} />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Provider" secondary={user.provider || '-'} />
-                </ListItem>
-              </List>
-            </Grid>
-          </Grid>
-        ) : (
-          <Typography variant="body2">No user information available.</Typography>
-        )}
-      </DialogContent>
-      <DialogActions>
-        {user?.provider === 'local' && (
-          <Button
-            onClick={onChangePassword}
-            variant="outlined"
-            color="secondary"
-            fullWidth
-            sx={{ mr: 1 }}
-          >
-            Change Password
-          </Button>
-        )}
-        <Button onClick={onClose} variant="contained" color="primary" fullWidth>Close</Button>
-      </DialogActions>
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="User ID" secondary={user.user_id || '-'} />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Role" secondary={user.role || '-'} />
+                    </ListItem>
+                  </List>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <List dense>
+                    <ListItem>
+                      <ListItemText primary="First Name" secondary={user.first_name || '-'} />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Last Name" secondary={user.last_name || '-'} />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Username" secondary={user.username || '-'} />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText primary="Provider" secondary={user.provider || '-'} />
+                    </ListItem>
+                  </List>
+                </Grid>
+              </Grid>
+            ) : (
+              <Typography variant="body2">No user information available.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            {user?.provider === 'local' && (
+              <Button
+                onClick={handleChangePassword}
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                sx={{ mr: 1 }}
+              >
+                Change Password
+              </Button>
+            )}
+            <Button onClick={onClose} variant="contained" color="primary" fullWidth>Close</Button>
+          </DialogActions>
+        </>
+      )}
     </Dialog>
   );
 };
