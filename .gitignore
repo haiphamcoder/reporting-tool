@@ -22,6 +22,7 @@ source_dump.txt
 
 # Ignore all .env.local files in frontend
 frontend/.env.local
+frontend/package-lock.json
 
 # Ignore all .env files
 .env
