@@ -1,9 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import CssBaseline from '@mui/material/CssBaseline';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
@@ -235,11 +233,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                             </FormControl>
                         </Box>
                         <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 100%' } }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <FormControlLabel
-                                    control={<Checkbox value="remember" color="primary" disabled={isLoading} />}
-                                    label="Remember me"
-                                />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                                 <Link
                                     component="button"
                                     type="button"
