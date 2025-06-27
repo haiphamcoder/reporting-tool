@@ -2,15 +2,15 @@ package com.haiphamcoder.usermanagement.service;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-
 import com.haiphamcoder.usermanagement.domain.dto.UserDto;
 import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
 import com.haiphamcoder.usermanagement.domain.model.ChangeRoleRequest;
+import com.haiphamcoder.usermanagement.domain.model.Metadata;
+import com.haiphamcoder.usermanagement.shared.Pair;
 
 public interface UserService {
 
-    public Page<UserDto> getAllUsers(Long userId, Integer page, Integer limit);
+    public Pair<List<UserDto>, Metadata> getAllUsers(Long userId, String search, Integer page, Integer limit);
 
     public List<UserDto> getAllUsersByProvider(String provider);
 

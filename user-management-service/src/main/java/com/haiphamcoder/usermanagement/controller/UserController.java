@@ -2,7 +2,6 @@ package com.haiphamcoder.usermanagement.controller;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -24,6 +23,7 @@ import com.haiphamcoder.usermanagement.domain.model.GetAllUserResponse;
 import com.haiphamcoder.usermanagement.domain.model.GetUserDetailsResponse;
 import com.haiphamcoder.usermanagement.domain.model.Metadata;
 import com.haiphamcoder.usermanagement.service.UserService;
+import com.haiphamcoder.usermanagement.shared.Pair;
 import com.haiphamcoder.usermanagement.shared.http.ApiResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -36,11 +36,12 @@ public class UserController {
 
         @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ApiResponse<Object>> getAll(@CookieValue(name = "user-id", required = true) Long userId,
+                        @RequestParam(name = "search", required = false) String search,
                         @RequestParam(name = "page", defaultValue = "0") Integer page,
                         @RequestParam(name = "limit", defaultValue = "10") Integer limit) {
-                Page<UserDto> users = userService.getAllUsers(userId, page, limit);
+                Pair<List<UserDto>, Metadata> users = userService.getAllUsers(userId, search, page, limit);
                 GetAllUserResponse response = GetAllUserResponse.builder()
-                                .data(users.getContent().stream().map(user -> GetAllUserResponse.Record.builder()
+                                .data(users.getFirst().stream().map(user -> GetAllUserResponse.Record.builder()
                                                 .id(user.getId().toString())
                                                 .firstName(user.getFirstName())
                                                 .lastName(user.getLastName())
@@ -50,13 +51,7 @@ public class UserController {
                                                 .avatarUrl(user.getAvatarUrl())
                                                 .provider(user.getProvider())
                                                 .build()).toList())
-                                .metadata(Metadata.builder()
-                                                .numberOfElements(users.getNumberOfElements())
-                                                .totalElements(users.getTotalElements())
-                                                .totalPages(users.getTotalPages())
-                                                .currentPage(users.getNumber())
-                                                .pageSize(users.getSize())
-                                                .build())
+                                .metadata(users.getSecond())
                                 .build();
                 return ResponseEntity.ok().body(ApiResponse.success(response, "Get all users successfully"));
         }

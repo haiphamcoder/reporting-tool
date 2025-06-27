@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.usermanagement.service.UserService;
+import com.haiphamcoder.usermanagement.shared.Pair;
 import com.haiphamcoder.usermanagement.shared.SnowflakeIdGenerator;
 
 import jakarta.annotation.PostConstruct;
@@ -20,6 +21,7 @@ import com.haiphamcoder.usermanagement.domain.exception.business.detail.Forbidde
 import com.haiphamcoder.usermanagement.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.usermanagement.domain.model.ChangePasswordRequest;
 import com.haiphamcoder.usermanagement.domain.model.ChangeRoleRequest;
+import com.haiphamcoder.usermanagement.domain.model.Metadata;
 import com.haiphamcoder.usermanagement.mapper.UserMapper;
 import com.haiphamcoder.usermanagement.repository.UserRepository;
 
@@ -47,9 +49,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserDto> getAllUsers(Long userId, Integer page, Integer limit) {
-        Page<User> users = userRepository.getAllUsers(userId, page, limit);
-        return users.map(UserMapper::toDto);
+    public Pair<List<UserDto>, Metadata> getAllUsers(Long userId, String search, Integer page, Integer limit) {
+
+        Optional<User> user = userRepository.getUserById(userId);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", userId);
+        }
+        if (!user.get().getRole().equals(ADMIN_ROLE)) {
+            throw new ForbiddenException("You are not allowed to get all users");
+        }
+
+        Page<User> users = userRepository.getAllUsers(search, page, limit);
+        
+        return new Pair<>(users.map(UserMapper::toDto).toList(), Metadata.builder()
+                .numberOfElements(users.getNumberOfElements())
+                .totalElements(users.getTotalElements())
+                .totalPages(users.getTotalPages())
+                .currentPage(users.getNumber())
+                .pageSize(users.getSize())
+                .build());
     }
 
     @Override
@@ -174,7 +192,8 @@ public class UserServiceImpl implements UserService {
             throw new ForbiddenException("You are not allowed to delete this user");
         }
         if (user.get().getId().equals(targetUserId)) {
-            throw new ForbiddenException("You are not allowed to delete yourself. You will lose your admin privileges.");
+            throw new ForbiddenException(
+                    "You are not allowed to delete yourself. You will lose your admin privileges.");
         }
         Optional<User> targetUser = userRepository.getUserById(targetUserId);
         if (targetUser.isEmpty()) {
