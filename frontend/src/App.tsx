@@ -6,7 +6,7 @@ import SignUpPage from './pages/SignUpPage';
 import Dashboard from './pages/Dashboard';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute } from './routes/ProtectedRoute';
+import { ProtectedRoute, AdminFirstLoginRoute } from './routes/ProtectedRoute';
 import { StatisticsProvider } from './context/StatisticsContext';
 import './config/chartjs'; // Import Chart.js configuration early
 
@@ -17,7 +17,13 @@ ReactDOM.createRoot(document.querySelector("#root")!).render(
         <Routes>
           <Route path="/auth/signin" element={<SignInPage />} />
           <Route path="/auth/signup" element={<SignUpPage />} />
-          <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/change-password" 
+            element={
+              <AdminFirstLoginRoute>
+                <ChangePasswordPage />
+              </AdminFirstLoginRoute>
+            } 
+          />
           <Route path="/dashboard/*"
             element={
               <ProtectedRoute>
