@@ -36,6 +36,22 @@ CREATE TABLE
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo refresh token',
         CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     ) COMMENT = 'Bảng lưu refresh token để xác thực user khi access token hết hạn';
+    
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(20) NOT NULL,
+    category VARCHAR(20) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    timestamp DATETIME NOT NULL,
+    `read` BOOLEAN NOT NULL DEFAULT FALSE,
+    action_url VARCHAR(500),
+    user_id VARCHAR(100),
+    INDEX idx_user_id (user_id),
+    INDEX idx_timestamp (timestamp),
+    INDEX idx_read (`read`),
+    INDEX idx_user_read (user_id, `read`)
+);
 
 DROP TABLE IF EXISTS otp;
 

@@ -30,7 +30,7 @@ export const notificationApi = {
   // Get all notifications for current user
   getNotifications: async (page: number = 0, limit: number = 50): Promise<NotificationResponse> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications?page=${page}&limit=${limit}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}?page=${page}&limit=${limit}`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -64,7 +64,7 @@ export const notificationApi = {
   // Mark notifications as read
   markAsRead: async (notificationIds: string[]): Promise<{ success: boolean; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/mark-read`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}/mark-read`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -92,7 +92,7 @@ export const notificationApi = {
   // Mark all notifications as read
   markAllAsRead: async (): Promise<{ success: boolean; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/mark-all-read`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}/mark-all-read`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -118,7 +118,7 @@ export const notificationApi = {
   // Delete notification
   deleteNotification: async (notificationId: string): Promise<{ success: boolean; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/${notificationId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}/${notificationId}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -144,7 +144,7 @@ export const notificationApi = {
   // Clear all notifications
   clearAllNotifications: async (): Promise<{ success: boolean; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/clear-all`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}/clear-all`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -170,7 +170,7 @@ export const notificationApi = {
   // Get unread count
   getUnreadCount: async (): Promise<{ success: boolean; result?: number; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/unread-count`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}/unread-count`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -197,7 +197,7 @@ export const notificationApi = {
   // Create notification (for testing or admin purposes)
   createNotification: async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>): Promise<{ success: boolean; result?: Notification; message?: string }> => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.NOTIFICATIONS}`, {
         method: 'POST',
         credentials: 'include',
         headers: {

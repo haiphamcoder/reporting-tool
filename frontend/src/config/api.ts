@@ -24,6 +24,7 @@ export const API_CONFIG = {
         CHARTS: '/reporting/charts',
         REPORTS: '/reporting/reports',
         USER_MANAGEMENT: '/user-management',
+        NOTIFICATIONS: '/integrated/notifications'
     }
 } as const;
 
