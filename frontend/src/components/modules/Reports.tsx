@@ -16,6 +16,7 @@ import { ReportSummary } from '../../types/report';
 import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddReportDialog from '../dialogs/AddReportDialog';
+import EditReportDialog from '../dialogs/EditReportDialog';
 import Search from '../Search';
 
 interface ReportsMetadata {
@@ -52,6 +53,9 @@ export default function Reports() {
     const [reportToDelete, setReportToDelete] = useState<ReportSummary | null>(null);
     // Add Report dialog state
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    // Edit Report dialog state
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [reportToEdit, setReportToEdit] = useState<any>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -211,9 +215,23 @@ export default function Reports() {
         }
     }
 
-    const handleEditClick = (row: any) => {
-        console.log('Edit chart:', row);
-        // Handle edit logic here
+    const handleEditClick = async (row: any) => {
+        try {
+            // Fetch the full report details including charts
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Failed to fetch report details');
+            }
+            
+            setReportToEdit(data.result);
+            setEditDialogOpen(true);
+        } catch (err: any) {
+            setError(err.message || 'Failed to fetch report details');
+            setShowErrorPopup(true);
+        }
     };
 
     const handleDeleteClick = (row: any) => {
@@ -469,6 +487,18 @@ export default function Reports() {
                     setSuccess('Report created successfully');
                     setShowSuccessPopup(true);
                 }}
+            />
+
+            <EditReportDialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                onSuccess={() => {
+                    setEditDialogOpen(false);
+                    fetchReports(currentPage, pageSize);
+                    setSuccess('Report updated successfully');
+                    setShowSuccessPopup(true);
+                }}
+                report={reportToEdit}
             />
         </Stack>
     );
