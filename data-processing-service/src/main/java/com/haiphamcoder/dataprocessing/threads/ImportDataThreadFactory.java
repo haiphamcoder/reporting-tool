@@ -6,6 +6,7 @@ import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
 import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.threads.impl.CSVProcessingThread;
+import com.haiphamcoder.dataprocessing.threads.impl.ExcelProcessingThread;
 import com.haiphamcoder.dataprocessing.config.CommonConstants;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,10 @@ public class ImportDataThreadFactory {
         switch (sourceDto.getConnectorType()) {
             case CommonConstants.CONNECTOR_TYPE_CSV: {
                 return new CSVProcessingThread(sourceDto, storageService, hdfsFileService);
+            }
+
+            case CommonConstants.CONNECTOR_TYPE_EXCEL: {
+                return new ExcelProcessingThread(sourceDto, storageService, hdfsFileService);
             }
 
             default:

@@ -32,4 +32,9 @@ public class HdfsFileServiceImpl implements HdfsFileService {
         return hdfsRepository.getHistoryUploadFile(userId, connectorType);
     }
 
+    @Override
+    public byte[] downloadFile(String fileUrl) {
+        return (byte[]) hdfsRepository.downloadFile(fileUrl);
+    }
+
 }

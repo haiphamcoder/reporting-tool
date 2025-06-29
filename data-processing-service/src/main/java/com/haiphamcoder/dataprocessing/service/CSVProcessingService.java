@@ -12,4 +12,6 @@ public interface CSVProcessingService extends HdfsFileProcessingService {
 
     public List<Mapping> getSchema(SourceDto source);
 
+    public List<String> getSchema(String userId, String fileName);
+
 }

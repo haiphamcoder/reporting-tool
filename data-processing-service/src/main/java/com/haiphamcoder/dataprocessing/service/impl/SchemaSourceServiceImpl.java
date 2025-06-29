@@ -10,6 +10,7 @@ import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.domain.exception.ConnectorTypeNotSupportException;
 import com.haiphamcoder.dataprocessing.domain.exception.SourceNotFoundException;
 import com.haiphamcoder.dataprocessing.service.CSVProcessingService;
+import com.haiphamcoder.dataprocessing.service.ExcelProcessingService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
 import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 
@@ -23,6 +24,7 @@ public class SchemaSourceServiceImpl implements SchemaSourceService {
 
     private final SourceGrpcClient sourceGrpcClient;
     private final CSVProcessingService csvProcessingService;
+    private final ExcelProcessingService excelProcessingService;
 
     @Override
     public List<Mapping> getSchema(Long sourceId) {
@@ -35,6 +37,9 @@ public class SchemaSourceServiceImpl implements SchemaSourceService {
         switch (source.getConnectorType()) {
             case CommonConstants.CONNECTOR_TYPE_CSV:
                 return csvProcessingService.getSchema(source);
+
+            case CommonConstants.CONNECTOR_TYPE_EXCEL:
+                return excelProcessingService.getSchema(source);
 
             default:
                 throw new ConnectorTypeNotSupportException("Connector type not supported");

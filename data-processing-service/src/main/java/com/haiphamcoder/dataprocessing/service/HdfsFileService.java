@@ -7,6 +7,8 @@ public interface HdfsFileService {
 
     public String uploadFile(String userId, InputStream inputStream, String fileName);
 
+    public byte[] downloadFile(String fileUrl);
+
     public InputStream streamFile(String fileUrl);
 
     public Map<String, String> getHistoryUploadFile(String userId, Integer connectorType);

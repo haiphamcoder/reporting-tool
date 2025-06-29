@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -28,6 +29,8 @@ public interface SourceService {
     public Map<String, String> getHistoryUploadFile(Long userId, Integer connectorType);
 
     public SourceDto confirmSchema(Long userId, SourceDto sourceDto);
+
+    public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest);
 
     public void deleteSource(Long sourceId);
 

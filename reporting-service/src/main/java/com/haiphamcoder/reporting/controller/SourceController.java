@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
@@ -89,6 +90,14 @@ public class SourceController {
             @RequestBody MultipartFile file) {
         String filePath = sourceService.uploadFile(userId, sourceId, file);
         return ResponseEntity.ok(ApiResponse.success(filePath, "File uploaded successfully"));
+    }
+
+    @PostMapping("/{source-id}/confirm-sheet")
+    public ResponseEntity<ApiResponse<Object>> confirmSheet(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId,
+            @RequestBody ConfirmSheetRequest confirmSheetRequest) {
+        sourceService.confirmSheet(userId, sourceId, confirmSheetRequest);
+        return ResponseEntity.ok(ApiResponse.success(null, "Sheet confirmed successfully"));
     }
 
     @GetMapping("/history-upload-file")

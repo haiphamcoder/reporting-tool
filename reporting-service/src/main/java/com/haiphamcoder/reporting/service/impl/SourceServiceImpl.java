@@ -20,6 +20,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenExce
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
+import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -95,9 +96,10 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit) {
+    public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page,
+            Integer limit) {
         Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, search, page, limit);
-        
+
         return new Pair<>(sources.stream()
                 .map(SourceMapper::toDto)
                 .toList(),
@@ -147,7 +149,8 @@ public class SourceServiceImpl implements SourceService {
                 }
 
                 Integer connectorType = source.get().getConnectorType();
-                if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV) {
+                if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV
+                        || connectorType == CommonConstants.CONNECTOR_TYPE_EXCEL) {
                     try {
                         String filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
                                 connectorType + "/" + fileName.trim().replaceAll("\s+", "_"));
@@ -206,6 +209,47 @@ public class SourceServiceImpl implements SourceService {
             }
         } else {
             throw new ForbiddenException("You are not allowed to update this source");
+        }
+    }
+
+    @Override
+    public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest) {
+        if (hasWritePermission(userId, sourceId)) {
+            Optional<Source> source = sourceRepository.getSourceById(sourceId);
+            if (source.isPresent()) {
+                if (source.get().getConnectorType() == CommonConstants.CONNECTOR_TYPE_EXCEL) {
+                    if (StringUtils.isNullOrEmpty(confirmSheetRequest.getSheetName())) {
+                        throw new InvalidInputException("sheet_name");
+                    }
+                    if (StringUtils.isNullOrEmpty(confirmSheetRequest.getDataRangeSelected())) {
+                        throw new InvalidInputException("data_range_selected");
+                    }
+                    String config = source.get().getConfig();
+                    ObjectNode objectNode = null;
+                    if (StringUtils.isNullOrEmpty(config)) {
+                        objectNode = MapperUtils.objectMapper.createObjectNode();
+                    } else {
+                        try {
+                            objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
+                        } catch (IOException e) {
+                            throw new InvalidInputException("config");
+                        }
+                    }
+                    objectNode.put("sheet_name", confirmSheetRequest.getSheetName());
+                    objectNode.put("data_range_selected", confirmSheetRequest.getDataRangeSelected());
+                    source.get().setConfig(objectNode.toString());
+                    Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
+                    if (updatedSource.isPresent()) {
+                        return;
+                    } else {
+                        throw new RuntimeException("Update source failed");
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported connector type");
+                }
+            } else {
+                throw new ResourceNotFoundException("Source", sourceId);
+            }
         }
     }
 

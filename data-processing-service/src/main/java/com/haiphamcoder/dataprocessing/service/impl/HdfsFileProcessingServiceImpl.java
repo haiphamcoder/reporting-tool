@@ -1,7 +1,5 @@
 package com.haiphamcoder.dataprocessing.service.impl;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.dataprocessing.service.HdfsFileProcessingService;
@@ -13,10 +11,5 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class HdfsFileProcessingServiceImpl implements HdfsFileProcessingService {
-    
-    @Override
-    public List<String> getSchema(String userId, String fileName) {
-        return null;
-    }
 
 }
