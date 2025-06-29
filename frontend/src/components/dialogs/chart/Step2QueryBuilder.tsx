@@ -23,7 +23,7 @@ import {
     Build as BuildIcon,
     TableChart as TableIcon
 } from '@mui/icons-material';
-import { ChartMode, QueryOption, FieldConfig, FilterConfig, ChartType, AggregationConfig, JoinConfig, JoinConditionConfig } from '../../../types/chart';
+import { ChartMode, QueryOption, FieldConfig, FilterConfig, ChartType } from '../../../types/chart';
 import { chartApi } from '../../../api/chart/chartApi';
 import DataPreview from './DataPreview';
 
@@ -104,16 +104,9 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
             const mainSource = sources.find(s => s.id === queryOption.table);
             if (mainSource) fetchSourceMapping(mainSource.id, mainSource.name);
         }
-        // Join tables
-        (queryOption.joins || []).forEach(join => {
-            if (join.table) {
-                const joinSource = sources.find(s => s.id === join.table);
-                if (joinSource) fetchSourceMapping(joinSource.id, joinSource.name);
-            }
-        });
-    }, [queryOption.table, queryOption.joins, sources, fetchSourceMapping]);
+    }, [queryOption.table, sources, fetchSourceMapping]);
 
-    // Tổng hợp field cho combobox từ các source đã chọn (main + join)
+    // Tổng hợp field cho combobox từ các source đã chọn (main table only)
     useEffect(() => {
         let fields: any[] = [];
         // Main table
@@ -129,23 +122,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 }))
             );
         }
-        // Join tables
-        (queryOption.joins || []).forEach(join => {
-            if (join.table && sourceMappings[join.table]) {
-                const joinSource = sources.find(s => s.id === join.table);
-                fields = fields.concat(
-                    sourceMappings[join.table].map(f => ({
-                        source_id: join.table,
-                        source_name: joinSource?.name || '',
-                        field_mapping: f.field_mapping,
-                        field_name: f.field_name,
-                        field_type: f.field_type
-                    }))
-                );
-            }
-        });
         setAllSourceFields(fields);
-    }, [queryOption.table, queryOption.joins, sourceMappings, sources]);
+    }, [queryOption.table, sourceMappings, sources]);
 
     const handleAddField = () => {
         const newField: FieldConfig = {
@@ -205,109 +183,6 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
         });
     };
 
-    const handleAddAggregation = () => {
-        const newAggregation: AggregationConfig = {
-            field: '',
-            function: 'SUM',
-            alias: ''
-        };
-        onQueryOptionChange({
-            ...queryOption,
-            aggregations: [...(queryOption.aggregations || []), newAggregation]
-        });
-    };
-
-    const handleUpdateAggregation = (index: number, aggregation: Partial<AggregationConfig>) => {
-        const updatedAggregations = [...(queryOption.aggregations || [])];
-        updatedAggregations[index] = { ...updatedAggregations[index], ...aggregation };
-        onQueryOptionChange({
-            ...queryOption,
-            aggregations: updatedAggregations
-        });
-    };
-
-    const handleRemoveAggregation = (index: number) => {
-        const updatedAggregations = (queryOption.aggregations || []).filter((_, i) => i !== index);
-        onQueryOptionChange({
-            ...queryOption,
-            aggregations: updatedAggregations
-        });
-    };
-
-    const handleAddJoin = () => {
-        const newJoin: JoinConfig = {
-            table: '',
-            type: 'INNER',
-            conditions: [],
-            alias: ''
-        };
-        onQueryOptionChange({
-            ...queryOption,
-            joins: [...(queryOption.joins || []), newJoin]
-        });
-    };
-
-    const handleUpdateJoin = (index: number, join: Partial<JoinConfig>) => {
-        const updatedJoins = [...(queryOption.joins || [])];
-        updatedJoins[index] = { ...updatedJoins[index], ...join };
-        onQueryOptionChange({
-            ...queryOption,
-            joins: updatedJoins
-        });
-    };
-
-    const handleRemoveJoin = (index: number) => {
-        const updatedJoins = (queryOption.joins || []).filter((_, i) => i !== index);
-        onQueryOptionChange({
-            ...queryOption,
-            joins: updatedJoins
-        });
-    };
-
-    const handleAddJoinCondition = (joinIndex: number) => {
-        const newCondition: JoinConditionConfig = {
-            left_field: '',
-            right_field: '',
-            operator: 'EQ'
-        };
-        const updatedJoins = [...(queryOption.joins || [])];
-        updatedJoins[joinIndex] = {
-            ...updatedJoins[joinIndex],
-            conditions: [...(updatedJoins[joinIndex].conditions || []), newCondition]
-        };
-        onQueryOptionChange({
-            ...queryOption,
-            joins: updatedJoins
-        });
-    };
-
-    const handleUpdateJoinCondition = (joinIndex: number, conditionIndex: number, condition: Partial<JoinConditionConfig>) => {
-        const updatedJoins = [...(queryOption.joins || [])];
-        const updatedConditions = [...(updatedJoins[joinIndex].conditions || [])];
-        updatedConditions[conditionIndex] = { ...updatedConditions[conditionIndex], ...condition };
-        updatedJoins[joinIndex] = {
-            ...updatedJoins[joinIndex],
-            conditions: updatedConditions
-        };
-        onQueryOptionChange({
-            ...queryOption,
-            joins: updatedJoins
-        });
-    };
-
-    const handleRemoveJoinCondition = (joinIndex: number, conditionIndex: number) => {
-        const updatedJoins = [...(queryOption.joins || [])];
-        const updatedConditions = (updatedJoins[joinIndex].conditions || []).filter((_, i) => i !== conditionIndex);
-        updatedJoins[joinIndex] = {
-            ...updatedJoins[joinIndex],
-            conditions: updatedConditions
-        };
-        onQueryOptionChange({
-            ...queryOption,
-            joins: updatedJoins
-        });
-    };
-
     const handlePreview = async () => {
         setPreviewLoading(true);
         setPreviewError(null);
@@ -323,26 +198,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 }
 
                 // 1. Gọi API convertQuery
-                // Chuẩn hóa group_by giống fields
-                const normalizedGroupBy = (queryOption.group_by || []).map(gb => {
-                    const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === gb);
-                    if (f) {
-                        return {
-                            field_name: f.field_name,
-                            data_type: f.field_type,
-                            alias: f.alias || '',
-                            source_id: f.source_id,
-                            source_name: f.source_name,
-                            field_mapping: f.field_mapping
-                        };
-                    }
-                    return { field_name: gb };
-                });
-                const queryOptionWithNormalizedGroupBy = {
-                    ...queryOption,
-                    group_by: normalizedGroupBy
-                };
-                const convertRes = await chartApi.convertQuery(queryOptionWithNormalizedGroupBy);
+                const convertRes = await chartApi.convertQuery(queryOption);
                 if (!convertRes.success || !convertRes.result) {
                     throw new Error(convertRes.message || 'Failed to convert query');
                 }
@@ -494,158 +350,6 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 </CardContent>
             </Card>
 
-            {/* Joins Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle1" fontWeight="medium">
-                            Table Joins
-                        </Typography>
-                        <Button
-                            startIcon={<AddIcon />}
-                            onClick={handleAddJoin}
-                            variant="outlined"
-                            size="small"
-                        >
-                            Add Join
-                        </Button>
-                    </Box>
-
-                    {(queryOption.joins || []).map((join, joinIndex) => (
-                        <Card key={joinIndex} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="subtitle2" color="primary">
-                                        Join {joinIndex + 1}
-                                    </Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleRemoveJoin(joinIndex)}
-                                        color="error"
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </Box>
-
-                                <Grid container spacing={2} sx={{ mb: 2 }}>
-                                    <Grid item xs={3}>
-                                        <FormControl fullWidth>
-                                            <InputLabel>Join Type</InputLabel>
-                                            <Select
-                                                size="small"
-                                                value={join.type}
-                                                onChange={(e) => handleUpdateJoin(joinIndex, { type: e.target.value as any })}
-                                                label="Join Type"
-                                            >
-                                                <MenuItem value="INNER">INNER JOIN</MenuItem>
-                                                <MenuItem value="LEFT">LEFT JOIN</MenuItem>
-                                                <MenuItem value="RIGHT">RIGHT JOIN</MenuItem>
-                                                <MenuItem value="FULL">FULL JOIN</MenuItem>
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
-                                    <Grid item xs={4}>
-                                        <FormControl fullWidth size="small">
-                                            <InputLabel>Table</InputLabel>
-                                            <Select
-                                                size="small"
-                                                value={join.table}
-                                                onChange={(e) => handleUpdateJoin(joinIndex, { table: e.target.value })}
-                                                label="Table"
-                                            >
-                                                {sources.map((source) => (
-                                                    <MenuItem key={source.id} value={source.id}>
-                                                        {source.name}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    </Grid>
-                                    <Grid item xs={3}>
-                                        <TextField
-                                            fullWidth
-                                            size="small"
-                                            label="Alias"
-                                            value={join.alias}
-                                            onChange={(e) => handleUpdateJoin(joinIndex, { alias: e.target.value })}
-                                            placeholder="Table alias"
-                                        />
-                                    </Grid>
-                                </Grid>
-
-                                {/* Join Conditions */}
-                                <Box sx={{ mb: 2 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Join Conditions
-                                        </Typography>
-                                        <Button
-                                            size="small"
-                                            onClick={() => handleAddJoinCondition(joinIndex)}
-                                            variant="text"
-                                            startIcon={<AddIcon />}
-                                        >
-                                            Add Condition
-                                        </Button>
-                                    </Box>
-
-                                    {(join.conditions || []).map((condition, conditionIndex) => (
-                                        <Grid container spacing={2} key={conditionIndex} sx={{ mb: 1 }}>
-                                            <Grid item xs={4}>
-                                                <TextField
-                                                    fullWidth
-                                                    size="small"
-                                                    label="Left Field"
-                                                    value={condition.left_field}
-                                                    onChange={(e) => handleUpdateJoinCondition(joinIndex, conditionIndex, { left_field: e.target.value })}
-                                                    placeholder="table.field"
-                                                />
-                                            </Grid>
-                                            <Grid item xs={2}>
-                                                <FormControl fullWidth>
-                                                    <InputLabel>Operator</InputLabel>
-                                                    <Select
-                                                        size="small"
-                                                        value={condition.operator}
-                                                        onChange={(e) => handleUpdateJoinCondition(joinIndex, conditionIndex, { operator: e.target.value as any })}
-                                                        label="Operator"
-                                                    >
-                                                        <MenuItem value="EQ">=</MenuItem>
-                                                        <MenuItem value="GT">&gt;</MenuItem>
-                                                        <MenuItem value="GTE">≥</MenuItem>
-                                                        <MenuItem value="LT">&lt;</MenuItem>
-                                                        <MenuItem value="LTE">≤</MenuItem>
-                                                    </Select>
-                                                </FormControl>
-                                            </Grid>
-                                            <Grid item xs={4}>
-                                                <TextField
-                                                    fullWidth
-                                                    size="small"
-                                                    label="Right Field"
-                                                    value={condition.right_field}
-                                                    onChange={(e) => handleUpdateJoinCondition(joinIndex, conditionIndex, { right_field: e.target.value })}
-                                                    placeholder="table.field"
-                                                />
-                                            </Grid>
-                                            <Grid item xs={2}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleRemoveJoinCondition(joinIndex, conditionIndex)}
-                                                    color="error"
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Grid>
-                                        </Grid>
-                                    ))}
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </CardContent>
-            </Card>
-
             {/* Fields Section */}
             <Card sx={{ mb: 3 }}>
                 <CardContent>
@@ -672,9 +376,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                         // Xác định trạng thái loading mapping
                         const mainTableSelected = !!queryOption.table;
                         const mainTableMappingLoaded = queryOption.table && sourceMappings[queryOption.table];
-                        const joinTableIds = (queryOption.joins || []).map(j => j.table).filter(Boolean);
-                        const joinMappingsLoaded = joinTableIds.every(jid => sourceMappings[jid]);
-                        const mappingLoading = mainTableSelected && (!mainTableMappingLoaded || !joinMappingsLoaded);
+                        const mappingLoading = mainTableSelected && !mainTableMappingLoaded;
                         // Sửa lại: chỉ disable khi chưa chọn bảng hoặc mapping đang loading
                         const disableFieldSelect = !mainTableSelected || mappingLoading;
                         return (
@@ -755,77 +457,6 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                             </Grid>
                         );
                     })}
-                </CardContent>
-            </Card>
-
-            {/* Aggregations Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle1" fontWeight="medium">
-                            Aggregations
-                        </Typography>
-                        <Button
-                            startIcon={<AddIcon />}
-                            onClick={handleAddAggregation}
-                            variant="outlined"
-                            size="small"
-                        >
-                            Add Aggregation
-                        </Button>
-                    </Box>
-
-                    {(queryOption.aggregations || []).map((aggregation, index) => (
-                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
-                            <Grid item xs={4}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Field"
-                                    value={aggregation.field}
-                                    onChange={(e) => handleUpdateAggregation(index, { field: e.target.value })}
-                                    placeholder="Field to aggregate"
-                                />
-                            </Grid>
-                            <Grid item xs={3}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Function</InputLabel>
-                                    <Select
-                                        size="small"
-                                        value={aggregation.function}
-                                        onChange={(e) => handleUpdateAggregation(index, { function: e.target.value as any })}
-                                        label="Function"
-                                    >
-                                        <MenuItem value="SUM">SUM</MenuItem>
-                                        <MenuItem value="AVG">AVG</MenuItem>
-                                        <MenuItem value="COUNT">COUNT</MenuItem>
-                                        <MenuItem value="MIN">MIN</MenuItem>
-                                        <MenuItem value="MAX">MAX</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <TextField
-                                    fullWidth
-                                    size="small"
-                                    label="Alias"
-                                    value={aggregation.alias}
-                                    onChange={(e) => handleUpdateAggregation(index, { alias: e.target.value })}
-                                    placeholder="Display name"
-                                />
-                            </Grid>
-                            <Grid item xs={2}>
-                                <IconButton
-                                    size="small"
-                                    onClick={() => handleRemoveAggregation(index)}
-                                    color="error"
-                                    sx={{ alignSelf: 'center', justifySelf: 'center' }}
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Grid>
-                        </Grid>
-                    ))}
                 </CardContent>
             </Card>
 
@@ -937,71 +568,103 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 </CardContent>
             </Card>
 
-            {/* Group By Section */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
-                        Group By
-                    </Typography>
-                    <FormControl fullWidth>
-                        <InputLabel size="small">Group By Fields</InputLabel>
-                        <Select
-                            multiple
-                            size="small"
-                            value={queryOption.group_by || []}
-                            onChange={(e) => {
-                                const value = e.target.value as string[];
-                                onQueryOptionChange({
-                                    ...queryOption,
-                                    group_by: value
-                                });
-                            }}
-                            label="Group By Fields"
-                            renderValue={(selected) =>
-                                (selected as string[]).map(sel => {
-                                    const f = allSourceFields.find(f => `${f.source_id}.${f.field_mapping}` === sel);
-                                    return f ? `${f.source_name}.${f.field_mapping}` : sel;
-                                }).join(', ')
-                            }
-                        >
-                            {allSourceFields.map((f, i) => (
-                                <MenuItem key={i} value={`${f.source_id}.${f.field_mapping}`}>
-                                    {`${f.source_name}.${f.field_mapping}`}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </CardContent>
-            </Card>
-
             {/* Sort Section */}
             <Card sx={{ mb: 3 }}>
                 <CardContent>
-                    <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
-                        Sort Order
-                    </Typography>
-                    <TextField
-                        size="small"
-                        fullWidth
-                        label="Sort Fields"
-                        value={queryOption.sort?.map(s => `${s.field} ${s.direction}`).join(', ') || ''}
-                        onChange={(e) => {
-                            const sortFields = e.target.value.split(',').map(f => f.trim()).filter(f => f);
-                            const sort = sortFields.map(field => {
-                                const [fieldName, direction] = field.split(' ');
-                                return {
-                                    field: fieldName,
-                                    direction: (direction || 'ASC') as 'ASC' | 'DESC'
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="subtitle1" fontWeight="medium">
+                            Sort Order
+                        </Typography>
+                        <Button
+                            startIcon={<AddIcon />}
+                            onClick={() => {
+                                const newSort = {
+                                    field: '',
+                                    direction: 'ASC' as 'ASC' | 'DESC'
                                 };
-                            });
-                            onQueryOptionChange({
-                                ...queryOption,
-                                sort
-                            });
-                        }}
-                        placeholder="field1 ASC, field2 DESC"
-                        helperText="Format: field direction (ASC/DESC)"
-                    />
+                                onQueryOptionChange({
+                                    ...queryOption,
+                                    sort: [...(queryOption.sort || []), newSort]
+                                });
+                            }}
+                            variant="outlined"
+                            size="small"
+                        >
+                            Add Sort
+                        </Button>
+                    </Box>
+
+                    {(queryOption.sort || []).map((sortItem, index) => (
+                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                            <Grid item xs={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel size="small">Field</InputLabel>
+                                    <Select
+                                        size="small"
+                                        value={sortItem.field}
+                                        onChange={(e) => {
+                                            const updatedSort = [...(queryOption.sort || [])];
+                                            updatedSort[index] = { ...updatedSort[index], field: e.target.value };
+                                            onQueryOptionChange({
+                                                ...queryOption,
+                                                sort: updatedSort
+                                            });
+                                        }}
+                                        label="Field"
+                                    >
+                                        {allSourceFields.map((f, i) => (
+                                            <MenuItem key={i} value={f.field_name}>
+                                                {`${f.source_name}.${f.field_mapping}`}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={4}>
+                                <FormControl fullWidth>
+                                    <InputLabel size="small">Order</InputLabel>
+                                    <Select
+                                        size="small"
+                                        value={sortItem.direction}
+                                        onChange={(e) => {
+                                            const updatedSort = [...(queryOption.sort || [])];
+                                            updatedSort[index] = { ...updatedSort[index], direction: e.target.value as 'ASC' | 'DESC' };
+                                            onQueryOptionChange({
+                                                ...queryOption,
+                                                sort: updatedSort
+                                            });
+                                        }}
+                                        label="Order"
+                                    >
+                                        <MenuItem value="ASC">Ascending (A-Z)</MenuItem>
+                                        <MenuItem value="DESC">Descending (Z-A)</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={2}>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                        const updatedSort = (queryOption.sort || []).filter((_, i) => i !== index);
+                                        onQueryOptionChange({
+                                            ...queryOption,
+                                            sort: updatedSort
+                                        });
+                                    }}
+                                    color="error"
+                                    sx={{ alignSelf: 'center', justifySelf: 'center' }}
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    ))}
+
+                    {(!queryOption.sort || queryOption.sort.length === 0) && (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                            No sort order specified. Results will be returned in default order.
+                        </Typography>
+                    )}
                 </CardContent>
             </Card>
         </Box>
