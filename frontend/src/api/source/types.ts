@@ -83,4 +83,35 @@ export interface SourceDetails {
 export interface SourceDetailsResponse {
   success: boolean;
   result: SourceDetails;
+}
+
+// Excel sheet related types
+export interface GetExcelSheetsRequest {
+  file_path: string;
+}
+
+export interface GetExcelSheetsResponse {
+  success: boolean;
+  result: string[];
+  message: string;
+  timestamp: string;
+}
+
+export interface ConfirmSheetRequest {
+  sheet_name: string;
+  data_range_selected: string;
+}
+
+export interface ConfirmSheetResponse {
+  success: boolean;
+  result: {
+    message: string;
+  };
+}
+
+// Upload file response type
+export interface UploadFileResponse {
+  success: boolean;
+  result: string; // This is the file path
+  message?: string;
 } 

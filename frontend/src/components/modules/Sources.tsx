@@ -277,6 +277,14 @@ export default function Sources() {
         if (addStep === 1) {
             setAddStep(2);
         } else if (addStep === 2) {
+            // For Excel connector, we need to go to step 2.5 (sheet selection)
+            // For other connectors, go to step 3
+            if (addForm.connectorType === 'excel') {
+                setAddStep(2.5);
+            } else {
+                setAddStep(3);
+            }
+        } else if (addStep === 2.5) {
             setAddStep(3);
         } else if (addStep === 3) {
             setAddStep(4);
@@ -284,7 +292,10 @@ export default function Sources() {
     };
 
     const handleAddBack = () => {
-        if (addStep > 1) {
+        if (addStep === 2.5) {
+            // From Excel sheet selection, go back to file upload
+            setAddStep(2);
+        } else if (addStep > 1) {
             setAddStep(addStep - 1);
         }
     };

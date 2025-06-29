@@ -7,7 +7,12 @@ import {
   ConfirmSchemaRequest,
   ConfirmSchemaResponse,
   SubmitImportResponse,
-  SourceDetailsResponse
+  SourceDetailsResponse,
+  GetExcelSheetsRequest,
+  GetExcelSheetsResponse,
+  ConfirmSheetRequest,
+  ConfirmSheetResponse,
+  UploadFileResponse
 } from './types';
 
 export const sourceApi = {
@@ -59,7 +64,7 @@ export const sourceApi = {
   },
 
   // Upload file cho source
-  uploadFile: async (sourceId: string, file: File): Promise<any> => {
+  uploadFile: async (sourceId: string, file: File): Promise<UploadFileResponse> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -182,6 +187,45 @@ export const sourceApi = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch preview data');
+    }
+
+    return response.json();
+  },
+
+  // Get Excel sheets
+  getExcelSheets: async (filePath: string): Promise<GetExcelSheetsResponse> => {
+    const params = new URLSearchParams();
+    params.append('file-path', filePath);
+
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EXCEL_GET_SHEETS}?${params.toString()}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get Excel sheets');
+    }
+
+    return response.json();
+  },
+
+  // Confirm Excel sheet
+  confirmSheet: async (sourceId: string, data: ConfirmSheetRequest): Promise<ConfirmSheetResponse> => {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_CONFIRM_SHEET.replace(':id', sourceId)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to confirm sheet');
     }
 
     return response.json();
