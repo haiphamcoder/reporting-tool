@@ -42,6 +42,9 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             setLoading(true);
             setError(null);
             try {
+                console.log('ChartPreviewInReport: Starting fetch for chart:', chart.id);
+                console.log('Chart config:', chart.config);
+                
                 let sql_query = '';
                 let fields: any[] = [];
                 if (chart.config.mode === 'basic') {
@@ -59,11 +62,18 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                         const data = await res.json();
                         if (!data.success) throw new Error(data.message || 'Failed to convert query');
                         sql_query = data.result;
-                        fields = chart.config.query_option.fields || [];
+                        fields = (chart.config.query_option.fields || []).map((f: any) => ({
+                            field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
+                            data_type: f.data_type,
+                            alias: f.alias || ''
+                        }));
+                        console.log('Converted SQL query:', sql_query);
+                        console.log('Fields:', fields);
                     }
                 } else if (chart.config.mode === 'advanced' && chart.sql_query) {
                     sql_query = chart.sql_query;
                     fields = [];
+                    console.log('Using advanced SQL query:', sql_query);
                 }
                 if (!sql_query) throw new Error('No SQL query available');
                 // Fetch preview data
@@ -78,8 +88,10 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 });
                 const preview = await previewRes.json();
                 if (!preview.success) throw new Error(preview.message || 'Failed to fetch chart data');
+                console.log('Preview data received:', preview.result);
                 setPreviewData(preview.result);
             } catch (err: any) {
+                console.error('ChartPreviewInReport error:', err);
                 setError(err.message || 'Failed to preview chart');
             } finally {
                 setLoading(false);
@@ -92,21 +104,42 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     // Helper to extract data/fields
     const getDataAndFields = () => {
         if (!previewData) return { data: [], fields: [] };
+        
+        console.log('Raw previewData:', previewData);
+        
+        let data: any[] = [];
+        let fields: string[] = [];
+
+        // Extract data based on structure - same logic as ChartViewPage
         if (previewData.columns && previewData.rows) {
-            return { data: previewData.rows, fields: previewData.columns };
+            fields = previewData.columns;
+            data = previewData.rows;
+            console.log('Using columns/rows structure:', { fields, dataLength: data.length });
         } else if (previewData.schema && previewData.records) {
-            return {
-                data: previewData.records,
-                fields: previewData.schema.filter((col: any) => !col.is_hidden).map((col: any) => col.field_name)
-            };
+            fields = previewData.schema
+                .filter((col: any) => !col.is_hidden)
+                .map((col: any) => col.field_name);
+            data = previewData.records;
+            console.log('Using schema/records structure:', { fields, dataLength: data.length });
         }
-        return { data: [], fields: [] };
+
+        if (data.length === 0 || fields.length === 0) {
+            console.log('No data or fields found:', { dataLength: data.length, fieldsLength: fields.length });
+            return { data: [], fields: [] };
+        }
+
+        console.log('Final extracted data:', { data: data.slice(0, 3), fields });
+        return { data, fields };
     };
 
     // Chart renderers
     const renderBarChart = () => {
         const { data, fields } = getDataAndFields();
-        if (!data.length || !fields.length || !chart.config.bar_chart_config) return <Typography fontSize={14}>No data</Typography>;
+        console.log('renderBarChart - data:', data, 'fields:', fields);
+        if (!data.length || !fields.length || !chart.config.bar_chart_config) {
+            console.log('Bar chart render failed:', { dataLength: data.length, fieldsLength: fields.length, barConfig: chart.config.bar_chart_config });
+            return <Typography fontSize={14}>No data</Typography>;
+        }
         const config = chart.config.bar_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
@@ -115,13 +148,17 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             labels,
             datasets: [{
                 label: config.y_axis_label || yField,
-                data: data.map((row: any) => Number(row[yField]) || 0),
+                data: data.map((row: any) => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
                 backgroundColor: 'rgba(54, 162, 235, 0.8)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,
                 stack: config.stacked ? 'stack1' : undefined,
             }]
         };
+        console.log('Bar chart config:', chartConfig);
         const options = {
             responsive: true,
             maintainAspectRatio: false,
@@ -133,14 +170,21 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     };
     const renderPieChart = () => {
         const { data, fields } = getDataAndFields();
-        if (!data.length || !fields.length || !chart.config.pie_chart_config) return <Typography fontSize={14}>No data</Typography>;
+        console.log('renderPieChart - data:', data, 'fields:', fields);
+        if (!data.length || !fields.length || !chart.config.pie_chart_config) {
+            console.log('Pie chart render failed:', { dataLength: data.length, fieldsLength: fields.length, pieConfig: chart.config.pie_chart_config });
+            return <Typography fontSize={14}>No data</Typography>;
+        }
         const config = chart.config.pie_chart_config;
         const labelField = config.label_field || fields[0];
         const valueField = config.value_field || fields[1] || fields[0];
         const chartConfig = {
             labels: data.map((row: any) => String(row[labelField] || 'N/A')),
             datasets: [{
-                data: data.map((row: any) => Number(row[valueField]) || 0),
+                data: data.map((row: any) => {
+                    const value = row[valueField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.8)',
                     'rgba(54, 162, 235, 0.8)',
@@ -151,6 +195,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 borderWidth: 1,
             }]
         };
+        console.log('Pie chart config:', chartConfig);
         const options = {
             responsive: true,
             maintainAspectRatio: false,
@@ -161,7 +206,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     };
     const renderLineChart = () => {
         const { data, fields } = getDataAndFields();
-        if (!data.length || !fields.length || !chart.config.line_chart_config) return <Typography fontSize={14}>No data</Typography>;
+        console.log('renderLineChart - data:', data, 'fields:', fields);
+        if (!data.length || !fields.length || !chart.config.line_chart_config) {
+            console.log('Line chart render failed:', { dataLength: data.length, fieldsLength: fields.length, lineConfig: chart.config.line_chart_config });
+            return <Typography fontSize={14}>No data</Typography>;
+        }
         const config = chart.config.line_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
@@ -170,7 +219,10 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             labels,
             datasets: [{
                 label: config.y_axis_label || yField,
-                data: data.map((row: any) => Number(row[yField]) || 0),
+                data: data.map((row: any) => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: config.fill_area ? 'rgba(75, 192, 192, 0.2)' : 'transparent',
                 borderWidth: 2,
@@ -179,6 +231,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 pointRadius: config.show_points !== false ? 4 : 0,
             }]
         };
+        console.log('Line chart config:', chartConfig);
         const options = {
             responsive: true,
             maintainAspectRatio: false,
@@ -189,7 +242,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     };
     const renderAreaChart = () => {
         const { data, fields } = getDataAndFields();
-        if (!data.length || !fields.length || !chart.config.area_chart_config) return <Typography fontSize={14}>No data</Typography>;
+        console.log('renderAreaChart - data:', data, 'fields:', fields);
+        if (!data.length || !fields.length || !chart.config.area_chart_config) {
+            console.log('Area chart render failed:', { dataLength: data.length, fieldsLength: fields.length, areaConfig: chart.config.area_chart_config });
+            return <Typography fontSize={14}>No data</Typography>;
+        }
         const config = chart.config.area_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
@@ -198,7 +255,10 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             labels,
             datasets: [{
                 label: config.y_axis_label || yField,
-                data: data.map((row: any) => Number(row[yField]) || 0),
+                data: data.map((row: any) => {
+                    const value = row[yField];
+                    return typeof value === 'number' ? value : parseFloat(value) || 0;
+                }),
                 borderColor: 'rgba(255, 159, 64, 1)',
                 backgroundColor: `rgba(255, 159, 64, ${config.opacity || 0.7})`,
                 borderWidth: 2,
@@ -206,6 +266,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 tension: 0.4,
             }]
         };
+        console.log('Area chart config:', chartConfig);
         const options = {
             responsive: true,
             maintainAspectRatio: false,
@@ -241,6 +302,8 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
         );
     };
     const renderChart = () => {
+        console.log('renderChart called with chart type:', chart.config.type);
+        console.log('previewData available:', !!previewData);
         if (!previewData) return null;
         switch (chart.config.type) {
             case 'bar': return renderBarChart();

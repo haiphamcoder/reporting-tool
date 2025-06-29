@@ -16,6 +16,7 @@ import { Box, CircularProgress } from '@mui/material';
 import CardAlert from '../CardAlert';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import AddChartDialog from '../dialogs/AddChartDiaglog';
+import EditChartDialog from '../dialogs/EditChartDialog';
 import Search from '../Search';
 
 interface ChartsMetadata {
@@ -59,6 +60,8 @@ export default function Charts() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const [addDialogOpen, setAddDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [chartToEdit, setChartToEdit] = useState<ChartSummary | null>(null);
 
     // Function to update URL with pagination parameters
     const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
@@ -213,8 +216,8 @@ export default function Charts() {
     }
 
     const handleEditClick = (row: any) => {
-        console.log('Edit chart:', row);
-        // Handle edit logic here
+        setChartToEdit(row);
+        setEditDialogOpen(true);
     };
 
     const handleDeleteClick = (row: any) => {
@@ -366,6 +369,15 @@ export default function Charts() {
         fetchCharts(metadata.current_page, metadata.page_size, searchTerm);
     };
 
+    const handleEditSuccess = () => {
+        setEditDialogOpen(false);
+        setChartToEdit(null);
+        setSuccess('Chart updated successfully');
+        setShowSuccessPopup(true);
+        // Refresh the charts list
+        fetchCharts(metadata.current_page, metadata.page_size, searchTerm);
+    };
+
     return (
         <Stack gap={2}>
             <Typography variant="h4" component="h2" gutterBottom>
@@ -464,12 +476,6 @@ export default function Charts() {
                 />
             )}
 
-            <AddChartDialog
-                open={addDialogOpen}
-                onClose={handleAddClose}
-                onSuccess={handleAddSuccess}
-            />
-
             <DeleteConfirmationDialog
                 open={deleteDialogOpen}
                 onClose={() => setDeleteDialogOpen(false)}
@@ -477,6 +483,22 @@ export default function Charts() {
                 title="Delete Chart"
                 message={`Are you sure you want to delete "${chartToDelete?.name}"? This action cannot be undone.`}
                 severity="error"
+            />
+
+            <AddChartDialog
+                open={addDialogOpen}
+                onClose={() => setAddDialogOpen(false)}
+                onSuccess={handleAddSuccess}
+            />
+
+            <EditChartDialog
+                open={editDialogOpen}
+                onClose={() => {
+                    setEditDialogOpen(false);
+                    setChartToEdit(null);
+                }}
+                onSuccess={handleEditSuccess}
+                chartId={chartToEdit?.id}
             />
         </Stack>
     );

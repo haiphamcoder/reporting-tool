@@ -221,28 +221,23 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 return;
             }
 
-            // Advanced mode giữ nguyên
-            // Create chart data for preview
-            const chartData = {
-                name: 'Preview Chart',
-                description: 'Preview chart for data validation',
-                config: {
-                    type: 'table' as ChartType, // Default type for preview
-                    mode: chartMode,
-                    ...((chartMode as string) === 'basic' ? { query_option: queryOption } : {}),
-                    ...((chartMode as string) === 'advanced' ? { sql_query: sqlQuery } : {})
-                }
-            };
+            // Advanced mode - use new logic
+            if (!sqlQuery.trim()) {
+                throw new Error('SQL query is required');
+            }
 
-            // Call actual API for preview
-            const response = await chartApi.previewChartData(chartData);
-
-            if (response.success) {
-                setPreviewData(response.data);
-                onPreviewData(response.data);
+            // Call preview-data API directly with SQL query
+            const previewRes = await chartApi.previewData({ 
+                sql_query: sqlQuery, 
+                fields: [] 
+            });
+            
+            if (previewRes.success) {
+                setPreviewData(previewRes.result);
+                onPreviewData(previewRes.result);
                 onPreviewSuccess(true);
             } else {
-                throw new Error(response.message || 'Failed to preview data');
+                throw new Error(previewRes.message || 'Failed to preview data');
             }
         } catch (error) {
             console.error('Preview error:', error);
