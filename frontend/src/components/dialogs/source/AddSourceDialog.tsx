@@ -4,8 +4,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
-import { API_CONFIG } from '../../../config/api';
 import CardAlert from '../../CardAlert';
+import { sourceApi } from '../../../api/source';
 import {
   Step1BasicInfo,
   Step2ConnectionConfig,
@@ -150,21 +150,12 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
   const handleAddNextInternal = async () => {
     if (currentContent === 'sources' && addStep === 1) {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.INIT_SOURCES}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            name: addForm.name,
-            connector_type: connectorTypeToNumber(addForm.connectorType),
-            description: addForm.description || '',
-          })
+        const data = await sourceApi.initSource({
+          name: addForm.name,
+          connector_type: connectorTypeToNumber(addForm.connectorType),
+          description: addForm.description || '',
         });
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to init source');
-        }
-        const data = await response.json();
+        
         // Nếu thành công thì lưu id vào addForm
         setAddForm((prev: any) => ({ ...prev, sourceId: data.result.id }));
         setAddStep(addStep + 1);
@@ -180,17 +171,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
         return;
       }
       try {
-        const formData = new FormData();
-        formData.append('file', addForm.selectedFile);
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_UPLOAD_FILE}?source-id=${addForm.sourceId}`, {
-          method: 'POST',
-          credentials: 'include',
-          body: formData,
-        });
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to upload file');
-        }
+        await sourceApi.uploadFile(addForm.sourceId, addForm.selectedFile);
         setAddStep(addStep + 1);
       } catch (err: any) {
         setAlertMessage(err.message || 'Failed to upload file');
@@ -205,28 +186,13 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
       }
       try {
         // 1. Confirm schema
-        const confirmRes = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_CONFIRM_SCHEMA}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            id: addForm.sourceId,
-            mapping: addForm.schema,
-          })
+        await sourceApi.confirmSchema({
+          id: addForm.sourceId,
+          mapping: addForm.schema,
         });
-        if (!confirmRes.ok) {
-          const error = await confirmRes.json();
-          throw new Error(error.message || 'Failed to confirm schema');
-        }
+        
         // 2. Ingest data
-        const ingestRes = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_SUBMIT_IMPORT}/${addForm.sourceId}`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (!ingestRes.ok) {
-          const error = await ingestRes.json();
-          throw new Error(error.message || 'Failed to ingest data');
-        }
+        await sourceApi.submitImport(addForm.sourceId);
         
         // Đóng dialog trước
         onClose();
@@ -256,14 +222,7 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
     if (currentContent === 'sources' && addStep === 3 && addForm.sourceId && !addForm.schema) {
       (async () => {
         try {
-          const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_GET_SCHEMA}/${addForm.sourceId}`, {
-            method: 'GET',
-            credentials: 'include',
-          });
-          if (!response.ok) {
-            throw new Error('Failed to fetch schema');
-          }
-          const data = await response.json();
+          const data = await sourceApi.getSchema(addForm.sourceId);
           setAddForm((prev: any) => ({ ...prev, schema: data.result }));
         } catch (err: any) {
           setAlertMessage(err.message || 'Failed to fetch schema');

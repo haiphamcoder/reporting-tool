@@ -13,7 +13,7 @@ import connectorCsvIcon from '../../assets/connector-csv.png';
 import connectorExcelIcon from '../../assets/connector-excel.png';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import { API_CONFIG } from '../../config/api';
+import { sourceApi } from '../../api/source';
 import { AddSourceDialog } from '../dialogs/source';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
@@ -176,29 +176,8 @@ export default function Sources() {
             setLoading(true);
             setError(null);
             
-            const params = new URLSearchParams();
-            params.append('page', page.toString());
-            params.append('limit', pageSize.toString());
-            if (search.trim()) {
-                params.append('search', search.trim());
-            }
+            const data = await sourceApi.getSources(page, pageSize, search);
             
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}?${params.toString()}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new TypeError("Response was not JSON");
-            }
-            const data = await response.json();
             if (data.success) {
                 const processedSources = data.result.sources.map((source: any) => ({
                     ...source,
@@ -209,10 +188,11 @@ export default function Sources() {
                 setCurrentPage(page);
                 setPageSize(pageSize);
             } else {
-                setError(data.message || 'Failed to fetch sources');
+                setError('Failed to fetch sources');
                 setShowErrorPopup(true);
             }
         } catch (error) {
+            console.error('Error fetching sources:', error);
             setError(error instanceof Error ? error.message : 'Failed to fetch sources');
             setShowErrorPopup(true);
             setSourcesData([]);
@@ -271,31 +251,13 @@ export default function Sources() {
             setError(null);
             setSuccess(null);
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}/${sourceToDelete.id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
+            await sourceApi.deleteSource(sourceToDelete.id);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                setSuccess('Source deleted successfully');
-                setShowSuccessPopup(true);
-                setDeleteDialogOpen(false);
-                setSourceToDelete(null);
-                fetchSources(metadata.current_page, metadata.page_size, searchTerm);
-            } else {
-                setError(data.message || 'Failed to delete source');
-                setShowErrorPopup(true);
-            }
+            setSuccess('Source deleted successfully');
+            setShowSuccessPopup(true);
+            setDeleteDialogOpen(false);
+            setSourceToDelete(null);
+            fetchSources(metadata.current_page, metadata.page_size, searchTerm);
         } catch (error) {
             console.error('Error deleting source:', error);
             setError(error instanceof Error ? error.message : 'Failed to delete source');
@@ -317,52 +279,7 @@ export default function Sources() {
         } else if (addStep === 2) {
             setAddStep(3);
         } else if (addStep === 3) {
-            // Handle source creation
-            try {
-                console.log('Creating source:', addForm);
-                const formData = new FormData();
-                formData.append('name', addForm.name);
-                formData.append('connectorType', addForm.connectorType);
-
-                if (addForm.selectedFile) {
-                    formData.append('file', addForm.selectedFile);
-                }
-
-                if (addForm.connectionConfig) {
-                    Object.keys(addForm.connectionConfig).forEach(key => {
-                        if (addForm.connectionConfig[key]) {
-                            formData.append(key, addForm.connectionConfig[key]);
-                        }
-                    });
-                }
-
-                const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCES}`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        // Refresh sources list
-                        fetchSources(metadata.current_page, metadata.page_size, searchTerm);
-                        setSuccess('Source created successfully');
-                        setShowSuccessPopup(true);
-                        handleAddClose();
-                    } else {
-                        setError(data.message || 'Failed to create source');
-                        setShowErrorPopup(true);
-                    }
-                } else {
-                    setError('Failed to create source');
-                    setShowErrorPopup(true);
-                }
-            } catch (error) {
-                console.error('Error creating source:', error);
-                setError(error instanceof Error ? error.message : 'Failed to create source');
-                setShowErrorPopup(true);
-            }
+            setAddStep(4);
         }
     };
 
