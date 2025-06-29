@@ -681,7 +681,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                             <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
                                 <Grid item xs={4}>
                                     <FormControl fullWidth>
-                                        <InputLabel>Field Name</InputLabel>
+                                        <InputLabel size="small">Field Name</InputLabel>
                                         <Select
                                             size="small"
                                             value={field.source_id && field.field_mapping ? `${field.source_id}.${field.field_mapping}` : ''}
@@ -716,7 +716,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                                         {/* Debug: Hiển thị số lượng field thực tế */}
                                         <Box sx={{ mt: 0.5 }}>
                                             <Typography variant="caption" color="text.secondary">
-                                                {`Số field khả dụng: ${allSourceFields.length}`}
+                                                {`Total available fields: ${allSourceFields.length}`}
                                             </Typography>
                                         </Box>
                                     </FormControl>
@@ -858,7 +858,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                             <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
                                 <Grid item xs={3}>
                                     <FormControl fullWidth>
-                                        <InputLabel>Field</InputLabel>
+                                        <InputLabel size="small">Field</InputLabel>
                                         <Select
                                             size="small"
                                             value={filter.source_id && filter.field_mapping ? `${filter.source_id}.${filter.field_mapping}` : ''}
@@ -897,14 +897,14 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                                             {operatorOptions.map(op => (
                                                 <MenuItem key={op} value={op}>{
                                                     op === 'EQ' ? '=' :
-                                                    op === 'NE' ? '≠' :
-                                                    op === 'GT' ? '>' :
-                                                    op === 'GTE' ? '≥' :
-                                                    op === 'LT' ? '<' :
-                                                    op === 'LTE' ? '≤' :
-                                                    op === 'LIKE' ? 'LIKE' :
-                                                    op === 'IN' ? 'IN' :
-                                                    op === 'NOT_IN' ? 'NOT IN' : op
+                                                        op === 'NE' ? '≠' :
+                                                            op === 'GT' ? '>' :
+                                                                op === 'GTE' ? '≥' :
+                                                                    op === 'LT' ? '<' :
+                                                                        op === 'LTE' ? '≤' :
+                                                                            op === 'LIKE' ? 'LIKE' :
+                                                                                op === 'IN' ? 'IN' :
+                                                                                    op === 'NOT_IN' ? 'NOT IN' : op
                                                 }</MenuItem>
                                             ))}
                                         </Select>
@@ -944,7 +944,7 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                         Group By
                     </Typography>
                     <FormControl fullWidth>
-                        <InputLabel>Group By Fields</InputLabel>
+                        <InputLabel size="small">Group By Fields</InputLabel>
                         <Select
                             multiple
                             size="small"
