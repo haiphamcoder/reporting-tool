@@ -112,11 +112,11 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
 
         try {
             const response = await chartApi.getChart(chartId);
-            
+
             // Handle response format: { code, success, message, result, timestamp }
             if (response.success && response.result) {
                 const chart = response.result;
-                
+
                 // Set basic info
                 setName(chart.name || '');
                 setDescription(chart.description || '');
@@ -172,7 +172,7 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
                     throw new Error(convertRes.message || 'Failed to convert query');
                 }
                 sql_query = convertRes.result;
-                
+
                 // Prepare fields for preview-data API
                 fields = (chart.config.query_option.fields || []).map((f: any) => ({
                     field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
@@ -226,7 +226,7 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
                     throw new Error(convertRes.message || 'Failed to convert query');
                 }
                 sql_query = convertRes.result;
-                
+
                 // Prepare fields for preview-data API
                 fields = (queryOption.fields || []).map((f: any) => ({
                     field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
@@ -449,7 +449,16 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
     }
 
     return (
-        <Dialog open={open} maxWidth="md" fullWidth>
+        <Dialog open={open}
+            onClose={handleClose}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    minHeight: '80vh',
+                    maxHeight: '90vh'
+                }
+            }}>
             <DialogTitle>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6">Edit Chart</Typography>

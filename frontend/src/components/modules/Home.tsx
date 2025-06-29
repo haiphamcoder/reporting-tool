@@ -155,7 +155,7 @@ export default function Home() {
       {dashboardData && (
         <Grid container spacing={3} columns={12}>
           {/* Growth Trends Chart - Full Width */}
-          <Grid size={{ xs: 12 }}>
+          {/* <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2 }}>
@@ -178,7 +178,7 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
-          </Grid>
+          </Grid> */}
 
           {/* Recent Items - Bottom Row */}
           <Grid size={{ xs: 12, md: 4 }}>
