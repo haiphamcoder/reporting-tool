@@ -14,7 +14,7 @@ import connectorExcelIcon from '../../assets/connector-excel.png';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { API_CONFIG } from '../../config/api';
-import AddSourceDialog from './AddSourceDialog';
+import { AddSourceDialog } from '../dialogs/source';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -636,6 +636,7 @@ export default function Sources() {
                 chartsData={[]}
                 handleAddNext={handleAddNext}
                 handleAddBack={handleAddBack}
+                onSourceCreated={fetchSources}
             />
 
             <DeleteConfirmationDialog
