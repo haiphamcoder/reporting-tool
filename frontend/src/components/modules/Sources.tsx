@@ -10,6 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import connectorCsvIcon from '../../assets/connector-csv.png';
+import connectorExcelIcon from '../../assets/connector-excel.png';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { API_CONFIG } from '../../config/api';
@@ -427,6 +428,13 @@ export default function Sources() {
                         <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
                             <img src={connectorCsvIcon} alt="CSV" style={{ width: 24, height: 24 }} />
                             <Typography>CSV</Typography>
+                        </Stack>
+                    );
+                } else if (params.row?.type === 2) {
+                    return (
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
+                            <img src={connectorExcelIcon} alt="Excel" style={{ width: 24, height: 24 }} />
+                            <Typography>Excel</Typography>
                         </Stack>
                     );
                 }
