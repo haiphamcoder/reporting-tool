@@ -47,7 +47,7 @@ const SqlHelper: React.FC<SqlHelperProps> = ({
 }) => {
     const [expanded, setExpanded] = useState<string | false>('panel1');
 
-    const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    const handleAccordionChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
         setExpanded(isExpanded ? panel : false);
     };
 

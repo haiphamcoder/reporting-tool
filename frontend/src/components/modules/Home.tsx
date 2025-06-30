@@ -12,7 +12,6 @@ import Divider from '@mui/material/Divider';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Statistic from '../Statistic';
-import { Chart } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
 import { SourceSummary } from '../../types/source';
 import { ChartSummary } from '../../types/chart';
@@ -107,40 +106,6 @@ export default function Home() {
     return <Alert severity="error">{error}</Alert>;
   }
 
-  const chartData = dashboardData ? {
-    labels: dashboardData.timeSeriesData.labels,
-    datasets: [
-      {
-        type: 'bar' as const,
-        label: 'Data Sources',
-        data: dashboardData.timeSeriesData.sources,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-      {
-        type: 'line' as const,
-        label: 'Charts',
-        data: dashboardData.timeSeriesData.charts,
-        borderColor: 'rgba(255, 99, 132, 1)',
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-      },
-      {
-        type: 'line' as const,
-        label: 'Reports',
-        data: dashboardData.timeSeriesData.reports,
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  } : null;
-
   return (
     <>
       <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
@@ -154,32 +119,6 @@ export default function Home() {
       
       {dashboardData && (
         <Grid container spacing={3} columns={12}>
-          {/* Growth Trends Chart - Full Width */}
-          {/* <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Growth Trends (Last 6 Months)
-                </Typography>
-                {chartData && (
-                  <Box sx={{ height: 400 }}>
-                    <Chart type='bar' data={chartData} options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { position: 'top' },
-                        tooltip: { mode: 'index', intersect: false }
-                      },
-                      scales: {
-                        y: { beginAtZero: true }
-                      }
-                    }} />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid> */}
-
           {/* Recent Items - Bottom Row */}
           <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{ height: '100%' }}>

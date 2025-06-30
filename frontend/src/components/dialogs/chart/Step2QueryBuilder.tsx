@@ -23,7 +23,7 @@ import {
     Build as BuildIcon,
     TableChart as TableIcon
 } from '@mui/icons-material';
-import { ChartMode, QueryOption, FieldConfig, FilterConfig, ChartType } from '../../../types/chart';
+import { ChartMode, QueryOption, FieldConfig, FilterConfig } from '../../../types/chart';
 import { chartApi } from '../../../api/chart/chartApi';
 import DataPreview from './DataPreview';
 

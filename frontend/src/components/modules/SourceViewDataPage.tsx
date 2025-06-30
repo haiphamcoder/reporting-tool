@@ -173,6 +173,30 @@ export default function SourceViewDataPage() {
     }
   }, [source_id, location.search]); // Also listen to location.search changes
 
+  // Function to create a unique hash from row data
+  const createRowHash = (row: any): string => {
+    // Simple hash function
+    const hashString = (str: string): number => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return Math.abs(hash);
+    };
+
+    // Convert row data to string and hash it
+    const rowString = JSON.stringify(row);
+    const dataHash = hashString(rowString);
+    
+    // Combine with timestamp for uniqueness
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    
+    return `${dataHash}-${timestamp}-${randomSuffix}`;
+  };
+
   if (!source_id) {
     return (
       <Box sx={{ p: 3 }}>
@@ -271,6 +295,11 @@ export default function SourceViewDataPage() {
         <CustomizedDataGrid
           rows={previewData.records}
           columns={columns}
+          getRowId={(row) => {
+            // Use existing id if available, otherwise create a unique hash
+            if (row.id !== undefined) return row.id;
+            return createRowHash(row);
+          }}
           sx={{
             height: '100% !important',
             minHeight: '500px',
@@ -370,6 +399,11 @@ export default function SourceViewDataPage() {
       <CustomizedDataGrid
         rows={previewData.records}
         columns={columns}
+        getRowId={(row) => {
+          // Use existing id if available, otherwise create a unique hash
+          if (row.id !== undefined) return row.id;
+          return createRowHash(row);
+        }}
         sx={{
           height: '100% !important',
           minHeight: '500px',

@@ -357,9 +357,6 @@ export default function Charts() {
         fetchCharts(metadata.current_page, metadata.page_size, searchTerm);
     }, [metadata.current_page, metadata.page_size, searchTerm, fetchCharts]);
 
-    function handleAddClose(): void {
-        setAddDialogOpen(false);
-    }
 
     const handleAddSuccess = () => {
         setAddDialogOpen(false);

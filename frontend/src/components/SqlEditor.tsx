@@ -14,7 +14,6 @@ const SqlEditor: React.FC<SqlEditorProps> = ({
     value,
     onChange,
     sources,
-    placeholder = "Enter your SQL query here...",
     height = "400px"
 }) => {
     const editorRef = useRef<any>(null);

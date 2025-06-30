@@ -8,7 +8,6 @@ import {
   ConfirmSchemaResponse,
   SubmitImportResponse,
   SourceDetailsResponse,
-  GetExcelSheetsRequest,
   GetExcelSheetsResponse,
   ConfirmSheetRequest,
   ConfirmSheetResponse,

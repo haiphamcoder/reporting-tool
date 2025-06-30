@@ -357,9 +357,11 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
             }
 
             const response = await chartApi.updateChart(chartId, chartData);
-
-            if (onSuccess) {
-                onSuccess();
+            if (response.success) {
+                setError(null);
+                onSuccess?.();
+            } else {
+                setError(response.message || 'Failed to update chart. Please try again.');
             }
 
             handleClose();
@@ -476,7 +478,7 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
                 )}
 
                 <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
-                    {steps.map((label, index) => (
+                    {steps.map((label) => (
                         <Step key={label}>
                             <StepLabel>{label}</StepLabel>
                         </Step>
