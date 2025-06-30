@@ -1,5 +1,8 @@
 package com.haiphamcoder.integrated.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -36,5 +39,23 @@ public class CommonConstants {
     public static final String SOURCE_PERMISSION_READ_EXECUTE = "r-x";
     public static final String SOURCE_PERMISSION_WRITE_EXECUTE = "-wx";
     public static final String SOURCE_PERMISSION_ALL = "rwx";
+
+    // SSE Event Type
+    public static final int SSE_EVENT_TYPE_RESOURCE_STATUS = 1;
+    public static final int SSE_EVENT_TYPE_INPUT_SOURCE = 2;
+    public static final int SSE_EVENT_TYPE_OUTPUT_SOURCE = 3;
+    public static final int SSE_EVENT_TYPE_NOTIFICATION = 4;
+
+    private static final Map<Integer, String> SSE_EVENT_NAME = new HashMap<>();
+    static {
+        SSE_EVENT_NAME.put(SSE_EVENT_TYPE_RESOURCE_STATUS, "resource-status");
+        SSE_EVENT_NAME.put(SSE_EVENT_TYPE_INPUT_SOURCE, "input-source");
+        SSE_EVENT_NAME.put(SSE_EVENT_TYPE_OUTPUT_SOURCE, "output-source");
+        SSE_EVENT_NAME.put(SSE_EVENT_TYPE_NOTIFICATION, "notification");
+    }
+
+    public static String getSseEventName(int type) {
+        return SSE_EVENT_NAME.get(type);
+    }
     
 }
