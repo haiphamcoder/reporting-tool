@@ -8,29 +8,29 @@ import {
     CircularProgress,
     Alert,
     IconButton,
-    Grid,
-    Paper} from '@mui/material';
+    Paper,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText
+} from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
     Refresh as RefreshIcon,
-    Add as AddIcon} from '@mui/icons-material';
+    Add as AddIcon
+} from '@mui/icons-material';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
 import { API_CONFIG } from '../../config/api';
 import AddChartToReportDialog from '../dialogs/AddChartToReportDialog';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Fab from '@mui/material/Fab';
 import ExportPdfDialog from './ExportPdfDialog';
-
-interface ReportDetail {
-    id: string;
-    name: string;
-    user_id: string;
-    description: string;
-    charts: any[];
-    is_deleted: boolean;
-    created_at: string;
-    modified_at: string;
-}
+import { ReportBlock, ReportDetail } from '../../types/report';
+import TextBlockEditor from './TextBlockEditor';
+import { v4 as uuidv4 } from 'uuid';
+import TextFieldsIcon from '@mui/icons-material/TextFields';
+import InsertChartIcon from '@mui/icons-material/InsertChart';
+import SaveIcon from '@mui/icons-material/Save';
 
 const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             try {
                 console.log('ChartPreviewInReport: Starting fetch for chart:', chart.id);
                 console.log('Chart config:', chart.config);
-                
+
                 let sql_query = '';
                 let fields: any[] = [];
                 if (chart.config.mode === 'basic') {
@@ -104,9 +104,9 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     // Helper to extract data/fields
     const getDataAndFields = () => {
         if (!previewData) return { data: [], fields: [] };
-        
+
         console.log('Raw previewData:', previewData);
-        
+
         let data: any[] = [];
         let fields: string[] = [];
 
@@ -337,9 +337,15 @@ const ReportViewPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [report, setReport] = useState<ReportDetail | null>(null);
+    const [addBlockAnchorEl, setAddBlockAnchorEl] = useState<null | HTMLElement>(null);
+    const [addBlockIdx, setAddBlockIdx] = useState<number | undefined>(undefined);
     const [addChartDialogOpen, setAddChartDialogOpen] = useState(false);
     const reportContentRef = React.useRef<HTMLDivElement>(null);
     const [exportDialogOpen, setExportDialogOpen] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [blocks, setBlocks] = useState<ReportBlock[]>([]);
+    const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+    const [editingText, setEditingText] = useState('');
 
     const fetchReport = async () => {
         setLoading(true);
@@ -364,12 +370,106 @@ const ReportViewPage: React.FC = () => {
         if (id) fetchReport();
     }, [id]);
 
+    useEffect(() => {
+        if (report) {
+            const b = getBlocks(report);
+            setBlocks(b);
+        }
+    }, [report]);
+
     const handleBack = () => {
         navigate('/dashboard/reports');
     };
 
-    const handleAddChartSuccess = () => {
-        fetchReport();
+    const handleAddBlockClick = (event: React.MouseEvent<HTMLButtonElement>, idx?: number) => {
+        setAddBlockAnchorEl(event.currentTarget);
+        setAddBlockIdx(idx);
+    };
+    const handleAddBlockClose = () => {
+        setAddBlockAnchorEl(null);
+        setAddBlockIdx(undefined);
+    };
+    const handleAddTextBlock = () => {
+        const newBlock: ReportBlock = {
+            id: uuidv4(),
+            type: 'text',
+            content: { text: '' },
+        };
+        let newBlocks = [...blocks];
+        if (addBlockIdx === -1) {
+            newBlocks.unshift(newBlock);
+        } else if (typeof addBlockIdx === 'number') {
+            newBlocks.splice(addBlockIdx + 1, 0, newBlock);
+        } else {
+            newBlocks.push(newBlock);
+        }
+        setBlocks(newBlocks);
+        setEditingBlockId(newBlock.id);
+        setEditingText('');
+        handleAddBlockClose();
+    };
+    const handleAddChartBlock = () => {
+        setAddChartDialogOpen(true);
+        handleAddBlockClose();
+    };
+    const handleChartSelected = (chart: any) => {
+        const newBlock: ReportBlock = {
+            id: uuidv4(),
+            type: 'chart',
+            content: { chartId: chart.id, chart },
+        };
+        let newBlocks = [...blocks];
+        if (addBlockIdx === -1) {
+            newBlocks.unshift(newBlock);
+        } else if (typeof addBlockIdx === 'number') {
+            newBlocks.splice(addBlockIdx + 1, 0, newBlock);
+        } else {
+            newBlocks.push(newBlock);
+        }
+        setBlocks(newBlocks);
+        setAddChartDialogOpen(false);
+    };
+
+    // Sửa block text
+    const handleEditTextBlock = (block: ReportBlock) => {
+        if (block.type === 'text') {
+            setEditingBlockId(block.id);
+            setEditingText((block.content as import('../../types/report').TextBlockContent).text || '');
+        }
+    };
+    const handleSaveTextBlock = () => {
+        setBlocks(blocks.map(b =>
+            b.id === editingBlockId && b.type === 'text'
+                ? { ...b, content: { ...(b.content as import('../../types/report').TextBlockContent), text: editingText } }
+                : b
+        ));
+        setEditingBlockId(null);
+        setEditingText('');
+    };
+    const handleCancelEditTextBlock = () => {
+        setEditingBlockId(null);
+        setEditingText('');
+    };
+    // Xóa block
+    const handleDeleteBlock = (id: string) => {
+        setBlocks(blocks.filter(b => b.id !== id));
+    };
+    // Move block
+    const handleMoveBlock = (id: string, direction: 'up' | 'down') => {
+        const idx = blocks.findIndex(b => b.id === id);
+        if (idx < 0) return;
+        let newBlocks = [...blocks];
+        if (direction === 'up' && idx > 0) {
+            [newBlocks[idx - 1], newBlocks[idx]] = [newBlocks[idx], newBlocks[idx - 1]];
+        } else if (direction === 'down' && idx < newBlocks.length - 1) {
+            [newBlocks[idx], newBlocks[idx + 1]] = [newBlocks[idx + 1], newBlocks[idx]];
+        }
+        setBlocks(newBlocks);
+    };
+    // Lưu blocks (chuẩn bị cho API PUT)
+    const handleSaveBlocks = () => {
+        // TODO: Gọi API PUT để lưu blocks vào report
+        setEditMode(false);
     };
 
     // Export PDF handler (nhận options từ dialog)
@@ -411,7 +511,7 @@ const ReportViewPage: React.FC = () => {
             temp.appendChild(desc);
         }
         // Charts: chụp từng chart thành ảnh rồi gắn vào DOM tạm
-        const chartsToExport = report.charts.filter((c: any) => options.selectedChartIds.includes(c.id));
+        const chartsToExport = blocks.filter((b: any) => b.type === 'chart' && options.selectedChartIds.includes(b.content.chartId)).map((b: any) => b.content.chart);
         const html2canvas = (await import('html2canvas')).default;
         // Tạo container cho chart theo layout
         const chartContainer = document.createElement('div');
@@ -469,6 +569,23 @@ const ReportViewPage: React.FC = () => {
         document.body.removeChild(temp);
     };
 
+    // Helper: convert old charts to blocks if needed
+    const getBlocks = (report: ReportDetail | null): ReportBlock[] => {
+        if (!report) return [];
+        if (report.blocks && Array.isArray(report.blocks) && report.blocks.length > 0) {
+            return report.blocks;
+        }
+        // Nếu chưa có blocks, convert từ charts (giữ thứ tự)
+        if ((report as any).charts && Array.isArray((report as any).charts)) {
+            return (report as any).charts.map((chart: any) => ({
+                id: chart.id,
+                type: 'chart',
+                content: { chartId: chart.id, chart },
+            }));
+        }
+        return [];
+    };
+
     return (
         <Stack gap={2} sx={{ width: '100%' }}>
             {/* Header */}
@@ -496,25 +613,41 @@ const ReportViewPage: React.FC = () => {
                     </Typography>
                 </Box>
             </Stack>
-            <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={fetchReport}
-                    disabled={loading}
-                >
-                    Refresh
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={() => setAddChartDialogOpen(true)}
-                >
-                    Add Chart
-                </Button>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" alignItems="flex-start" gap={1}>
+                    <Button variant={editMode ? 'outlined' : 'contained'} onClick={() => setEditMode(e => !e)}>
+                        {editMode ? 'View Mode' : 'Edit Mode'}
+                    </Button>
+                    {editMode && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSaveBlocks}>
+                            Save
+                        </Button>
+                    )}
+                </Stack>
+                <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={fetchReport}
+                        disabled={loading}
+                    >
+                        Refresh
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<AddIcon />}
+                        onClick={() => setAddChartDialogOpen(true)}
+                    >
+                        Add Chart
+                    </Button>
+                </Stack>
             </Stack>
-            <Box ref={reportContentRef} sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
+            <Box ref={reportContentRef} sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                 {loading ? (
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
                         <CircularProgress />
@@ -524,34 +657,68 @@ const ReportViewPage: React.FC = () => {
                 ) : report ? (
                     <>
                         <Box>
-                            {(!report.charts || report.charts.length === 0) ? (
-                                <Alert severity="info">No charts in this report.</Alert>
+                            {blocks.length === 0 ? (
+                                <Alert severity="info">No content in this report.</Alert>
                             ) : (
-                                <Grid container spacing={2}>
-                                    {report.charts.map((chart, _idx) => {
-                                        let gridProps = { xs: 12, sm: 12, md: 12, lg: 12 };
-                                        if (report.charts.length === 2) gridProps = { xs: 12, sm: 6, md: 6, lg: 6 };
-                                        else if (report.charts.length >= 3) gridProps = { xs: 12, sm: 6, md: 4, lg: 4 };
-                                        return (
-                                            <Grid item key={chart.id} {...gridProps}>
-                                                <Paper sx={{ p: 2, height: '100%' }} elevation={2} data-chart-id={chart.id}>
-                                                    <ChartPreviewInReport chart={chart} />
+                                <Stack gap={2}>
+                                    {blocks.map((block, idx) => (
+                                        <Box key={block.id}>
+                                            {editMode && (
+                                                <Stack direction="row" gap={1} mb={1}>
+                                                    <Button size="small" onClick={e => handleAddBlockClick(e, idx - 1)}>Add block above</Button>
+                                                    <Button size="small" onClick={e => handleAddBlockClick(e, idx)}>Add block below</Button>
+                                                    <Button size="small" onClick={() => handleMoveBlock(block.id, 'up')} disabled={idx === 0}>Move up</Button>
+                                                    <Button size="small" onClick={() => handleMoveBlock(block.id, 'down')} disabled={idx === blocks.length - 1}>Move down</Button>
+                                                    <Button size="small" color="error" onClick={() => handleDeleteBlock(block.id)}>Delete</Button>
+                                                    {block.type === 'text' && (
+                                                        <Button size="small" onClick={() => handleEditTextBlock(block)}>Edit</Button>
+                                                    )}
+                                                </Stack>
+                                            )}
+                                            {block.type === 'chart' ? (
+                                                <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
+                                                    <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
                                                 </Paper>
-                                            </Grid>
-                                        );
-                                    })}
-                                </Grid>
+                                            ) : block.type === 'text' ? (
+                                                editingBlockId === block.id && editMode ? (
+                                                    <TextBlockEditor
+                                                        value={editingText}
+                                                        onChange={setEditingText}
+                                                        onSave={handleSaveTextBlock}
+                                                        onCancel={handleCancelEditTextBlock}
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
+                                                        <Typography variant="body1" style={{ whiteSpace: 'pre-line', ...(block.content && (block.content as import('../../types/report').TextBlockContent).format ? (block.content as import('../../types/report').TextBlockContent).format : {}) }}>{(block.content as import('../../types/report').TextBlockContent).text}</Typography>
+                                                    </Paper>
+                                                )
+                                            ) : null}
+                                        </Box>
+                                    ))}
+                                </Stack>
                             )}
                         </Box>
                     </>
                 ) : null}
             </Box>
+            <Menu anchorEl={addBlockAnchorEl} open={!!addBlockAnchorEl} onClose={handleAddBlockClose}>
+                <MenuItem onClick={handleAddTextBlock}>
+                    <ListItemIcon><TextFieldsIcon /></ListItemIcon>
+                    <ListItemText>Text Block</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleAddChartBlock}>
+                    <ListItemIcon><InsertChartIcon /></ListItemIcon>
+                    <ListItemText>Chart Block</ListItemText>
+                </MenuItem>
+            </Menu>
             <AddChartToReportDialog
                 open={addChartDialogOpen}
                 onClose={() => setAddChartDialogOpen(false)}
                 reportId={report?.id || ''}
-                existingChartIds={report?.charts?.map((c: any) => c.id) || []}
-                onSuccess={handleAddChartSuccess}
+                existingChartIds={blocks.filter(b => b.type === 'chart').map((b: any) => b.content.chartId) || []}
+                onSuccess={chart => handleChartSelected(chart)}
+                selectMode
             />
             {/* Floating Action Button for Export PDF */}
             <Fab
@@ -572,7 +739,7 @@ const ReportViewPage: React.FC = () => {
                 open={exportDialogOpen}
                 onClose={() => setExportDialogOpen(false)}
                 onExport={handleExportPDF}
-                charts={report?.charts?.map((c: any) => ({ id: c.id, name: c.name })) || []}
+                charts={getBlocks(report).filter(b => b.type === 'chart').map((b: any) => ({ id: b.content.chartId, name: b.content.chart?.name || '' })) || []}
                 defaultScale={3}
             />
         </Stack>

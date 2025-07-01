@@ -27,10 +27,11 @@ interface AddChartToReportDialogProps {
     onClose: () => void;
     reportId: string;
     existingChartIds: string[];
-    onSuccess?: () => void;
+    onSuccess?: (chart?: any) => void;
+    selectMode?: boolean;
 }
 
-const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, onClose, reportId, existingChartIds, onSuccess }) => {
+const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, onClose, reportId, existingChartIds, onSuccess, selectMode }): React.ReactElement => {
     const [charts, setCharts] = useState<ChartSummary[]>([]);
     const [selectedChartIds, setSelectedChartIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -66,6 +67,12 @@ const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, o
 
     const handleToggleChart = (chartId: string) => {
         if (existingChartIds.includes(chartId)) return;
+        if (selectMode) {
+            const chart = charts.find(c => c.id === chartId);
+            if (chart && onSuccess) onSuccess(chart);
+            onClose();
+            return;
+        }
         setSelectedChartIds((prev) =>
             prev.includes(chartId)
                 ? prev.filter((id) => id !== chartId)
@@ -74,6 +81,7 @@ const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, o
     };
 
     const handleAddCharts = async () => {
+        if (selectMode) return;
         if (selectedChartIds.length === 0) {
             setError('Please select at least one chart to add.');
             return;
@@ -172,14 +180,16 @@ const AddChartToReportDialog: React.FC<AddChartToReportDialogProps> = ({ open, o
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleDialogClose} disabled={loading}>Cancel</Button>
-                <Button
-                    onClick={handleAddCharts}
-                    variant="contained"
-                    color="primary"
-                    disabled={loading || selectedChartIds.length === 0}
-                >
-                    {loading ? <CircularProgress size={20} /> : 'Add'}
-                </Button>
+                {!selectMode && (
+                    <Button
+                        onClick={handleAddCharts}
+                        variant="contained"
+                        color="primary"
+                        disabled={loading || selectedChartIds.length === 0}
+                    >
+                        {loading ? <CircularProgress size={20} /> : 'Add'}
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );
