@@ -8,6 +8,13 @@ import { GridColDef, GridRenderCellParams, GridRowParams } from '@mui/x-data-gri
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ShareIcon from '@mui/icons-material/Share';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 import { useState, useEffect, useCallback } from 'react';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
@@ -332,36 +339,49 @@ export default function Reports() {
             minWidth: 120,
             sortable: false,
             renderCell: (params: GridRenderCellParams<ReportSummary>) => {
-                if (!params.row) return null;
+                const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+                const open = Boolean(anchorEl);
+                const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+                    event.stopPropagation();
+                    setAnchorEl(event.currentTarget);
+                };
+                const handleMenuClose = (_event?: React.SyntheticEvent | {}, _reason?: 'backdropClick' | 'escapeKeyDown') => {
+                    setAnchorEl(null);
+                };
                 return (
-                    <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        sx={{ height: '100%', width: '100%' }}
-                    >
+                    <>
                         <IconButton
-                            color="primary"
                             size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClick(params.row);
-                            }}
+                            onClick={handleMenuOpen}
                         >
-                            <EditIcon />
+                            <MoreVertIcon />
                         </IconButton>
-                        <IconButton
-                            color="error"
-                            size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteClick(params.row);
-                            }}
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleMenuClose}
+                            onClick={handleMenuClose}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                            <DeleteIcon />
-                        </IconButton>
-                    </Stack>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
+                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                <ListItemText>Edit</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                                <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
+                                <ListItemText>Clone</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                                <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                                <ListItemText>Share</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(params.row); handleMenuClose(); }}>
+                                <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+                                <ListItemText>Delete</ListItemText>
+                            </MenuItem>
+                        </Menu>
+                    </>
                 );
             },
         },
