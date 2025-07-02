@@ -28,4 +28,9 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
     public Optional<ReportPermission> getReportPermissionByReportIdAndUserId(Long reportId, Long userId) {
         return reportPermissionJpaRepository.findByReportIdAndUserId(reportId, userId);
     }
+
+    @Override
+    public Optional<ReportPermission> saveReportPermission(ReportPermission reportPermission) {
+        return Optional.of(reportPermissionJpaRepository.save(reportPermission));
+    }
 }

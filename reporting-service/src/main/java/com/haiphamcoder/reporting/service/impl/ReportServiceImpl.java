@@ -10,16 +10,20 @@ import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
+import com.haiphamcoder.reporting.domain.entity.ReportPermission;
+import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ReportPersistenceException;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
+import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
+import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
 import com.haiphamcoder.reporting.shared.Pair;
@@ -36,9 +40,11 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final ChartRepository chartRepository;
     private final ChartReportRepository chartReportRepository;
+    private final ReportPermissionRepository reportPermissionRepository;
 
     @Override
-    public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page, Integer limit) {
+    public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page,
+            Integer limit) {
         Page<Report> reports = reportRepository.getReportsByUserId(userId, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
             List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
@@ -161,6 +167,33 @@ public class ReportServiceImpl implements ReportService {
         chartReport.setCreatedAt(LocalDateTime.now());
         chartReport.setModifiedAt(LocalDateTime.now());
         chartReportRepository.save(chartReport);
+    }
+
+    @Override
+    public void shareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest) {
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        if (report.get().getUserId() != userId) {
+            throw new ForbiddenException("You are not allowed to share this report");
+        }
+        for (ShareReportRequest.UserReportPermission userReportPermission : shareReportRequest
+                .getUserReportPermissions()) {
+            Optional<ReportPermission> existingReportPermission = reportPermissionRepository
+                    .getReportPermissionByReportIdAndUserId(report.get().getId(), userReportPermission.getUserId());
+            if (existingReportPermission.isPresent()) {
+                existingReportPermission.get().setPermission(userReportPermission.getPermission().getValue());
+                reportPermissionRepository.saveReportPermission(existingReportPermission.get());
+            } else {
+                ReportPermission reportPermission = ReportPermission.builder()
+                        .reportId(report.get().getId())
+                        .userId(userReportPermission.getUserId())
+                        .permission(userReportPermission.getPermission().getValue())
+                        .build();
+                reportPermissionRepository.saveReportPermission(reportPermission);
+            }
+        }
     }
 
 }

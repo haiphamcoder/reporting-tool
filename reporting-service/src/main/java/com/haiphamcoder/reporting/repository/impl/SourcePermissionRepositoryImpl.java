@@ -41,4 +41,9 @@ public class SourcePermissionRepositoryImpl implements SourcePermissionRepositor
         return sourcePermissionJpaRepository.save(sourcePermission);
     }
 
+    @Override
+    public SourcePermission saveSourcePermission(SourcePermission sourcePermission) {
+        return sourcePermissionJpaRepository.save(sourcePermission);
+    }
+
 }

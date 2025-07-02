@@ -12,5 +12,7 @@ public interface SourcePermissionRepository {
     List<SourcePermission> getSourcePermissionsBySourceId(Long sourceId);
 
     SourcePermission createSourcePermission(SourcePermission sourcePermission);
+
+    SourcePermission saveSourcePermission(SourcePermission sourcePermission);
     
 }

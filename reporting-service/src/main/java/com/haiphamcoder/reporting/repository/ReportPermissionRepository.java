@@ -6,4 +6,6 @@ import com.haiphamcoder.reporting.domain.entity.ReportPermission;
 
 public interface ReportPermissionRepository {
     Optional<ReportPermission> getReportPermissionByReportIdAndUserId(Long reportId, Long userId);
+
+    Optional<ReportPermission> saveReportPermission(ReportPermission reportPermission);
 }

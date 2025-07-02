@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
+import com.haiphamcoder.reporting.domain.entity.ChartPermission;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
@@ -19,8 +20,10 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFo
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.QueryOption.Join;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
+import com.haiphamcoder.reporting.domain.model.request.ShareChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
+import com.haiphamcoder.reporting.repository.ChartPermissionRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
 import com.haiphamcoder.reporting.service.ChartService;
@@ -38,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChartServiceImpl implements ChartService {
     private final ChartRepository chartRepository;
+    private final ChartPermissionRepository chartPermissionRepository;
     private final SourceRepository sourceRepository;
 
     @Override
@@ -142,5 +146,30 @@ public class ChartServiceImpl implements ChartService {
             }
         }
         return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
+    }
+
+    @Override
+    public void shareChart(Long userId, Long chartId, ShareChartRequest shareChartRequest) {
+        Optional<Chart> chart = chartRepository.getChartById(chartId);
+        if (chart.isEmpty()) {
+            throw new ResourceNotFoundException("Chart", chartId);
+        }
+        if (chart.get().getUserId() != userId) {
+            throw new ForbiddenException("You are not allowed to share this chart");
+        }
+        for (ShareChartRequest.UserChartPermission userChartPermission : shareChartRequest.getUserChartPermissions()) {
+            Optional<ChartPermission> existingChartPermission = chartPermissionRepository.getChartPermissionByChartIdAndUserId(chart.get().getId(), userChartPermission.getUserId());
+            if (existingChartPermission.isPresent()) {
+                existingChartPermission.get().setPermission(userChartPermission.getPermission().getValue());
+                chartPermissionRepository.saveChartPermission(existingChartPermission.get());
+            } else {
+                ChartPermission chartPermission = ChartPermission.builder()
+                        .chartId(chart.get().getId())
+                        .userId(userChartPermission.getUserId())
+                        .permission(userChartPermission.getPermission().getValue())
+                        .build();
+                chartPermissionRepository.saveChartPermission(chartPermission);
+            }
+        }
     }
 }

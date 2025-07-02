@@ -37,8 +37,11 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
     @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND DATE(s.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
-    @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND s.name = :sourceName")
+    @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND s.name = :sourceName AND s.isDeleted = false")
     Long countByUserIdAndName(@Param("userId") Long userId, @Param("sourceName") String sourceName);
+
+    @Query("SELECT s FROM Source s WHERE s.id = :id AND s.isDeleted = false")
+    Optional<Source> findByIdAndIsDeleted(@Param("id") Long id);
 }
 
 @Component
@@ -55,7 +58,7 @@ public class SourceRepositoryImpl implements SourceRepository {
 
     @Override
     public Optional<Source> getSourceById(Long id) {
-        return sourceJpaRepository.findById(id);
+        return sourceJpaRepository.findByIdAndIsDeleted(id);
     }
 
     @Override

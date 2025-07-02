@@ -9,6 +9,7 @@ import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -67,6 +68,14 @@ public class SourceController {
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
+    }
+
+    @PostMapping("/{source-id}/share")
+    public ResponseEntity<ApiResponse<Object>> shareSource(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId,
+            @RequestBody ShareSourceRequest shareSourceRequest) {
+        sourceService.shareSource(userId, sourceId, shareSourceRequest);
+        return ResponseEntity.ok(ApiResponse.success(null, "Source shared successfully"));
     }
 
     @GetMapping("/{source-id}")

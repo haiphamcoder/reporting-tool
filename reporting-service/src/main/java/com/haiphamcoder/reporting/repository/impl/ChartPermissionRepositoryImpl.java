@@ -28,4 +28,9 @@ public class ChartPermissionRepositoryImpl implements ChartPermissionRepository 
     public Optional<ChartPermission> getChartPermissionByChartIdAndUserId(Long chartId, Long userId) {
         return chartPermissionJpaRepository.findByChartIdAndUserId(chartId, userId);
     }
+
+    @Override
+    public Optional<ChartPermission> saveChartPermission(ChartPermission chartPermission) {
+        return Optional.of(chartPermissionJpaRepository.save(chartPermission));
+    }
 }

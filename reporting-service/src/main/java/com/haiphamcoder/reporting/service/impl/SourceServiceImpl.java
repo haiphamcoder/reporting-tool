@@ -22,6 +22,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlrea
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.SourceMapper;
@@ -284,6 +285,35 @@ public class SourceServiceImpl implements SourceService {
                 return SourceMapper.toDto(updatedSource.get());
             } else {
                 throw new RuntimeException("Update source failed");
+            }
+        } else {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+    }
+
+    @Override
+    public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            Source sourceEntity = source.get();
+            if (sourceEntity.getUserId().longValue() != userId.longValue()) {
+                throw new ForbiddenException("You are not allowed to share this source");
+            }
+            for (ShareSourceRequest.UserSourcePermission userSourcePermission : shareSourceRequest
+                    .getUserSourcePermissions()) {
+                Optional<SourcePermission> existingSourcePermission = sourcePermissionRepository
+                        .getSourcePermissionBySourceIdAndUserId(sourceEntity.getId(), userSourcePermission.getUserId());
+                if (existingSourcePermission.isPresent()) {
+                    existingSourcePermission.get().setPermission(userSourcePermission.getPermission().getValue());
+                    sourcePermissionRepository.saveSourcePermission(existingSourcePermission.get());
+                } else {
+                    SourcePermission sourcePermission = SourcePermission.builder()
+                            .sourceId(sourceEntity.getId())
+                            .userId(userSourcePermission.getUserId())
+                            .permission(userSourcePermission.getPermission().getValue())
+                            .build();
+                    sourcePermissionRepository.createSourcePermission(sourcePermission);
+                }
             }
         } else {
             throw new ResourceNotFoundException("Source", sourceId);
