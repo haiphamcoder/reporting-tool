@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
+import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllReportsResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -56,6 +57,14 @@ public class ReportController {
             @PathVariable("report-id") Long reportId) {
         ReportDto report = reportService.getReportById(userId, reportId);
         return ResponseEntity.ok(ApiResponse.success(report, "Report fetched successfully"));
+    }
+
+    @PostMapping("/{report-id}/share")
+    public ResponseEntity<ApiResponse<Object>> share(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId,
+            @RequestBody ShareReportRequest shareReportRequest) {
+        reportService.shareReport(userId, reportId, shareReportRequest);
+        return ResponseEntity.ok(ApiResponse.success(null, "Report shared successfully"));
     }
 
     @PutMapping("/{report-id}")
