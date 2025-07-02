@@ -196,4 +196,21 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    @Override
+    public ReportDto cloneReport(Long userId, Long reportId) {
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        ReportDto clonedReport = ReportMapper.toReportDto(report.get());
+        clonedReport.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+        clonedReport.setUserId(String.valueOf(userId));
+        clonedReport.setCreatedAt(LocalDateTime.now());
+        Report savedReport = reportRepository.save(ReportMapper.toEntity(clonedReport));
+        if (savedReport == null) {
+            throw new RuntimeException("Clone report failed");
+        }
+        return ReportMapper.toReportDto(savedReport);
+    }
+
 }

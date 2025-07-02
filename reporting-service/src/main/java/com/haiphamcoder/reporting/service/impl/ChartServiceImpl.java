@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,8 @@ public class ChartServiceImpl implements ChartService {
     private final SourceRepository sourceRepository;
 
     @Override
-    public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page, Integer limit) {
+    public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page,
+            Integer limit) {
         Page<Chart> charts = chartRepository.getAllChartsByUserId(userId, search, page, limit);
         return new Pair<>(charts.stream().map(ChartMapper::toChartDto).collect(Collectors.toList()),
                 Metadata.builder()
@@ -158,7 +160,8 @@ public class ChartServiceImpl implements ChartService {
             throw new ForbiddenException("You are not allowed to share this chart");
         }
         for (ShareChartRequest.UserChartPermission userChartPermission : shareChartRequest.getUserChartPermissions()) {
-            Optional<ChartPermission> existingChartPermission = chartPermissionRepository.getChartPermissionByChartIdAndUserId(chart.get().getId(), userChartPermission.getUserId());
+            Optional<ChartPermission> existingChartPermission = chartPermissionRepository
+                    .getChartPermissionByChartIdAndUserId(chart.get().getId(), userChartPermission.getUserId());
             if (existingChartPermission.isPresent()) {
                 existingChartPermission.get().setPermission(userChartPermission.getPermission().getValue());
                 chartPermissionRepository.saveChartPermission(existingChartPermission.get());
@@ -171,5 +174,22 @@ public class ChartServiceImpl implements ChartService {
                 chartPermissionRepository.saveChartPermission(chartPermission);
             }
         }
+    }
+
+    @Override
+    public ChartDto cloneChart(Long userId, Long chartId) {
+        Optional<Chart> chart = chartRepository.getChartById(chartId);
+        if (chart.isEmpty()) {
+            throw new ResourceNotFoundException("Chart", chartId);
+        }
+        ChartDto clonedChart = ChartMapper.toChartDto(chart.get());
+        clonedChart.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+        clonedChart.setUserId(String.valueOf(userId));
+        clonedChart.setCreatedAt(LocalDateTime.now());
+        Chart savedChart = chartRepository.save(ChartMapper.toChart(clonedChart));
+        if (savedChart == null) {
+            throw new RuntimeException("Clone chart failed");
+        }
+        return ChartMapper.toChartDto(savedChart);
     }
 }

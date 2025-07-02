@@ -90,4 +90,9 @@ public class ReportRepositoryImpl implements ReportRepository {
         return Optional.of(reportJpaRepository.save(report));
     }
 
+    @Override
+    public Report save(Report report) {
+        return reportJpaRepository.save(report);
+    }
+
 }

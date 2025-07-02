@@ -25,4 +25,6 @@ public interface ReportService {
 
     void shareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest);
 
+    ReportDto cloneReport(Long userId, Long reportId);
+
 }

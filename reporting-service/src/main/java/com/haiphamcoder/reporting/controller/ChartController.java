@@ -60,6 +60,13 @@ public class ChartController {
         return ResponseEntity.ok(ApiResponse.success(null, "Chart shared successfully"));
     }
 
+    @GetMapping("/{chart-id}/clone")
+    public ResponseEntity<ApiResponse<Object>> clone(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId) {
+        ChartDto clonedChart = chartService.cloneChart(userId, chartId);
+        return ResponseEntity.ok(ApiResponse.success(clonedChart, "Chart cloned successfully"));
+    }
+
     @PostMapping("/convert-query")
     public ResponseEntity<ApiResponse<Object>> convertQuery(@CookieValue(name = "user-id") Long userId,
             @RequestBody QueryOption queryOption) {

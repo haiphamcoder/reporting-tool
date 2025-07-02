@@ -59,6 +59,13 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(report, "Report fetched successfully"));
     }
 
+    @GetMapping("/{report-id}/clone")
+    public ResponseEntity<ApiResponse<Object>> clone(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId) {
+        ReportDto clonedReport = reportService.cloneReport(userId, reportId);
+        return ResponseEntity.ok(ApiResponse.success(clonedReport, "Report cloned successfully"));
+    }
+
     @PostMapping("/{report-id}/share")
     public ResponseEntity<ApiResponse<Object>> share(@CookieValue(name = "user-id") Long userId,
             @PathVariable("report-id") Long reportId,

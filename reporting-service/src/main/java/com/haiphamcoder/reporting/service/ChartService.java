@@ -25,4 +25,6 @@ public interface ChartService {
 
     void shareChart(Long userId, Long chartId, ShareChartRequest shareChartRequest);
 
+    ChartDto cloneChart(Long userId, Long chartId);
+
 }

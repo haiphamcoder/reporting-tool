@@ -27,4 +27,6 @@ public interface ReportRepository {
 
     Optional<Report> createReport(Report report);
 
+    Report save(Report report);
+
 }
