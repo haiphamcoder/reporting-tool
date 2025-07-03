@@ -1,11 +1,14 @@
 package com.haiphamcoder.integrated.service;
 
-import java.util.Map;
+import com.haiphamcoder.integrated.domain.model.EmailDetails;
+import com.haiphamcoder.integrated.domain.model.EmailTemplate;
 
 public interface EmailService {
 
-    void sendSimpleMessage(String to, String subject, String text);
+    void sendSimpleMessage(EmailDetails emailDetails);
 
-    void sendMessageWithTemplate(String to, String subject, String templateName, Map<String, Object> variables);
+    void sendMessageWithTemplate(EmailDetails emailDetails, EmailTemplate template);
+
+    void sendHtmlMessage(EmailDetails emailDetails);
 
 }
