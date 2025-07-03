@@ -33,6 +33,9 @@ public class ReportDto {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("owner")
+    private Owner owner;
+
     @JsonProperty("chart_ids")
     private List<String> chartIds;
 
@@ -49,4 +52,28 @@ public class ReportDto {
     @JsonProperty("modified_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modifiedAt;
+
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Owner {
+
+        @JsonProperty("id")
+        private String id;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
+
+    }
+
 }

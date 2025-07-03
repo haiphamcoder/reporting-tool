@@ -45,6 +45,9 @@ public class SourceDto {
     @JsonProperty("status")
     private Integer status;
 
+    @JsonProperty("owner")
+    private Owner owner;
+
     @JsonProperty("user_id")
     private String userId;
 
@@ -83,6 +86,28 @@ public class SourceDto {
         @JsonProperty("is_hidden")
         @Builder.Default
         private Boolean isHidden = false;
+
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Owner {
+
+        @JsonProperty("id")
+        private String id;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
 
     }
 }

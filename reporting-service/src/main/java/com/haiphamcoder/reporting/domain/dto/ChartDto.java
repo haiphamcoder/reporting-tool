@@ -50,6 +50,31 @@ public class ChartDto {
     @JsonProperty("modified_at")
     private LocalDateTime modifiedAt;
 
+    @JsonProperty("owner")
+    private Owner owner;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Owner {
+
+        @JsonProperty("id")
+        private String id;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
+
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
