@@ -154,6 +154,9 @@ public class UserServiceImpl implements UserService {
         if (targetUser.isEmpty()) {
             throw new ResourceNotFoundException("User", targetUserId);
         }
+        if (!passwordEncoder.matches(request.getOldPassword(), targetUser.get().getPassword())) {
+            throw new ForbiddenException("Old password is incorrect");
+        }
         targetUser.get().setPassword(passwordEncoder.encode(request.getNewPassword()));
         targetUser.get().setFirstLogin(false);
         userRepository.saveUser(targetUser.get());
