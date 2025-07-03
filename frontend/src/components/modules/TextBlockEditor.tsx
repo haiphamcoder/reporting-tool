@@ -36,7 +36,7 @@ const FONT_SIZES = [12, 14, 16, 18, 20, 24, 28, 32];
 
 const Toolbar: React.FC = () => {
   const [editor] = useLexicalComposerContext();
-  const [align, setAlign] = React.useState('left');
+  const [, setAlign] = React.useState('left');
   const [fontSize, setFontSize] = React.useState(16);
 
   const applyFormat = (format: 'bold' | 'italic') => {
@@ -75,7 +75,7 @@ const Toolbar: React.FC = () => {
   );
 };
 
-const TextBlockEditor: React.FC<TextBlockEditorProps> = ({ value, onChange, onSave, onCancel, autoFocus }) => {
+const TextBlockEditor: React.FC<TextBlockEditorProps> = ({ onChange, onSave, onCancel, autoFocus }) => {
   const theme = useTheme();
   const initialConfig = {
     namespace: 'TextBlockEditor',
