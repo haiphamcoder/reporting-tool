@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
@@ -29,6 +30,7 @@ import com.haiphamcoder.reporting.mapper.SourceMapper;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
 import com.haiphamcoder.reporting.service.SourceService;
+import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
@@ -42,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SourceServiceImpl implements SourceService {
     private final SourceRepository sourceRepository;
+    private final UserGrpcClient userGrpcClient;
     private final SourcePermissionRepository sourcePermissionRepository;
     private final HdfsFileService hdfsFileService;
 
@@ -102,7 +105,17 @@ public class SourceServiceImpl implements SourceService {
         Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, search, page, limit);
 
         return new Pair<>(sources.stream()
-                .map(SourceMapper::toDto)
+                .map(source -> {
+                    SourceDto sourceDto = SourceMapper.toDto(source);
+                    UserDto userDto = userGrpcClient.getUserById(source.getUserId());
+                    sourceDto.setOwner(SourceDto.Owner.builder()
+                            .id(String.valueOf(userDto.getId()))
+                            .name(userDto.getFirstName() + " " + userDto.getLastName())
+                            .email(userDto.getEmail())
+                            .avatar(userDto.getAvatarUrl())
+                            .build());
+                    return sourceDto;
+                })
                 .toList(),
                 Metadata.builder()
                         .totalElements(sources.getTotalElements())
