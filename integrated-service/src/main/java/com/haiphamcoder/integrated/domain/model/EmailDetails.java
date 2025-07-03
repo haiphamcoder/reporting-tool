@@ -48,4 +48,7 @@ public class EmailDetails {
     @JsonProperty("variables")
     private Map<String, Object> variables;
 
+    @JsonProperty("is_html")
+    private boolean isHtml;
+
 }
