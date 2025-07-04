@@ -1,6 +1,7 @@
 package com.haiphamcoder.integrated;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,17 +23,22 @@ public class IntegratedServiceApplication implements CommandLineRunner {
 	private final TelegramBotProperties telegramBotProperties;
 	private final TelegramBotsLongPollingApplication botsApplication;
 	private final TelegramBot telegramBot;
+	private final boolean telegramBotEnabled;
 
 	public IntegratedServiceApplication(@Qualifier("telegramBotProperties") TelegramBotProperties telegramBotProperties,
+			@Value("${telegram.bot.enabled}") boolean telegramBotEnabled,
 			TelegramBot telegramBot) {
 		this.telegramBotProperties = telegramBotProperties;
 		this.botsApplication = new TelegramBotsLongPollingApplication();
 		this.telegramBot = telegramBot;
+		this.telegramBotEnabled = telegramBotEnabled;
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
-		// registerBot();
+		if (telegramBotEnabled) {
+			registerBot();
+		}
 	}
 
 	private void registerBot() {
