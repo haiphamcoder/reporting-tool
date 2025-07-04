@@ -22,7 +22,7 @@ public class EmailServiceGrpcImpl extends EmailServiceGrpc.EmailServiceImplBase 
     private final EmailService emailService;
 
     @Override
-    public void sendOtpEmail(EmailRequest request, StreamObserver<EmailResponse> responseObserver) {
+    public void sendOtpEmail(EmailDetailsProto request, StreamObserver<EmailResponseProto> responseObserver) {
         EmailDetails emailDetails = new EmailDetails();
         emailDetails.setTo(Arrays.asList(request.getTo()));
         emailDetails.setSubject(request.getSubject());
@@ -34,14 +34,14 @@ public class EmailServiceGrpcImpl extends EmailServiceGrpc.EmailServiceImplBase 
         emailDetails.setVariables(request.getVariablesMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue())));
         emailService.sendMessageWithTemplate(emailDetails, EmailTemplate.OTP);
-        EmailResponse response = EmailResponse.newBuilder().setSuccess(true).setMessage("Email sent successfully")
+        EmailResponseProto response = EmailResponseProto.newBuilder().setSuccess(true).setMessage("Email sent successfully")
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 
     @Override
-    public void sendWelcomeEmail(EmailRequest request, StreamObserver<EmailResponse> responseObserver) {
+    public void sendWelcomeEmail(EmailDetailsProto request, StreamObserver<EmailResponseProto> responseObserver) {
         EmailDetails emailDetails = new EmailDetails();
         emailDetails.setTo(Arrays.asList(request.getTo()));
         emailDetails.setSubject(request.getSubject());
@@ -53,7 +53,7 @@ public class EmailServiceGrpcImpl extends EmailServiceGrpc.EmailServiceImplBase 
         emailDetails.setVariables(request.getVariablesMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue())));
         emailService.sendMessageWithTemplate(emailDetails, EmailTemplate.WELCOME);
-        EmailResponse response = EmailResponse.newBuilder().setSuccess(true).setMessage("Email sent successfully")
+        EmailResponseProto response = EmailResponseProto.newBuilder().setSuccess(true).setMessage("Email sent successfully")
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();

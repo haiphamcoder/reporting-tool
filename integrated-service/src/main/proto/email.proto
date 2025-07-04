@@ -6,7 +6,7 @@ option java_package = "com.haiphamcoder.integrated.proto";
 package email;
 
 // Message chứa thông tin chi tiết email cần gửi
-message EmailRequest {
+message EmailDetailsProto {
   string to = 1;
   string subject = 2;
   string body = 3;
@@ -18,14 +18,14 @@ message EmailRequest {
 }
 
 // Message phản hồi sau khi gửi email
-message EmailResponse {
+message EmailResponseProto {
   bool success = 1;
   string message = 2;
 }
 
 // Định nghĩa service gửi email với nhiều RPC
 service EmailService {
-  rpc SendOtpEmail(EmailRequest) returns (EmailResponse);
-  rpc SendWelcomeEmail(EmailRequest) returns (EmailResponse);
+  rpc SendOtpEmail(EmailDetailsProto) returns (EmailResponseProto);
+  rpc SendWelcomeEmail(EmailDetailsProto) returns (EmailResponseProto);
   // Có thể bổ sung thêm các RPC khác nếu cần
 }
