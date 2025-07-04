@@ -23,6 +23,11 @@ public class SecurityConfiguration {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final UnauthorizedAuthenticationEntryPoint unauthorizedAuthenticationEntryPoint;
 
+        private final String[] whiteList = {
+                "/verify-otp",
+                "/forgot-password",
+        };
+
         @Bean
         SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http.csrf(csrf -> csrf.disable())
@@ -30,6 +35,7 @@ public class SecurityConfiguration {
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(unauthorizedAuthenticationEntryPoint))
                                 .authorizeHttpRequests(request -> request
+                                                .requestMatchers(whiteList).permitAll()
                                                 .anyRequest()
                                                 .authenticated())
                                 .sessionManagement(session -> session

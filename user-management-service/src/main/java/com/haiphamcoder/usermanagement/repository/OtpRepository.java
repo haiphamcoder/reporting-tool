@@ -12,6 +12,7 @@ public interface OtpRepository {
 
     Optional<Otp> save(Otp otp);
 
-    List<Otp> getByOtpCodeAndUserIdAndExpiredAtAfter(String otpCode, Long userId, LocalDateTime expiredAt);
+    List<Otp> getByOtpCodeAndVerifiedAndUserIdAndExpiredAtAfter(String otpCode, boolean isVerified, Long userId,
+            LocalDateTime expiredAt);
 
 }

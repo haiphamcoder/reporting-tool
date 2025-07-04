@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.integrated.proto";
+
+package email;
+
+// Message chứa thông tin chi tiết email cần gửi
+message EmailDetailsProto {
+  string to = 1;
+  string subject = 2;
+  string body = 3;
+  string from = 4;
+  repeated string cc = 5;
+  repeated string bcc = 6;
+  bool is_html = 7;
+  map<string, string> variables = 8; // Thêm biến động cho template
+}
+
+// Message phản hồi sau khi gửi email
+message EmailResponseProto {
+  bool success = 1;
+  string message = 2;
+}
+
+// Định nghĩa service gửi email với nhiều RPC
+service EmailService {
+  rpc SendOtpEmail(EmailDetailsProto) returns (EmailResponseProto);
+  rpc SendWelcomeEmail(EmailDetailsProto) returns (EmailResponseProto);
+  // Có thể bổ sung thêm các RPC khác nếu cần
+}

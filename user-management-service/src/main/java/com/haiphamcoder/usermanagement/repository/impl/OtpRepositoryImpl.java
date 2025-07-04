@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
 @Repository
 interface OtpJpaRepository extends JpaRepository<Otp, Long> {
 
-    List<Otp> findByOtpCodeAndUserIdAndExpiredAtAfter(String otpCode, Long userId, LocalDateTime expiredAt);
+    List<Otp> findByOtpCodeAndVerifiedAndUserIdAndExpiredAtAfter(String otpCode, boolean isVerified, Long userId,
+            LocalDateTime expiredAt);
 
 }
 
@@ -37,7 +38,9 @@ public class OtpRepositoryImpl implements OtpRepository {
     }
 
     @Override
-    public List<Otp> getByOtpCodeAndUserIdAndExpiredAtAfter(String otpCode, Long userId, LocalDateTime expiredAt) {
-        return otpJpaRepository.findByOtpCodeAndUserIdAndExpiredAtAfter(otpCode, userId, expiredAt);
+    public List<Otp> getByOtpCodeAndVerifiedAndUserIdAndExpiredAtAfter(String otpCode, boolean isVerified,
+            Long userId, LocalDateTime expiredAt) {
+        return otpJpaRepository.findByOtpCodeAndVerifiedAndUserIdAndExpiredAtAfter(otpCode, isVerified, userId,
+                expiredAt);
     }
 }
