@@ -253,6 +253,41 @@ export default function Reports() {
         setAddDialogOpen(true);
     };
 
+    const handleCloneClick = async (row: any) => {
+        try {
+            setError(null);
+            setSuccess(null);
+
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}/clone`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                setSuccess('Report cloned successfully');
+                setShowSuccessPopup(true);
+                fetchReports(metadata.current_page, metadata.page_size, searchTerm);
+            } else {
+                setError(data.message || 'Failed to clone report');
+                setShowErrorPopup(true);
+            }
+        } catch (error) {
+            console.error('Error cloning report:', error);
+            setError(error instanceof Error ? error.message : 'Failed to clone report');
+            setShowErrorPopup(true);
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (!reportToDelete) return;
 
@@ -563,7 +598,7 @@ export default function Reports() {
                                 <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Edit</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>

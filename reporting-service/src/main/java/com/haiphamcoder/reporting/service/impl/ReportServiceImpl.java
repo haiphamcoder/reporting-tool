@@ -237,6 +237,13 @@ public class ReportServiceImpl implements ReportService {
         if (savedReport == null) {
             throw new RuntimeException("Clone report failed");
         }
+        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
+        chartReports.forEach(chartReport -> {
+            ChartReport clonedChartReport = new ChartReport();
+            clonedChartReport.setReportId(savedReport.getId());
+            clonedChartReport.setChartId(chartReport.getChartId());
+            chartReportRepository.save(clonedChartReport);
+        });
         return ReportMapper.toReportDto(savedReport);
     }
 
