@@ -184,7 +184,7 @@ public class ChartServiceImpl implements ChartService {
         return chartPermissions.stream().map(chartPermission -> {
             UserDto userDto = userGrpcClient.getUserById(chartPermission.getUserId());
             return UserChartPermission.builder()
-                    .userId(chartPermission.getUserId())
+                    .userId(String.valueOf(chartPermission.getUserId()))
                     .name(userDto.getFirstName() + " " + userDto.getLastName())
                     .email(userDto.getEmail())
                     .avatar(userDto.getAvatarUrl())
@@ -204,12 +204,12 @@ public class ChartServiceImpl implements ChartService {
         }
         chartPermissionRepository.deleteAllChartPermissionsByChartId(chartId);
         for (UserChartPermission userChartPermission : shareChartRequest.getUserChartPermissions()) {
-            if (Objects.equals(userChartPermission.getUserId(), userId)) {
+            if (String.valueOf(userId).equals(userChartPermission.getUserId())) {
                 continue;
             }
             ChartPermission chartPermission = ChartPermission.builder()
                     .chartId(chart.get().getId())
-                    .userId(userChartPermission.getUserId())
+                    .userId(Long.parseLong(userChartPermission.getUserId()))
                     .permission(userChartPermission.getPermission().getValue())
                     .build();
             chartPermissionRepository.saveChartPermission(chartPermission);

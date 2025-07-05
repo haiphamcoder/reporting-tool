@@ -85,7 +85,7 @@ public class ChartDto {
     public static class UserChartPermission {
 
         @JsonProperty("id")
-        private Long userId;
+        private String userId;
 
         @JsonProperty("name")
         private String name;
