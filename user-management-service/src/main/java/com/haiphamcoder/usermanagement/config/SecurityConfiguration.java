@@ -27,6 +27,7 @@ public class SecurityConfiguration {
                 "/verify-otp",
                 "/forgot-password",
                 "/check-provider",
+                "/reset-password",
         };
 
         @Bean
