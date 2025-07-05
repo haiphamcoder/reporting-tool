@@ -19,12 +19,14 @@ import { useState, useEffect, useCallback } from 'react';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import CardAlert from '../CardAlert';
 import { Box, CircularProgress } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
 import { ReportSummary } from '../../types/report';
 import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddReportDialog from '../dialogs/AddReportDialog';
 import EditReportDialog from '../dialogs/EditReportDialog';
 import Search from '../Search';
+import { useAuth } from '../../context/AuthContext';
 
 interface ReportsMetadata {
     total_elements: number;
@@ -37,6 +39,7 @@ interface ReportsMetadata {
 export default function Reports() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
 
     const [reportsData, setReportsData] = useState<ReportSummary[]>([]);
     const [metadata, setMetadata] = useState<ReportsMetadata>({
@@ -69,7 +72,7 @@ export default function Reports() {
     const [pageSize, setPageSize] = useState(10);
 
     // Search state
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Function to update URL with pagination parameters
     const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
@@ -118,7 +121,7 @@ export default function Reports() {
         // Update pagination and search state from URL
         setCurrentPage(page);
         setPageSize(size);
-        setSearchQuery(search);
+        setSearchTerm(search);
     }, [location.search, navigate]);
 
     // Initialize URL with default pagination values on first load
@@ -204,9 +207,9 @@ export default function Reports() {
     }, [fetchReports]);
 
     const handlePageChange = useCallback((page: number, size: number) => {
-        updateURLWithPagination(page, size, searchQuery);
-        fetchReports(page, size, searchQuery);
-    }, [searchQuery, updateURLWithPagination, fetchReports]);
+        updateURLWithPagination(page, size, searchTerm);
+        fetchReports(page, size, searchTerm);
+    }, [searchTerm, updateURLWithPagination, fetchReports]);
 
     const handleSearchChange = useCallback((searchTerm: string) => {
         // Reset to first page when searching
@@ -277,7 +280,7 @@ export default function Reports() {
                 setShowSuccessPopup(true);
                 setDeleteDialogOpen(false);
                 setReportToDelete(null);
-                fetchReports(metadata.current_page, metadata.page_size, searchQuery);
+                fetchReports(metadata.current_page, metadata.page_size, searchTerm);
             } else {
                 setError(data.message || 'Failed to delete source');
                 setShowErrorPopup(true);
@@ -290,19 +293,114 @@ export default function Reports() {
     };
 
     const reportsColumns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-        { field: 'description', headerName: 'Description', flex: 1, minWidth: 200 },
+        { 
+            field: 'name', 
+            headerName: 'Name', 
+            flex: 1.2, 
+            minWidth: 120,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<ReportSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%',
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        { 
+            field: 'description', 
+            headerName: 'Description', 
+            flex: 1.5, 
+            minWidth: 150,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<ReportSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%'
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        {
+            field: 'owner',
+            headerName: 'Owner',
+            flex: 0.8,
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ReportSummary>) => {
+                const owner = params.row?.owner;
+                if (!owner) return null;
+                
+                const isCurrentUser = user && owner.id === user.user_id;
+                const displayName = isCurrentUser ? 'Me' : owner.name;
+                
+                return (
+                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%', width: '100%' }}>
+                        <Avatar
+                            src={owner.avatar}
+                            alt={owner.name}
+                            sx={{ width: 28, height: 28 }}
+                        >
+                            {owner.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            {displayName}
+                        </Typography>
+                    </Stack>
+                );
+            }
+        },
         {
             field: 'number_of_charts',
             headerName: 'Number of Charts',
-            flex: 1,
-            minWidth: 150,
+            flex: 0.6,
+            minWidth: 100,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<ReportSummary>) => (
                 <Box
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
                         height: '100%',
+                        justifyContent: 'center',
                     }}
                 >
                     <Box
@@ -312,15 +410,14 @@ export default function Reports() {
                             border: '1.5px solid',
                             borderColor: 'success.light',
                             backgroundColor: 'white',
-                            borderRadius: '16px',
+                            borderRadius: '12px',
                             px: 1,
-                            py: 0,
+                            py: 0.5,
                             fontWeight: 600,
-                            fontSize: '1rem',
-                            minWidth: 60,
+                            fontSize: '0.75rem',
+                            minWidth: 50,
                             textAlign: 'center',
-                            ml: 1,
-                            lineHeight: 1.5,
+                            lineHeight: 1.2,
                         }}
                     >
                         {params.value}
@@ -328,16 +425,108 @@ export default function Reports() {
                 </Box>
             ),
         },
-        { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
+        { 
+            field: 'updated_at', 
+            headerName: 'Updated At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ReportSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
+        },
         {
-            field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180
+            field: 'created_at', 
+            headerName: 'Created At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ReportSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
         },
         {
             field: 'actions',
             headerName: 'Actions',
-            flex: 0.5,
-            minWidth: 120,
+            flex: 0.6,
+            minWidth: 80,
             sortable: false,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<ReportSummary>) => {
                 const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
                 const open = Boolean(anchorEl);
@@ -349,7 +538,13 @@ export default function Reports() {
                     setAnchorEl(null);
                 };
                 return (
-                    <>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                    }}>
                         <IconButton
                             size="small"
                             onClick={handleMenuOpen}
@@ -381,15 +576,15 @@ export default function Reports() {
                                 <ListItemText>Delete</ListItemText>
                             </MenuItem>
                         </Menu>
-                    </>
+                    </Box>
                 );
             },
         },
     ];
 
     const handleRefresh = useCallback(() => {
-        fetchReports(metadata.current_page, metadata.page_size, searchQuery);
-    }, [metadata.current_page, metadata.page_size, searchQuery, fetchReports]);
+        fetchReports(metadata.current_page, metadata.page_size, searchTerm);
+    }, [metadata.current_page, metadata.page_size, searchTerm, fetchReports]);
 
     return (
         <Stack gap={2}>
@@ -398,7 +593,7 @@ export default function Reports() {
             </Typography>
             <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
                 <Search 
-                    value={searchQuery}
+                    value={searchTerm}
                     onSearchChange={handleSearchChange}
                     placeholder="Search reports..."
                 />
@@ -431,7 +626,6 @@ export default function Reports() {
                 <CustomizedDataGrid
                     rows={reportsData}
                     columns={reportsColumns}
-                    // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
                     sx={{
                         height: '100% !important',
                         minHeight: '500px',
@@ -439,6 +633,8 @@ export default function Reports() {
                         '& .MuiDataGrid-cell:focus': { outline: 'none' },
                         '& .MuiDataGrid-row': {
                             borderBottom: '1px solid #e0e0e0',
+                            minHeight: 'auto !important',
+                            maxHeight: 'none !important',
                         },
                         '& .MuiDataGrid-row:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
@@ -449,20 +645,28 @@ export default function Reports() {
                         '& .MuiDataGrid-main': {
                             height: '100% !important',
                         },
+                        '& .MuiDataGrid-cell': {
+                            padding: '6px 16px',
+                            alignItems: 'center',
+                        },
+                        '& .MuiDataGrid-columnHeader': {
+                            padding: '6px 16px',
+                        },
                     }}
                     disableColumnMenu
+                    disableRowSelectionOnClick
+                    onRowDoubleClick={handleRowDoubleClick}
                     paginationMode="server"
-                    onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
                     rowCount={metadata.total_elements}
                     pageSizeOptions={[10, 25, 50]}
                     paginationModel={{
                         page: currentPage,
                         pageSize: pageSize
                     }}
-                    disableRowSelectionOnClick
-                    onRowDoubleClick={handleRowDoubleClick}
+                    onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
                     hideFooterSelectedRowCount
                     loading={loading}
+                    getRowHeight={() => 'auto'}
                 />
             )}
 

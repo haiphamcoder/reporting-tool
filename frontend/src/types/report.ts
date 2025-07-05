@@ -5,6 +5,11 @@ export interface ReportSummary {
     number_of_charts: number;
     updated_at: string;
     created_at: string;
+    owner?: {
+        id: string;
+        name: string;
+        avatar?: string;
+    };
 }
 
 export type ReportBlockType = 'chart' | 'text';
