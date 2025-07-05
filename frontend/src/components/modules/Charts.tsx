@@ -18,6 +18,7 @@ import CardAlert from '../CardAlert';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import AddChartDialog from '../dialogs/AddChartDiaglog';
 import EditChartDialog from '../dialogs/EditChartDialog';
+import ShareChartDialog from '../dialogs/ShareChartDialog';
 import Search from '../Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -73,6 +74,10 @@ export default function Charts() {
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [chartToEdit, setChartToEdit] = useState<ChartSummary | null>(null);
+    
+    // Share dialog state
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [chartToShare, setChartToShare] = useState<ChartSummary | null>(null);
 
     // Function to update URL with pagination parameters
     const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
@@ -238,6 +243,11 @@ export default function Charts() {
 
     const handleAddClick = () => {
         setAddDialogOpen(true);
+    };
+
+    const handleShareClick = (row: ChartSummary) => {
+        setChartToShare(row);
+        setShareDialogOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
@@ -577,7 +587,7 @@ export default function Charts() {
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Share</ListItemText>
                             </MenuItem>
@@ -744,6 +754,20 @@ export default function Charts() {
                 }}
                 onSuccess={handleEditSuccess}
                 chartId={chartToEdit?.id}
+            />
+
+            <ShareChartDialog
+                open={shareDialogOpen}
+                onClose={() => {
+                    setShareDialogOpen(false);
+                    setChartToShare(null);
+                }}
+                chartId={chartToShare?.id || ''}
+                chartName={chartToShare?.name}
+                onSuccess={(message) => {
+                    setSuccess(message);
+                    setShowSuccessPopup(true);
+                }}
             />
         </Stack>
     );
