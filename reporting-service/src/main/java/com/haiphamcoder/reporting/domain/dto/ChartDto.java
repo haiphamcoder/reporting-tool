@@ -87,6 +87,15 @@ public class ChartDto {
         @JsonProperty("id")
         private Long userId;
 
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
+
         @JsonProperty("permission")
         private ChartPermissionType permission;
 

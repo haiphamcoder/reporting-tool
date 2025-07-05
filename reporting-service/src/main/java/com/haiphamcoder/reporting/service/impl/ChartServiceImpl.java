@@ -182,8 +182,12 @@ public class ChartServiceImpl implements ChartService {
         }
         List<ChartPermission> chartPermissions = chartPermissionRepository.getChartPermissionsByChartId(chartId);
         return chartPermissions.stream().map(chartPermission -> {
+            UserDto userDto = userGrpcClient.getUserById(chartPermission.getUserId());
             return UserChartPermission.builder()
                     .userId(chartPermission.getUserId())
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
                     .permission(ChartPermissionType.fromValue(chartPermission.getPermission()))
                     .build();
         }).toList();
