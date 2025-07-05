@@ -30,6 +30,7 @@ import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
+import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.ReportService;
 import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.Pair;
@@ -48,6 +49,7 @@ public class ReportServiceImpl implements ReportService {
     private final ChartReportRepository chartReportRepository;
     private final ReportPermissionRepository reportPermissionRepository;
     private final UserGrpcClient userGrpcClient;
+    private final PermissionService permissionService;
 
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page,
@@ -219,12 +221,7 @@ public class ReportServiceImpl implements ReportService {
             throw new ResourceNotFoundException("Report", reportId);
         }
         if (!Objects.equals(report.get().getUserId(), userId)) {
-            Optional<ReportPermission> reportPermission = reportPermissionRepository
-                    .getReportPermissionByReportIdAndUserId(reportId, userId);
-            if (reportPermission.isEmpty()) {
-                throw new ForbiddenException("You are not allowed to clone this report");
-            }
-            if (!reportPermission.get().hasReadPermission()) {
+            if (!permissionService.hasViewReportPermission(userId, reportId)) {
                 throw new ForbiddenException("You are not allowed to clone this report");
             }
         }

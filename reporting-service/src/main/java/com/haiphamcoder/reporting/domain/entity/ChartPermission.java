@@ -65,16 +65,12 @@ public class ChartPermission {
         this.modifiedAt = LocalDateTime.now();
     }
 
-    public boolean hasReadPermission() {
-        return permission.contains("r");
+    public boolean hasViewPermission() {
+        return permission.contains("view");
     }
 
-    public boolean hasWritePermission() {
-        return permission.contains("w");
-    }
-
-    public boolean hasExecutePermission() {
-        return permission.contains("x");
+    public boolean hasEditPermission() {
+        return permission.contains("edit");
     }
 
 }

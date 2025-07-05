@@ -2,22 +2,16 @@ package com.haiphamcoder.reporting.service;
 
 public interface PermissionService {
 
-    boolean hasReadSourcePermission(Long userId, Long sourceId);
+    boolean hasViewSourcePermission(Long userId, Long sourceId);
 
-    boolean hasWriteSourcePermission(Long userId, Long sourceId);
+    boolean hasEditSourcePermission(Long userId, Long sourceId);
 
-    boolean hasExecuteSourcePermission(Long userId, Long sourceId);
+    boolean hasViewReportPermission(Long userId, Long reportId);
 
-    boolean hasReadReportPermission(Long userId, Long reportId);
+    boolean hasEditReportPermission(Long userId, Long reportId);
 
-    boolean hasWriteReportPermission(Long userId, Long reportId);
+    boolean hasViewChartPermission(Long userId, Long chartId);
 
-    boolean hasExecuteReportPermission(Long userId, Long reportId);
+    boolean hasEditChartPermission(Long userId, Long chartId);
 
-    boolean hasReadChartPermission(Long userId, Long chartId);
-
-    boolean hasWriteChartPermission(Long userId, Long chartId);
-
-    boolean hasExecuteChartPermission(Long userId, Long chartId);
-    
 }

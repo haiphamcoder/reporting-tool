@@ -11,4 +11,8 @@ public interface ChartPermissionRepository {
     Optional<ChartPermission> saveChartPermission(ChartPermission chartPermission);
 
     List<ChartPermission> getAllChartPermissionsByUserId(Long userId);
+
+    List<ChartPermission> getChartPermissionsByChartId(Long chartId);
+
+    void deleteAllChartPermissionsByChartId(Long chartId);
 }

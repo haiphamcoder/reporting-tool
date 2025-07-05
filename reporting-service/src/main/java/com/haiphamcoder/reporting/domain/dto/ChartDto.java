@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.haiphamcoder.reporting.domain.enums.QueryType;
+import com.haiphamcoder.reporting.domain.enums.ChartPermissionType;
 import com.haiphamcoder.reporting.domain.enums.ChartType;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 
@@ -72,6 +73,22 @@ public class ChartDto {
 
         @JsonProperty("avatar")
         private String avatar;
+
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UserChartPermission {
+
+        @JsonProperty("id")
+        private Long userId;
+
+        @JsonProperty("permission")
+        private ChartPermissionType permission;
 
     }
 

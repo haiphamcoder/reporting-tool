@@ -10,13 +10,8 @@ import lombok.Getter;
 
 @AllArgsConstructor
 public enum SourcePermissionType {
-    READ("r--"),
-    WRITE("-w-"),
-    READ_WRITE("rw-"),
-    EXECUTE("--x"),
-    READ_EXECUTE("r-x"),
-    WRITE_EXECUTE("-wx"),
-    ALL("rwx");
+    VIEW("view"),
+    EDIT("edit");
 
     @JsonProperty("value")
     @JsonValue

@@ -25,91 +25,61 @@ public class PermissionServiceImpl implements PermissionService {
     private final SourcePermissionRepository sourcePermissionRepository;
 
     @Override
-    public boolean hasReadSourcePermission(Long userId, Long sourceId) {
+    public boolean hasViewSourcePermission(Long userId, Long sourceId) {
         Optional<SourcePermission> sourcePermission = sourcePermissionRepository
                 .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
         if (sourcePermission.isPresent()) {
-            return sourcePermission.get().hasReadPermission();
+            return sourcePermission.get().hasViewPermission() || sourcePermission.get().hasEditPermission();
         }
         return false;
     }
 
     @Override
-    public boolean hasWriteSourcePermission(Long userId, Long sourceId) {
+    public boolean hasEditSourcePermission(Long userId, Long sourceId) {
         Optional<SourcePermission> sourcePermission = sourcePermissionRepository
                 .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
         if (sourcePermission.isPresent()) {
-            return sourcePermission.get().hasWritePermission();
+            return sourcePermission.get().hasEditPermission();
         }
         return false;
     }
 
     @Override
-    public boolean hasExecuteSourcePermission(Long userId, Long sourceId) {
-        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
-                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
-        if (sourcePermission.isPresent()) {
-            return sourcePermission.get().hasExecutePermission();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean hasReadReportPermission(Long userId, Long reportId) {
+    public boolean hasViewReportPermission(Long userId, Long reportId) {
         Optional<ReportPermission> reportPermission = reportPermissionRepository
                 .getReportPermissionByReportIdAndUserId(reportId, userId);
         if (reportPermission.isPresent()) {
-            return reportPermission.get().hasReadPermission();
+            return reportPermission.get().hasViewPermission() || reportPermission.get().hasEditPermission();
         }
         return false;
     }
 
     @Override
-    public boolean hasWriteReportPermission(Long userId, Long reportId) {
+    public boolean hasEditReportPermission(Long userId, Long reportId) {
         Optional<ReportPermission> reportPermission = reportPermissionRepository
                 .getReportPermissionByReportIdAndUserId(reportId, userId);
         if (reportPermission.isPresent()) {
-            return reportPermission.get().hasWritePermission();
+            return reportPermission.get().hasEditPermission();
         }
         return false;
     }
 
     @Override
-    public boolean hasExecuteReportPermission(Long userId, Long reportId) {
-        Optional<ReportPermission> reportPermission = reportPermissionRepository
-                .getReportPermissionByReportIdAndUserId(reportId, userId);
-        if (reportPermission.isPresent()) {
-            return reportPermission.get().hasExecutePermission();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean hasReadChartPermission(Long userId, Long chartId) {
+    public boolean hasViewChartPermission(Long userId, Long chartId) {
         Optional<ChartPermission> chartPermission = chartPermissionRepository
                 .getChartPermissionByChartIdAndUserId(chartId, userId);
         if (chartPermission.isPresent()) {
-            return chartPermission.get().hasReadPermission();
+            return chartPermission.get().hasViewPermission() || chartPermission.get().hasEditPermission();
         }
         return false;
     }
 
     @Override
-    public boolean hasWriteChartPermission(Long userId, Long chartId) {
+    public boolean hasEditChartPermission(Long userId, Long chartId) {
         Optional<ChartPermission> chartPermission = chartPermissionRepository
                 .getChartPermissionByChartIdAndUserId(chartId, userId);
         if (chartPermission.isPresent()) {
-            return chartPermission.get().hasWritePermission();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean hasExecuteChartPermission(Long userId, Long chartId) {
-        Optional<ChartPermission> chartPermission = chartPermissionRepository
-                .getChartPermissionByChartIdAndUserId(chartId, userId);
-        if (chartPermission.isPresent()) {
-            return chartPermission.get().hasExecutePermission();
+            return chartPermission.get().hasEditPermission();
         }
         return false;
     }

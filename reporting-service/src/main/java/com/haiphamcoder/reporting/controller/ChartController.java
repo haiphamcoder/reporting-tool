@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.dto.ChartDto.UserChartPermission;
 import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareChartRequest;
@@ -53,11 +54,18 @@ public class ChartController {
         return ResponseEntity.ok(ApiResponse.success(response, "Charts fetched successfully"));
     }
 
+    @GetMapping("/{chart-id}/share")
+    public ResponseEntity<ApiResponse<Object>> getShare(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("chart-id") Long chartId) {
+        List<UserChartPermission> shareChart = chartService.getShareChart(userId, chartId);
+        return ResponseEntity.ok(ApiResponse.success(shareChart, "Share chart fetched successfully"));
+    }
+
     @PostMapping("/{chart-id}/share")
     public ResponseEntity<ApiResponse<Object>> share(@CookieValue(name = "user-id") Long userId,
             @PathVariable("chart-id") Long chartId,
             @RequestBody ShareChartRequest shareChartRequest) {
-        chartService.shareChart(userId, chartId, shareChartRequest);
+        chartService.updateShareChart(userId, chartId, shareChartRequest);
         return ResponseEntity.ok(ApiResponse.success(null, "Chart shared successfully"));
     }
 

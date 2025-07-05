@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
+import com.haiphamcoder.reporting.domain.dto.ChartDto.UserChartPermission;
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartPermission;
 import com.haiphamcoder.reporting.domain.entity.Source;
+import com.haiphamcoder.reporting.domain.enums.ChartPermissionType;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
@@ -31,6 +33,7 @@ import com.haiphamcoder.reporting.repository.ChartPermissionRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.SourceRepository;
 import com.haiphamcoder.reporting.service.ChartService;
+import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.Pair;
@@ -49,6 +52,7 @@ public class ChartServiceImpl implements ChartService {
     private final ChartPermissionRepository chartPermissionRepository;
     private final SourceRepository sourceRepository;
     private final UserGrpcClient userGrpcClient;
+    private final PermissionService permissionService;
 
     @Override
     public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page,
@@ -168,28 +172,43 @@ public class ChartServiceImpl implements ChartService {
     }
 
     @Override
-    public void shareChart(Long userId, Long chartId, ShareChartRequest shareChartRequest) {
+    public List<UserChartPermission> getShareChart(Long userId, Long chartId) {
         Optional<Chart> chart = chartRepository.getChartById(chartId);
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
-        if (chart.get().getUserId() != userId) {
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to get share chart");
+        }
+        List<ChartPermission> chartPermissions = chartPermissionRepository.getChartPermissionsByChartId(chartId);
+        return chartPermissions.stream().map(chartPermission -> {
+            return UserChartPermission.builder()
+                    .userId(chartPermission.getUserId())
+                    .permission(ChartPermissionType.fromValue(chartPermission.getPermission()))
+                    .build();
+        }).toList();
+    }
+
+    @Override
+    public void updateShareChart(Long userId, Long chartId, ShareChartRequest shareChartRequest) {
+        Optional<Chart> chart = chartRepository.getChartById(chartId);
+        if (chart.isEmpty()) {
+            throw new ResourceNotFoundException("Chart", chartId);
+        }
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
             throw new ForbiddenException("You are not allowed to share this chart");
         }
-        for (ShareChartRequest.UserChartPermission userChartPermission : shareChartRequest.getUserChartPermissions()) {
-            Optional<ChartPermission> existingChartPermission = chartPermissionRepository
-                    .getChartPermissionByChartIdAndUserId(chart.get().getId(), userChartPermission.getUserId());
-            if (existingChartPermission.isPresent()) {
-                existingChartPermission.get().setPermission(userChartPermission.getPermission().getValue());
-                chartPermissionRepository.saveChartPermission(existingChartPermission.get());
-            } else {
-                ChartPermission chartPermission = ChartPermission.builder()
-                        .chartId(chart.get().getId())
-                        .userId(userChartPermission.getUserId())
-                        .permission(userChartPermission.getPermission().getValue())
-                        .build();
-                chartPermissionRepository.saveChartPermission(chartPermission);
+        chartPermissionRepository.deleteAllChartPermissionsByChartId(chartId);
+        for (UserChartPermission userChartPermission : shareChartRequest.getUserChartPermissions()) {
+            if (Objects.equals(userChartPermission.getUserId(), userId)) {
+                continue;
             }
+            ChartPermission chartPermission = ChartPermission.builder()
+                    .chartId(chart.get().getId())
+                    .userId(userChartPermission.getUserId())
+                    .permission(userChartPermission.getPermission().getValue())
+                    .build();
+            chartPermissionRepository.saveChartPermission(chartPermission);
         }
     }
 
@@ -200,12 +219,7 @@ public class ChartServiceImpl implements ChartService {
             throw new ResourceNotFoundException("Chart", chartId);
         }
         if (!Objects.equals(chart.get().getUserId(), userId)) {
-            Optional<ChartPermission> chartPermission = chartPermissionRepository
-                    .getChartPermissionByChartIdAndUserId(chartId, userId);
-            if (chartPermission.isEmpty()) {
-                throw new ForbiddenException("You are not allowed to clone this chart");
-            }
-            if (!chartPermission.get().hasReadPermission()) {
+            if (!permissionService.hasViewChartPermission(userId, chartId)) {
                 throw new ForbiddenException("You are not allowed to clone this chart");
             }
         }
