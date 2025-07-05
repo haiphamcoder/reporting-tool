@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.haiphamcoder.reporting.domain.dto.ReportDto.Owner;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,6 +50,9 @@ public class GetAllReportsResponse {
 
         @JsonProperty("type")
         private String type;
+
+        @JsonProperty("owner")
+        private Owner owner;
 
         @JsonProperty("status")
         private String status;

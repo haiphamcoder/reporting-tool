@@ -60,6 +60,7 @@ public class SourceController {
                         .name(source.getName())
                         .description(source.getDescription())
                         .type(source.getConnectorType())
+                        .owner(source.getOwner())
                         .status(CommonConstants.SOURCE_STATUS_MAP.get(source.getStatus()))
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())

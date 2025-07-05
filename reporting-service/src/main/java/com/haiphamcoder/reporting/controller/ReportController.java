@@ -43,6 +43,7 @@ public class ReportController {
                         .name(report.getName())
                         .description(report.getDescription())
                         .numberOfCharts(report.getCharts() != null ? report.getCharts().size() : 0)
+                        .owner(report.getOwner())
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())
