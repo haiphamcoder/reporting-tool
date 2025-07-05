@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
@@ -27,6 +28,7 @@ import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
 import com.haiphamcoder.reporting.service.ReportService;
+import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
@@ -42,6 +44,7 @@ public class ReportServiceImpl implements ReportService {
     private final ChartRepository chartRepository;
     private final ChartReportRepository chartReportRepository;
     private final ReportPermissionRepository reportPermissionRepository;
+    private final UserGrpcClient userGrpcClient;
 
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page,
@@ -53,6 +56,13 @@ public class ReportServiceImpl implements ReportService {
                     .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
             ReportDto reportDto = ReportMapper.toReportDto(report);
             reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
+            UserDto userDto = userGrpcClient.getUserById(report.getUserId());
+            reportDto.setOwner(ReportDto.Owner.builder()
+                    .id(String.valueOf(userDto.getId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .build());
             return reportDto;
         }).toList(),
                 Metadata.builder()
