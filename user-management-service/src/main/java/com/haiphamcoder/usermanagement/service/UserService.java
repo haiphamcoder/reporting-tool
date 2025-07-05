@@ -8,6 +8,8 @@ import com.haiphamcoder.usermanagement.domain.model.ChangeRoleRequest;
 import com.haiphamcoder.usermanagement.domain.model.Metadata;
 import com.haiphamcoder.usermanagement.shared.Pair;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public interface UserService {
 
     public Pair<List<UserDto>, Metadata> getAllUsers(Long userId, String search, Integer page, Integer limit);
@@ -29,5 +31,13 @@ public interface UserService {
     public UserDto changeRole(Long userId, Long targetUserId, ChangeRoleRequest request);
 
     public void deleteUser(Long userId, Long targetUserId);
+
+    public void forgotPassword(String email);
+
+    public void verifyOtp(String otp, String email, HttpServletResponse response);
+
+    public String checkProvider(String email);
+
+    public void resetPassword(Long userId, String email, String password);
 
 }

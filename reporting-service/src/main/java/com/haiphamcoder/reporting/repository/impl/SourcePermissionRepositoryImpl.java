@@ -18,6 +18,8 @@ interface SourcePermissionJpaRepository extends JpaRepository<SourcePermission, 
     Optional<SourcePermission> findBySourceIdAndUserId(Long sourceId, Long userId);
 
     List<SourcePermission> findAllBySourceId(Long sourceId);
+
+    List<SourcePermission> findAllByUserId(Long userId);
 }
 
 @Component
@@ -44,6 +46,11 @@ public class SourcePermissionRepositoryImpl implements SourcePermissionRepositor
     @Override
     public SourcePermission saveSourcePermission(SourcePermission sourcePermission) {
         return sourcePermissionJpaRepository.save(sourcePermission);
+    }
+
+    @Override
+    public List<SourcePermission> getAllSourcePermissionsByUserId(Long userId) {
+        return sourcePermissionJpaRepository.findAllByUserId(userId);
     }
 
 }

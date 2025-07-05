@@ -2,11 +2,16 @@ package com.haiphamcoder.reporting.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
@@ -25,7 +30,9 @@ import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
+import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.ReportService;
+import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.Pair;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
@@ -41,17 +48,28 @@ public class ReportServiceImpl implements ReportService {
     private final ChartRepository chartRepository;
     private final ChartReportRepository chartReportRepository;
     private final ReportPermissionRepository reportPermissionRepository;
+    private final UserGrpcClient userGrpcClient;
+    private final PermissionService permissionService;
 
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page,
             Integer limit) {
-        Page<Report> reports = reportRepository.getReportsByUserId(userId, search, page, limit);
+        List<ReportPermission> reportPermissions = reportPermissionRepository.getAllReportPermissionsByUserId(userId);
+        Set<Long> reportIds = reportPermissions.stream().map(ReportPermission::getReportId).collect(Collectors.toSet());
+        Page<Report> reports = reportRepository.getReportsByUserIdOrReportId(userId, reportIds, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
             List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
             List<Chart> charts = chartReports.stream()
                     .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
             ReportDto reportDto = ReportMapper.toReportDto(report);
             reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
+            UserDto userDto = userGrpcClient.getUserById(report.getUserId());
+            reportDto.setOwner(ReportDto.Owner.builder()
+                    .id(String.valueOf(userDto.getId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .build());
             return reportDto;
         }).toList(),
                 Metadata.builder()
@@ -202,14 +220,27 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
+        if (!Objects.equals(report.get().getUserId(), userId)) {
+            if (!permissionService.hasViewReportPermission(userId, reportId)) {
+                throw new ForbiddenException("You are not allowed to clone this report");
+            }
+        }
         ReportDto clonedReport = ReportMapper.toReportDto(report.get());
         clonedReport.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+        clonedReport.setName(clonedReport.getName() + " (Copy)");
         clonedReport.setUserId(String.valueOf(userId));
         clonedReport.setCreatedAt(LocalDateTime.now());
         Report savedReport = reportRepository.save(ReportMapper.toEntity(clonedReport));
         if (savedReport == null) {
             throw new RuntimeException("Clone report failed");
         }
+        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
+        chartReports.forEach(chartReport -> {
+            ChartReport clonedChartReport = new ChartReport();
+            clonedChartReport.setReportId(savedReport.getId());
+            clonedChartReport.setChartId(chartReport.getChartId());
+            chartReportRepository.save(clonedChartReport);
+        });
         return ReportMapper.toReportDto(savedReport);
     }
 

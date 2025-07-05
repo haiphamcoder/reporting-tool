@@ -1,11 +1,8 @@
-package com.haiphamcoder.reporting.domain.model.request;
-
-import java.util.List;
+package com.haiphamcoder.usermanagement.domain.model.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haiphamcoder.reporting.domain.dto.ChartDto.UserChartPermission;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ShareChartRequest {
+public class ForgotPasswordRequest {
 
-    @JsonProperty("users")
-    private List<UserChartPermission> userChartPermissions;
+    @JsonProperty("email")
+    private String email;
     
 }

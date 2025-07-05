@@ -14,6 +14,26 @@ export interface UserInfo {
     first_login: boolean;
 }
 
+export interface CheckProviderResponse {
+    result: {
+        provider: string;
+    }
+}
+
+export interface ForgotPasswordResponse {
+    message: string;
+}
+
+export interface VerifyOtpResponse {
+    success: boolean;
+    message: string;
+}
+
+export interface ResetPasswordResponse {
+    success: boolean;
+    message: string;
+}
+
 export const authApi = {
     signUp: async (data: SignUpRequest): Promise<SignUpResponse> => {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
@@ -92,5 +112,76 @@ export const authApi = {
         if (!response.ok) {
             throw new Error('Failed to logout');
         }
+    },
+
+    // User Management APIs for password reset
+    checkProvider: async (email: string): Promise<CheckProviderResponse> => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/user-management/check-provider`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to check provider');
+        }
+
+        return response.json();
+    },
+
+    forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/user-management/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to send reset email');
+        }
+
+        return response.json();
+    },
+
+    verifyOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/user-management/verify-otp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp }),
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to verify OTP');
+        }
+
+        return response.json();
+    },
+
+    resetPassword: async (email: string, password: string): Promise<ResetPasswordResponse> => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/user-management/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to reset password');
+        }
+
+        return response.json();
     }
 }; 

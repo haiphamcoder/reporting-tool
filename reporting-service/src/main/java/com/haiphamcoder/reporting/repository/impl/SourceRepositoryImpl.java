@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,13 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
     @Query("SELECT s FROM Source s WHERE s.userId = :userId AND s.isDeleted = :isDeleted")
     Page<Source> findAllByUserIdAndIsDeleted(@Param("userId") Long userId,
             @Param("isDeleted") Boolean isDeleted, Pageable pageable);
+
+    @Query("SELECT s FROM Source s WHERE (s.userId = :userId OR s.id IN :sourceIds) AND s.isDeleted = false AND (s.name LIKE %:search% OR s.description LIKE %:search%)")
+    Page<Source> findAllByUserIdOrSourceId(
+            @Param("userId") Long userId,
+            @Param("sourceIds") Set<Long> sourceIds,
+            @Param("search") String search,
+            Pageable pageable);
 
     Optional<Source> findByIdAndUserId(Long id, Long userId);
 
@@ -64,14 +72,14 @@ public class SourceRepositoryImpl implements SourceRepository {
     @Override
     public Page<Source> getAllSourcesByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page,
             Integer limit) {
-        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
-        
-        if (normalizedSearch == null) {
-            return sourceJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
-        } else {
-            return sourceJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
-                    normalizedSearch, PageRequest.of(page, limit));
-        }
+        return sourceJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId,
+                isDeleted, search, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Source> getAllSourcesByUserIdOrSourceId(Long userId, Set<Long> sourceIds, String search, Integer page,
+            Integer limit) {
+        return sourceJpaRepository.findAllByUserIdOrSourceId(userId, sourceIds, search, PageRequest.of(page, limit));
     }
 
     @Override

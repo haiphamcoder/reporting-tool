@@ -3,6 +3,12 @@ export interface SourceSummary {
   name: string;
   description: string;
   type: number;
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+  };
   status: string;
   created_at: string;
   updated_at: string;

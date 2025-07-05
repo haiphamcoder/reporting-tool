@@ -13,10 +13,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChartSummary } from '../../types/chart';
 import { API_CONFIG } from '../../config/api';
 import { Box, CircularProgress } from '@mui/material';
+import Avatar from '@mui/material/Avatar';
 import CardAlert from '../CardAlert';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
 import AddChartDialog from '../dialogs/AddChartDiaglog';
 import EditChartDialog from '../dialogs/EditChartDialog';
+import ShareChartDialog from '../dialogs/ShareChartDialog';
 import Search from '../Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -25,6 +27,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import { useAuth } from '../../context/AuthContext';
+import { chartApi } from '../../api/chart/chartApi';
 
 interface ChartsMetadata {
     total_elements: number;
@@ -37,6 +41,7 @@ interface ChartsMetadata {
 export default function Charts() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
 
     const [chartsData, setChartsData] = useState<ChartSummary[]>([]);
     const [metadata, setMetadata] = useState<ChartsMetadata>({
@@ -69,6 +74,10 @@ export default function Charts() {
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [chartToEdit, setChartToEdit] = useState<ChartSummary | null>(null);
+    
+    // Share dialog state
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [chartToShare, setChartToShare] = useState<ChartSummary | null>(null);
 
     // Function to update URL with pagination parameters
     const updateURLWithPagination = useCallback((page: number, size: number, search: string = '') => {
@@ -236,6 +245,11 @@ export default function Charts() {
         setAddDialogOpen(true);
     };
 
+    const handleShareClick = (row: ChartSummary) => {
+        setChartToShare(row);
+        setShareDialogOpen(true);
+    };
+
     const handleDeleteConfirm = async () => {
         if (!chartToDelete) return;
 
@@ -275,20 +289,138 @@ export default function Charts() {
         }
     };
 
+    const handleCloneClick = async (row: ChartSummary) => {
+        try {
+            setError(null);
+            setSuccess(null);
+
+            const data = await chartApi.cloneChart(row.id);
+
+            if (data.success) {
+                setSuccess('Chart cloned successfully');
+                setShowSuccessPopup(true);
+                // Refresh the charts list
+                fetchCharts(metadata.current_page, metadata.page_size, searchTerm);
+            } else {
+                setError(data.message || 'Failed to clone chart');
+                setShowErrorPopup(true);
+            }
+        } catch (error) {
+            console.error('Error cloning chart:', error);
+            setError(error instanceof Error ? error.message : 'Failed to clone chart');
+            setShowErrorPopup(true);
+        }
+    };
+
     const chartsColumns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-        { field: 'description', headerName: 'Description', flex: 1, minWidth: 200 },
+        { 
+            field: 'name', 
+            headerName: 'Name', 
+            flex: 1.2, 
+            minWidth: 120,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<ChartSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%',
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        { 
+            field: 'description', 
+            headerName: 'Description', 
+            flex: 1.5, 
+            minWidth: 150,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<ChartSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%'
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        {
+            field: 'owner',
+            headerName: 'Owner',
+            flex: 0.8,
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ChartSummary>) => {
+                const owner = params.row?.owner;
+                if (!owner) return null;
+                
+                const isCurrentUser = user && owner.id === user.user_id;
+                const displayName = isCurrentUser ? 'Me' : owner.name;
+                
+                return (
+                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%', width: '100%' }}>
+                        <Avatar
+                            src={owner.avatar}
+                            alt={owner.name}
+                            sx={{ width: 28, height: 28 }}
+                        >
+                            {owner.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            {displayName}
+                        </Typography>
+                    </Stack>
+                );
+            }
+        },
         {
             field: 'type',
             headerName: 'Type',
-            flex: 1,
-            minWidth: 150,
+            flex: 0.6,
+            minWidth: 100,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<ChartSummary>) => (
                 <Box
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
                         height: '100%',
+                        justifyContent: 'center',
                     }}
                 >
                     <Box
@@ -298,15 +430,14 @@ export default function Charts() {
                             border: '1.5px solid',
                             borderColor: 'success.light',
                             backgroundColor: 'white',
-                            borderRadius: '16px',
+                            borderRadius: '12px',
                             px: 1,
-                            py: 0,
+                            py: 0.5,
                             fontWeight: 600,
-                            fontSize: '1rem',
-                            minWidth: 60,
+                            fontSize: '0.75rem',
+                            minWidth: 50,
                             textAlign: 'center',
-                            ml: 1,
-                            lineHeight: 1.5,
+                            lineHeight: 1.2,
                         }}
                     >
                         {params.value}
@@ -314,16 +445,108 @@ export default function Charts() {
                 </Box>
             ),
         },
-        { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
+        { 
+            field: 'updated_at', 
+            headerName: 'Updated At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ChartSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
+        },
         {
-            field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180
+            field: 'created_at', 
+            headerName: 'Created At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<ChartSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
         },
         {
             field: 'actions',
             headerName: 'Actions',
-            flex: 0.5,
-            minWidth: 120,
+            flex: 0.6,
+            minWidth: 80,
             sortable: false,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<ChartSummary>) => {
                 const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
                 const open = Boolean(anchorEl);
@@ -335,7 +558,13 @@ export default function Charts() {
                     setAnchorEl(null);
                 };
                 return (
-                    <>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                    }}>
                         <IconButton
                             size="small"
                             onClick={handleMenuOpen}
@@ -354,11 +583,11 @@ export default function Charts() {
                                 <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Edit</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Share</ListItemText>
                             </MenuItem>
@@ -367,7 +596,7 @@ export default function Charts() {
                                 <ListItemText>Delete</ListItemText>
                             </MenuItem>
                         </Menu>
-                    </>
+                    </Box>
                 );
             },
         },
@@ -435,7 +664,6 @@ export default function Charts() {
                 <CustomizedDataGrid
                     rows={chartsData}
                     columns={chartsColumns}
-                    // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
                     sx={{
                         height: '100% !important',
                         minHeight: '500px',
@@ -443,6 +671,8 @@ export default function Charts() {
                         '& .MuiDataGrid-cell:focus': { outline: 'none' },
                         '& .MuiDataGrid-row': {
                             borderBottom: '1px solid #e0e0e0',
+                            minHeight: 'auto !important',
+                            maxHeight: 'none !important',
                         },
                         '& .MuiDataGrid-row:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
@@ -453,20 +683,28 @@ export default function Charts() {
                         '& .MuiDataGrid-main': {
                             height: '100% !important',
                         },
+                        '& .MuiDataGrid-cell': {
+                            padding: '6px 16px',
+                            alignItems: 'center',
+                        },
+                        '& .MuiDataGrid-columnHeader': {
+                            padding: '6px 16px',
+                        },
                     }}
                     disableColumnMenu
+                    disableRowSelectionOnClick
+                    onRowDoubleClick={handleRowDoubleClick}
                     paginationMode="server"
-                    onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
                     rowCount={metadata.total_elements}
                     pageSizeOptions={[10, 25, 50]}
                     paginationModel={{
                         page: currentPage,
                         pageSize: pageSize
                     }}
-                    disableRowSelectionOnClick
-                    onRowDoubleClick={handleRowDoubleClick}
+                    onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
                     hideFooterSelectedRowCount
                     loading={loading}
+                    getRowHeight={() => 'auto'}
                 />
             )}
 
@@ -516,6 +754,20 @@ export default function Charts() {
                 }}
                 onSuccess={handleEditSuccess}
                 chartId={chartToEdit?.id}
+            />
+
+            <ShareChartDialog
+                open={shareDialogOpen}
+                onClose={() => {
+                    setShareDialogOpen(false);
+                    setChartToShare(null);
+                }}
+                chartId={chartToShare?.id || ''}
+                chartName={chartToShare?.name}
+                onSuccess={(message) => {
+                    setSuccess(message);
+                    setShowSuccessPopup(true);
+                }}
             />
         </Stack>
     );

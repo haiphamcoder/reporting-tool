@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 interface ReportPermissionJpaRepository extends JpaRepository<ReportPermission, ReportPermissionComposeKey> {
     Optional<ReportPermission> findByReportIdAndUserId(Long reportId, Long userId);
+
+    List<ReportPermission> findAllByUserId(Long userId);
 }
 
 @Component
@@ -32,5 +35,10 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
     @Override
     public Optional<ReportPermission> saveReportPermission(ReportPermission reportPermission) {
         return Optional.of(reportPermissionJpaRepository.save(reportPermission));
+    }
+
+    @Override
+    public List<ReportPermission> getAllReportPermissionsByUserId(Long userId) {
+        return reportPermissionJpaRepository.findAllByUserId(userId);
     }
 }

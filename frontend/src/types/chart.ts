@@ -5,6 +5,11 @@ export interface ChartSummary {
     type: string;
     updated_at: string;
     created_at: string;
+    owner?: {
+        id: string;
+        name: string;
+        avatar?: string;
+    };
 }
 
 export type ChartType = 'table' | 'bar' | 'line' | 'area' | 'pie';

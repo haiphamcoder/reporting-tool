@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,10 @@ interface ReportJpaRepository extends JpaRepository<Report, Long> {
 
     @Query("SELECT COUNT(r) FROM Report r WHERE r.userId = :userId AND DATE(r.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    @Query("SELECT r FROM Report r WHERE (r.userId = :userId OR r.id IN :reportIds) AND r.isDeleted = false AND (r.name LIKE %:search% OR r.description LIKE %:search%)")
+    Page<Report> findAllByUserIdOrReportId(@Param("userId") Long userId, @Param("reportIds") Set<Long> reportIds,
+            @Param("search") String search, Pageable pageable);
 }
 
 @Component
@@ -50,15 +55,16 @@ public class ReportRepositoryImpl implements ReportRepository {
     }
 
     @Override
-    public Page<Report> getReportsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit) {
-        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
-        
-        if (normalizedSearch == null) {
-            return reportJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
-        } else {
-            return reportJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
-                    normalizedSearch, PageRequest.of(page, limit));
-        }
+    public Page<Report> getReportsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page,
+            Integer limit) {
+        return reportJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
+                search, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Report> getReportsByUserIdOrReportId(Long userId, Set<Long> reportIds, String search, Integer page,
+            Integer limit) {
+        return reportJpaRepository.findAllByUserIdOrReportId(userId, reportIds, search, PageRequest.of(page, limit));
     }
 
     @Override

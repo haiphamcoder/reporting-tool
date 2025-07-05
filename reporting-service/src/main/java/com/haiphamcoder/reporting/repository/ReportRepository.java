@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 
@@ -18,6 +19,8 @@ public interface ReportRepository {
     default Page<Report> getReportsByUserId(Long userId, String search, Integer page, Integer limit) {
         return getReportsByUserIdAndIsDeleted(userId, false, search, page, limit);
     }
+
+    Page<Report> getReportsByUserIdOrReportId(Long userId, Set<Long> reportIds, String search, Integer page, Integer limit);
 
     Long getTotalReportByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
