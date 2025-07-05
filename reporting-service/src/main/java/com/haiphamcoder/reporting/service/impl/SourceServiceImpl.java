@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -102,7 +104,11 @@ public class SourceServiceImpl implements SourceService {
     @Override
     public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page,
             Integer limit) {
-        Page<Source> sources = sourceRepository.getAllSourcesByUserId(userId, search, page, limit);
+
+        List<SourcePermission> sourcePermissions = sourcePermissionRepository.getAllSourcePermissionsByUserId(userId);
+        Set<Long> sourceIds = sourcePermissions.stream().map(SourcePermission::getSourceId).collect(Collectors.toSet());
+
+        Page<Source> sources = sourceRepository.getAllSourcesByUserIdOrSourceId(userId, sourceIds, search, page, limit);
 
         return new Pair<>(sources.stream()
                 .map(source -> {

@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 
@@ -19,6 +20,9 @@ public interface SourceRepository {
     default Page<Source> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit) {
         return getAllSourcesByUserIdAndIsDeleted(userId, false, search, page, limit);
     }
+
+    Page<Source> getAllSourcesByUserIdOrSourceId(Long userId, Set<Long> sourceIds, String search, Integer page,
+            Integer limit);
 
     Optional<Source> deleteSourceById(Long id);
 

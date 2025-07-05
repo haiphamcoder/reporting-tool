@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +53,9 @@ public class ChartServiceImpl implements ChartService {
     @Override
     public Pair<List<ChartDto>, Metadata> getAllChartsByUserId(Long userId, String search, Integer page,
             Integer limit) {
-        Page<Chart> charts = chartRepository.getAllChartsByUserId(userId, search, page, limit);
+        List<ChartPermission> chartPermissions = chartPermissionRepository.getAllChartPermissionsByUserId(userId);
+        Set<Long> chartIds = chartPermissions.stream().map(ChartPermission::getChartId).collect(Collectors.toSet());
+        Page<Chart> charts = chartRepository.getAllChartsByUserIdOrChartId(userId, chartIds, search, page, limit);
         return new Pair<>(charts.stream().map(chart -> {
             ChartDto chartDto = ChartMapper.toChartDto(chart);
             UserDto userDto = userGrpcClient.getUserById(chart.getUserId());

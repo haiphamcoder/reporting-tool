@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 
@@ -16,6 +17,8 @@ public interface ChartRepository {
     default Page<Chart> getAllChartsByUserId(Long userId, String search, Integer page, Integer limit) {
         return getAllChartsByUserIdAndIsDeleted(userId, false, search, page, limit);
     }
+
+    Page<Chart> getAllChartsByUserIdOrChartId(Long userId, Set<Long> chartIds, String search, Integer page, Integer limit);
     
     Optional<Chart> getChartById(Long id);
 

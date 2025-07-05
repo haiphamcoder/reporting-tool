@@ -1,5 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 interface ChartPermissionJpaRepository extends JpaRepository<ChartPermission, ChartPermissionComposeKey> {
     Optional<ChartPermission> findByChartIdAndUserId(Long chartId, Long userId);
+
+    List<ChartPermission> findAllByUserId(Long userId);
 }
 
 @Component
@@ -32,5 +35,10 @@ public class ChartPermissionRepositoryImpl implements ChartPermissionRepository 
     @Override
     public Optional<ChartPermission> saveChartPermission(ChartPermission chartPermission) {
         return Optional.of(chartPermissionJpaRepository.save(chartPermission));
+    }
+
+    @Override
+    public List<ChartPermission> getAllChartPermissionsByUserId(Long userId) {
+        return chartPermissionJpaRepository.findAllByUserId(userId);
     }
 }

@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -49,7 +52,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Pair<List<ReportDto>, Metadata> getAllReportsByUserId(Long userId, String search, Integer page,
             Integer limit) {
-        Page<Report> reports = reportRepository.getReportsByUserId(userId, search, page, limit);
+        List<ReportPermission> reportPermissions = reportPermissionRepository.getAllReportPermissionsByUserId(userId);
+        Set<Long> reportIds = reportPermissions.stream().map(ReportPermission::getReportId).collect(Collectors.toSet());
+        Page<Report> reports = reportRepository.getReportsByUserIdOrReportId(userId, reportIds, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
             List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
             List<Chart> charts = chartReports.stream()

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +32,10 @@ interface ChartJpaRepository extends JpaRepository<Chart, Long> {
 
     @Query("SELECT COUNT(c) FROM Chart c WHERE c.userId = :userId AND DATE(c.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    @Query("SELECT c FROM Chart c WHERE (c.userId = :userId OR c.id IN :chartIds) AND c.isDeleted = false AND (c.name LIKE %:search% OR c.description LIKE %:search%)")
+    Page<Chart> findAllByUserIdOrChartId(@Param("userId") Long userId, @Param("chartIds") Set<Long> chartIds,
+            @Param("search") String search, Pageable pageable);
 }
 
 @Component
@@ -44,15 +49,16 @@ public class ChartRepositoryImpl implements ChartRepository {
     }
 
     @Override
-    public Page<Chart> getAllChartsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page, Integer limit) {
-        String normalizedSearch = (search != null && search.trim().isEmpty()) ? null : search;
-        
-        if (normalizedSearch == null) {
-            return chartJpaRepository.findAllByUserIdAndIsDeleted(userId, isDeleted, PageRequest.of(page, limit));
-        } else {
-            return chartJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
-                    normalizedSearch, PageRequest.of(page, limit));
-        }
+    public Page<Chart> getAllChartsByUserIdOrChartId(Long userId, Set<Long> chartIds, String search, Integer page,
+            Integer limit) {
+        return chartJpaRepository.findAllByUserIdOrChartId(userId, chartIds, search, PageRequest.of(page, limit));
+    }
+
+    @Override
+    public Page<Chart> getAllChartsByUserIdAndIsDeleted(Long userId, Boolean isDeleted, String search, Integer page,
+            Integer limit) {
+        return chartJpaRepository.findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(userId, isDeleted,
+                search, PageRequest.of(page, limit));
     }
 
     @Override

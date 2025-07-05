@@ -14,5 +14,7 @@ public interface SourcePermissionRepository {
     SourcePermission createSourcePermission(SourcePermission sourcePermission);
 
     SourcePermission saveSourcePermission(SourcePermission sourcePermission);
+
+    List<SourcePermission> getAllSourcePermissionsByUserId(Long userId);
     
 }

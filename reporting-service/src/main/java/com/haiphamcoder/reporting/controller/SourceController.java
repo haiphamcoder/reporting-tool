@@ -48,7 +48,7 @@ public class SourceController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse<Object>> getSources(@CookieValue(name = "user-id") Long userId,
-            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "search", required = false, defaultValue = "") String search,
             @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
         
