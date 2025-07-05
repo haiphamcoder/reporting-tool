@@ -13,6 +13,7 @@ import connectorCsvIcon from '../../assets/connector-csv.png';
 import connectorExcelIcon from '../../assets/connector-excel.png';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
+import Avatar from '@mui/material/Avatar';
 import { sourceApi } from '../../api/source';
 import { AddSourceDialog } from '../dialogs/source';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
@@ -27,6 +28,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import { useAuth } from '../../context/AuthContext';
 
 interface SourcesMetadata {
     total_elements: number;
@@ -39,6 +41,7 @@ interface SourcesMetadata {
 export default function Sources() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
 
     const [sourcesData, setSourcesData] = useState<SourceSummary[]>([]);
     const [metadata, setMetadata] = useState<SourcesMetadata>({
@@ -188,7 +191,8 @@ export default function Sources() {
             if (data.success) {
                 const processedSources = data.result.sources.map((source: any) => ({
                     ...source,
-                    id: source.id.toString()
+                    id: source.id.toString(),
+                    owner: source.owner || null
                 }));
                 setSourcesData(processedSources);
                 setMetadata(data.result.metadata);
@@ -350,26 +354,120 @@ export default function Sources() {
     };
 
     const sourcesColumns: GridColDef[] = [
-        { field: 'name', headerName: 'Name', flex: 1, minWidth: 200 },
-        { field: 'description', headerName: 'Description', flex: 1, minWidth: 200 },
+        { 
+            field: 'name', 
+            headerName: 'Name', 
+            flex: 1.2, 
+            minWidth: 120,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%',
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        { 
+            field: 'description', 
+            headerName: 'Description', 
+            flex: 1.5, 
+            minWidth: 150,
+            headerAlign: 'left',
+            align: 'left',
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => (
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'left',
+                    height: '100%',
+                    width: '100%'
+                }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ 
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {params.value}
+                    </Typography>
+                </Box>
+            )
+        },
+        {
+            field: 'owner',
+            headerName: 'Owner',
+            flex: 0.8,
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => {
+                const owner = params.row?.owner;
+                if (!owner) return null;
+                
+                const isCurrentUser = user && owner.id === user.user_id;
+                const displayName = isCurrentUser ? 'Me' : owner.name;
+                
+                return (
+                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%', width: '100%' }}>
+                        <Avatar
+                            src={owner.avatar}
+                            alt={owner.name}
+                            sx={{ width: 28, height: 28 }}
+                        >
+                            {owner.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            {displayName}
+                        </Typography>
+                    </Stack>
+                );
+            }
+        },
         {
             field: 'type',
             headerName: 'Type',
-            flex: 1,
-            minWidth: 150,
+            flex: 0.6,
+            minWidth: 100,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<SourceSummary>) => {
                 if (params.row?.type === 1) {
                     return (
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
-                            <img src={connectorCsvIcon} alt="CSV" style={{ width: 24, height: 24 }} />
-                            <Typography>CSV</Typography>
+                        <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%', width: '100%' }}>
+                            <img src={connectorCsvIcon} alt="CSV" style={{ width: 20, height: 20 }} />
+                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>CSV</Typography>
                         </Stack>
                     );
                 } else if (params.row?.type === 2) {
                     return (
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ height: '100%', width: '100%' }}>
-                            <img src={connectorExcelIcon} alt="Excel" style={{ width: 24, height: 24 }} />
-                            <Typography>Excel</Typography>
+                        <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ height: '100%', width: '100%' }}>
+                            <img src={connectorExcelIcon} alt="Excel" style={{ width: 20, height: 20 }} />
+                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>Excel</Typography>
                         </Stack>
                     );
                 }
@@ -379,14 +477,17 @@ export default function Sources() {
         {
             field: 'status',
             headerName: 'Status',
-            flex: 1,
-            minWidth: 150,
+            flex: 0.6,
+            minWidth: 100,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<SourceSummary>) => (
                 <Box
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
                         height: '100%',
+                        justifyContent: 'center',
                     }}
                 >
                     <Box
@@ -396,15 +497,14 @@ export default function Sources() {
                             border: '1.5px solid',
                             borderColor: 'success.light',
                             backgroundColor: 'white',
-                            borderRadius: '16px',
+                            borderRadius: '12px',
                             px: 1,
-                            py: 0,
+                            py: 0.5,
                             fontWeight: 600,
-                            fontSize: '1rem',
-                            minWidth: 60,
+                            fontSize: '0.75rem',
+                            minWidth: 50,
                             textAlign: 'center',
-                            ml: 1,
-                            lineHeight: 1.5,
+                            lineHeight: 1.2,
                         }}
                     >
                         {params.value}
@@ -412,16 +512,108 @@ export default function Sources() {
                 </Box>
             ),
         },
-        { field: 'updated_at', headerName: 'Updated At', flex: 1, minWidth: 180 },
+        { 
+            field: 'updated_at', 
+            headerName: 'Updated At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
+        },
         {
-            field: 'created_at', headerName: 'Created At', flex: 1, minWidth: 180
+            field: 'created_at', 
+            headerName: 'Created At', 
+            flex: 0.8, 
+            minWidth: 120,
+            headerAlign: 'center',
+            align: 'center',
+            renderCell: (params: GridRenderCellParams<SourceSummary>) => {
+                const formatDateTime = (dateTimeString: string) => {
+                    if (!dateTimeString) return { date: '', time: '' };
+                    
+                    // Giả sử format gốc là "yyyy-MM-dd HH:mm:ss"
+                    const parts = dateTimeString.split(' ');
+                    if (parts.length >= 2) {
+                        return { date: parts[0], time: parts[1] };
+                    }
+                    
+                    // Fallback nếu format khác
+                    const date = new Date(dateTimeString);
+                    const dateStr = date.toISOString().split('T')[0]; // yyyy-MM-dd
+                    const timeStr = date.toTimeString().split(' ')[0]; // HH:mm:ss
+                    
+                    return { date: dateStr, time: timeStr };
+                };
+
+                const { date, time } = formatDateTime(params.value);
+
+                return (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body2">
+                            {date}
+                        </Typography>
+                        <Typography variant="body2">
+                            {time}
+                        </Typography>
+                    </Box>
+                );
+            }
         },
         {
             field: 'actions',
             headerName: 'Actions',
-            flex: 0.5,
-            minWidth: 120,
+            flex: 0.6,
+            minWidth: 80,
             sortable: false,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params: GridRenderCellParams<SourceSummary>) => {
                 const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
                 const open = Boolean(anchorEl);
@@ -433,7 +625,13 @@ export default function Sources() {
                     setAnchorEl(null);
                 };
                 return (
-                    <>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                    }}>
                         <IconButton
                             size="small"
                             onClick={handleMenuOpen}
@@ -465,7 +663,7 @@ export default function Sources() {
                                 <ListItemText>Delete</ListItemText>
                             </MenuItem>
                         </Menu>
-                    </>
+                    </Box>
                 );
             },
         },
@@ -513,7 +711,6 @@ export default function Sources() {
                 <CustomizedDataGrid
                     rows={sourcesData}
                     columns={sourcesColumns}
-                    // sx={{ '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
                     sx={{
                         height: '100% !important',
                         minHeight: '500px',
@@ -521,6 +718,8 @@ export default function Sources() {
                         '& .MuiDataGrid-cell:focus': { outline: 'none' },
                         '& .MuiDataGrid-row': {
                             borderBottom: '1px solid #e0e0e0',
+                            minHeight: 'auto !important',
+                            maxHeight: 'none !important',
                         },
                         '& .MuiDataGrid-row:hover': {
                             backgroundColor: 'rgba(25, 118, 210, 0.08)',
@@ -530,6 +729,13 @@ export default function Sources() {
                         },
                         '& .MuiDataGrid-main': {
                             height: '100% !important',
+                        },
+                        '& .MuiDataGrid-cell': {
+                            padding: '6px 16px',
+                            alignItems: 'center',
+                        },
+                        '& .MuiDataGrid-columnHeader': {
+                            padding: '6px 16px',
                         },
                     }}
                     disableColumnMenu
@@ -545,6 +751,7 @@ export default function Sources() {
                     onPaginationModelChange={(model) => handlePageChange(model.page, model.pageSize)}
                     hideFooterSelectedRowCount
                     loading={loading}
+                    getRowHeight={() => 'auto'}
                 />
             )}
 
