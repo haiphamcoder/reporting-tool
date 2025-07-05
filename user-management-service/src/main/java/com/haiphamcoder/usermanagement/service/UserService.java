@@ -36,4 +36,8 @@ public interface UserService {
 
     public void verifyOtp(String otp, String email, HttpServletResponse response);
 
+    public String checkProvider(String email);
+
+    public void resetPassword(Long userId, String email, String password);
+
 }

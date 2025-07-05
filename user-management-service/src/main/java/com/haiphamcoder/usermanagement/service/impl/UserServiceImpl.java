@@ -265,4 +265,27 @@ public class UserServiceImpl implements UserService {
         CookieUtils.addCookie(response, "user-id", String.valueOf(user.get().getId()));
     }
 
+    @Override
+    public String checkProvider(String email) {
+        Optional<User> user = userRepository.getUserByEmail(email);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", email);
+        }
+        return user.get().getProvider();
+    }
+
+    @Override
+    public void resetPassword(Long userId, String email, String password) {
+        Optional<User> user = userRepository.getUserByEmail(email);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User", email);
+        }
+        if (!user.get().getId().equals(userId)) {
+            throw new ForbiddenException("You are not allowed to reset password for this user");
+        }
+        user.get().setPassword(passwordEncoder.encode(password));
+        user.get().setFirstLogin(false);
+        userRepository.saveUser(user.get());
+    }
+
 }

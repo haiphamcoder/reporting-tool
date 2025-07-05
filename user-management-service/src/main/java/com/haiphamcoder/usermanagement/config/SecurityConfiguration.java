@@ -26,6 +26,7 @@ public class SecurityConfiguration {
         private final String[] whiteList = {
                 "/verify-otp",
                 "/forgot-password",
+                "/check-provider",
         };
 
         @Bean

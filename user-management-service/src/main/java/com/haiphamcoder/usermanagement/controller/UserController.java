@@ -23,8 +23,11 @@ import com.haiphamcoder.usermanagement.domain.model.ChangeRoleResponse;
 import com.haiphamcoder.usermanagement.domain.model.GetAllUserResponse;
 import com.haiphamcoder.usermanagement.domain.model.GetUserDetailsResponse;
 import com.haiphamcoder.usermanagement.domain.model.Metadata;
+import com.haiphamcoder.usermanagement.domain.model.request.CheckProviderRequest;
 import com.haiphamcoder.usermanagement.domain.model.request.ForgotPasswordRequest;
+import com.haiphamcoder.usermanagement.domain.model.request.ResetPasswordRequest;
 import com.haiphamcoder.usermanagement.domain.model.request.VerifyOtpRequest;
+import com.haiphamcoder.usermanagement.domain.model.response.CheckProviderResponse;
 import com.haiphamcoder.usermanagement.service.UserService;
 import com.haiphamcoder.usermanagement.shared.Pair;
 import com.haiphamcoder.usermanagement.shared.http.ApiResponse;
@@ -151,6 +154,24 @@ public class UserController {
                         @RequestBody ForgotPasswordRequest request) {
                 userService.forgotPassword(request.getEmail());
                 return ResponseEntity.ok().body(ApiResponse.success(null, "Forgot password successfully"));
+        }
+
+        @PostMapping(path = "/reset-password", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ApiResponse<Object>> resetPassword(
+                        @CookieValue(name = "user-id", required = true) Long userId,
+                        @RequestBody ResetPasswordRequest request) {
+                userService.resetPassword(userId, request.getEmail(), request.getPassword());
+                return ResponseEntity.ok().body(ApiResponse.success(null, "Reset password successfully"));
+        }
+
+        @PostMapping(path = "/check-provider", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ApiResponse<Object>> checkProvider(
+                        @RequestBody CheckProviderRequest request) {
+                String provider = userService.checkProvider(request.getEmail());
+                CheckProviderResponse response = CheckProviderResponse.builder()
+                                .provider(provider)
+                                .build();
+                return ResponseEntity.ok().body(ApiResponse.success(response, "Check provider successfully"));
         }
 
 }
