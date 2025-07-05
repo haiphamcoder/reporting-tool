@@ -27,6 +27,7 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { useAuth } from '../../context/AuthContext';
+import { chartApi } from '../../api/chart/chartApi';
 
 interface ChartsMetadata {
     total_elements: number;
@@ -274,6 +275,29 @@ export default function Charts() {
         } catch (error) {
             console.error('Error deleting source:', error);
             setError(error instanceof Error ? error.message : 'Failed to delete source');
+            setShowErrorPopup(true);
+        }
+    };
+
+    const handleCloneClick = async (row: ChartSummary) => {
+        try {
+            setError(null);
+            setSuccess(null);
+
+            const data = await chartApi.cloneChart(row.id);
+
+            if (data.success) {
+                setSuccess('Chart cloned successfully');
+                setShowSuccessPopup(true);
+                // Refresh the charts list
+                fetchCharts(metadata.current_page, metadata.page_size, searchTerm);
+            } else {
+                setError(data.message || 'Failed to clone chart');
+                setShowErrorPopup(true);
+            }
+        } catch (error) {
+            console.error('Error cloning chart:', error);
+            setError(error instanceof Error ? error.message : 'Failed to clone chart');
             setShowErrorPopup(true);
         }
     };
@@ -549,7 +573,7 @@ export default function Charts() {
                                 <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Edit</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>

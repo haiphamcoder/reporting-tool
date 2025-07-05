@@ -94,6 +94,24 @@ export const chartApi = {
         return response.json();
     },
 
+    // Clone chart
+    cloneChart: async (chartId: string) => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CHARTS_CLONE.replace(':id', chartId)}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return response.json();
+    },
+
     // Get all charts
     getCharts: async () => {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CHARTS}`, {

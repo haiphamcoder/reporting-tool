@@ -24,6 +24,7 @@ export const API_CONFIG = {
         EXCEL_GET_SHEETS: '/data-processing/excel/sheets',
         SOURCE_CONFIRM_SHEET: '/reporting/sources/:id/confirm-sheet',
         CHARTS: '/reporting/charts',
+        CHARTS_CLONE: '/reporting/charts/:id/clone',
         REPORTS: '/reporting/reports',
         USER_MANAGEMENT: '/user-management',
         NOTIFICATIONS: '/integrated/notifications'
