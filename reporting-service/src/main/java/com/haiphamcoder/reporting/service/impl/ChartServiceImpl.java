@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -182,8 +183,19 @@ public class ChartServiceImpl implements ChartService {
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
+            Optional<ChartPermission> chartPermission = chartPermissionRepository
+                    .getChartPermissionByChartIdAndUserId(chartId, userId);
+            if (chartPermission.isEmpty()) {
+                throw new ForbiddenException("You are not allowed to clone this chart");
+            }
+            if (!chartPermission.get().hasReadPermission()) {
+                throw new ForbiddenException("You are not allowed to clone this chart");
+            }
+        }
         ChartDto clonedChart = ChartMapper.toChartDto(chart.get());
         clonedChart.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+        clonedChart.setName(clonedChart.getName() + " (Copy)");
         clonedChart.setUserId(String.valueOf(userId));
         clonedChart.setCreatedAt(LocalDateTime.now());
         Chart savedChart = chartRepository.save(ChartMapper.toChart(clonedChart));

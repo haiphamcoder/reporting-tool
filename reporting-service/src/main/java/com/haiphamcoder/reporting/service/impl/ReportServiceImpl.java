@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -202,8 +203,19 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
+        if (!Objects.equals(report.get().getUserId(), userId)) {
+            Optional<ReportPermission> reportPermission = reportPermissionRepository
+                    .getReportPermissionByReportIdAndUserId(reportId, userId);
+            if (reportPermission.isEmpty()) {
+                throw new ForbiddenException("You are not allowed to clone this report");
+            }
+            if (!reportPermission.get().hasReadPermission()) {
+                throw new ForbiddenException("You are not allowed to clone this report");
+            }
+        }
         ReportDto clonedReport = ReportMapper.toReportDto(report.get());
         clonedReport.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+        clonedReport.setName(clonedReport.getName() + " (Copy)");
         clonedReport.setUserId(String.valueOf(userId));
         clonedReport.setCreatedAt(LocalDateTime.now());
         Report savedReport = reportRepository.save(ReportMapper.toEntity(clonedReport));
