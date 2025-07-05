@@ -8,7 +8,6 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import { authApi } from '../api/auth/authApi';
@@ -139,12 +138,11 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
 
     const renderEmailStep = () => (
         <form onSubmit={handleEmailSubmit}>
-            <DialogContentText>
+            <DialogContentText sx={{ mb: 1 }}>
                 Enter your account&apos;s email address, and we&apos;ll send you a link to
                 reset your password.
             </DialogContentText>
             <FormControl fullWidth margin="dense">
-                <InputLabel htmlFor="email">Email address</InputLabel>
                 <OutlinedInput
                     autoFocus
                     required
@@ -152,12 +150,13 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
                     name="email"
                     label="Email address"
                     type="email"
+                    placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
                 />
             </FormControl>
-            <DialogActions sx={{ pb: 3, px: 3 }}>
+            <DialogActions sx={{ px: 0 , mt: 1}}>
                 <Button onClick={handleCloseDialog} variant="outlined" sx={{ width: 100 }} disabled={loading}>
                     Cancel
                 </Button>
@@ -176,11 +175,10 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
 
     const renderOtpStep = () => (
         <form onSubmit={handleOtpSubmit}>
-            <DialogContentText>
+            <DialogContentText sx={{ mb: 1 }}>
                 Enter the OTP sent to your email address.
             </DialogContentText>
             <FormControl fullWidth margin="dense">
-                <InputLabel htmlFor="otp">OTP</InputLabel>
                 <OutlinedInput
                     autoFocus
                     required
@@ -188,13 +186,14 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
                     name="otp"
                     label="OTP"
                     type="text"
+                    placeholder="OTP"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     disabled={loading}
                     inputProps={{ maxLength: 6 }}
                 />
             </FormControl>
-            <DialogActions sx={{ pb: 3, px: 3 }}>
+            <DialogActions sx={{ px: 0 , mt: 1}}>
                 <Button onClick={handleCloseDialog} variant="outlined" sx={{ width: 100 }} disabled={loading}>
                     Cancel
                 </Button>
@@ -214,10 +213,9 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
     const renderNewPasswordStep = () => (
         <form onSubmit={handlePasswordSubmit}>
             <DialogContentText>
-                Enter your new password.
+                Enter your new password:
             </DialogContentText>
-            <FormControl fullWidth margin="dense">
-                <InputLabel htmlFor="newPassword">New Password</InputLabel>
+            <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
                 <OutlinedInput
                     autoFocus
                     required
@@ -225,25 +223,29 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
                     name="newPassword"
                     label="New Password"
                     type="password"
+                    placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     disabled={loading}
                 />
             </FormControl>
+            <DialogContentText>
+                Confirm your new password:
+            </DialogContentText>
             <FormControl fullWidth margin="dense">
-                <InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
                 <OutlinedInput
                     required
                     id="confirmPassword"
                     name="confirmPassword"
                     label="Confirm Password"
                     type="password"
+                    placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={loading}
                 />
             </FormControl>
-            <DialogActions sx={{ pb: 3, px: 3 }}>
+            <DialogActions sx={{ px: 0 , mt: 1}}>
                 <Button onClick={handleCloseDialog} variant="outlined" sx={{ width: 100 }} disabled={loading}>
                     Cancel
                 </Button>
@@ -254,7 +256,7 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={20} /> : null}
                 >
-                    Reset Password
+                    Reset
                 </Button>
             </DialogActions>
         </form>
@@ -265,7 +267,7 @@ export default function ForgotPasswordDialog({ open, handleClose }: ForgotPasswo
             <DialogContentText>
                 {success}
             </DialogContentText>
-            <DialogActions sx={{ pb: 3, px: 3 }}>
+            <DialogActions sx={{ px: 0 , mt: 1}}>
                 <Button onClick={handleCloseDialog} variant="contained" sx={{ width: 100 }}>
                     Close
                 </Button>
