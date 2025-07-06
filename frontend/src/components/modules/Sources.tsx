@@ -17,6 +17,7 @@ import Avatar from '@mui/material/Avatar';
 import { sourceApi } from '../../api/source';
 import { AddSourceDialog } from '../dialogs/source';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
+import ShareSourceDialog from '../dialogs/ShareSourceDialog';
 import CardAlert from '../CardAlert';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SourceSummary } from '../../types/source';
@@ -62,6 +63,8 @@ export default function Sources() {
     // Dialog states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [sourceToDelete, setSourceToDelete] = useState<SourceSummary | null>(null);
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [sourceToShare, setSourceToShare] = useState<SourceSummary | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -291,6 +294,21 @@ export default function Sources() {
             setError(error instanceof Error ? error.message : 'Failed to clone source');
             setShowErrorPopup(true);
         }
+    };
+
+    const handleShareClick = (row: SourceSummary) => {
+        setSourceToShare(row);
+        setShareDialogOpen(true);
+    };
+
+    const handleShareClose = () => {
+        setShareDialogOpen(false);
+        setSourceToShare(null);
+    };
+
+    const handleShareSuccess = (message: string) => {
+        setSuccess(message);
+        setShowSuccessPopup(true);
     };
 
     const handleAddClick = () => {
@@ -671,7 +689,7 @@ export default function Sources() {
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Share</ListItemText>
                             </MenuItem>
@@ -818,6 +836,14 @@ export default function Sources() {
                 title="Delete Source"
                 message={`Are you sure you want to delete "${sourceToDelete?.name}"? This action cannot be undone.`}
                 severity="error"
+            />
+
+            <ShareSourceDialog
+                open={shareDialogOpen}
+                onClose={handleShareClose}
+                sourceId={sourceToShare?.id || ''}
+                sourceName={sourceToShare?.name}
+                onSuccess={handleShareSuccess}
             />
         </Stack>
     );
