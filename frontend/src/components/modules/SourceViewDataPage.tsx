@@ -3,12 +3,18 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { GridColDef } from '@mui/x-data-grid';
-import CustomizedDataGrid from '../CustomizedDataGrid';
-import { Button, Stack, Alert, CircularProgress } from '@mui/material';
+import CustomDataGrid from '../CustomizedDataGrid';
+import { Button, Stack, Alert, CircularProgress, Snackbar } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { API_CONFIG } from '../../config/api';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
+import { useGridApiRef } from '@mui/x-data-grid';
 
 interface Schema {
   field_name: string;
@@ -26,11 +32,29 @@ export default function SourceViewDataPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { source_id } = useParams();
+  const apiRef = useGridApiRef();
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [editLoading, setEditLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({ open: false, message: '', severity: 'success' });
+  // State for edit confirmation dialog
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    newRow: any | null;
+    oldRow: any | null;
+    resolve: ((value: any) => void) | null;
+    reject: ((reason?: any) => void) | null;
+    id?: string | number;
+    field?: string;
+  }>({ open: false, newRow: null, oldRow: null, resolve: null, reject: null, id: undefined, field: undefined });
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   // Function to update URL with pagination parameters
   const updateURLWithPagination = (page: number, size: number) => {
@@ -163,6 +187,61 @@ export default function SourceViewDataPage() {
     fetchSourceData(currentPage, pageSize);
   };
 
+  // Function to save edited data
+  const handleSaveData = async (updatedData: any) => {
+    if (!source_id) {
+      setSnackbar({
+        open: true,
+        message: 'Source ID not found',
+        severity: 'error'
+      });
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      const url = `${API_CONFIG.BASE_URL}/data-processing/sources/${source_id}/data`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ data: updatedData }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setSnackbar({
+          open: true,
+          message: 'Data updated successfully',
+          severity: 'success'
+        });
+        // Refresh data to show updated values
+        fetchSourceData(currentPage, pageSize);
+      } else {
+        setSnackbar({
+          open: true,
+          message: data.message || 'Failed to update data',
+          severity: 'error'
+        });
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to update data',
+        severity: 'error'
+      });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Fetch data on component mount
   useEffect(() => {
     if (source_id) {
@@ -173,7 +252,7 @@ export default function SourceViewDataPage() {
     }
   }, [source_id, location.search]); // Also listen to location.search changes
 
-  // Function to create a unique hash from row data
+  // Function to create a unique, stable hash from row data (no timestamp/random)
   const createRowHash = (row: any): string => {
     // Simple hash function
     const hashString = (str: string): number => {
@@ -185,16 +264,64 @@ export default function SourceViewDataPage() {
       }
       return Math.abs(hash);
     };
-
     // Convert row data to string and hash it
     const rowString = JSON.stringify(row);
     const dataHash = hashString(rowString);
-    
-    // Combine with timestamp for uniqueness
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    
-    return `${dataHash}-${timestamp}-${randomSuffix}`;
+    return `row_${dataHash}`;
+  };
+
+  // Handle row update (cell edit) with confirmation dialog
+  const processRowUpdate = (newRow: any, oldRow: any) => {
+    // Chỉ cho phép 1 cell edit tại 1 thời điểm
+    if (editDialog.open) {
+      return Promise.reject(oldRow);
+    }
+    // Tìm field đang edit
+    let changedField: string | undefined = undefined;
+    if (oldRow && newRow) {
+      for (const key of Object.keys(newRow)) {
+        if (newRow[key] !== oldRow[key]) {
+          changedField = key;
+          break;
+        }
+      }
+    }
+    const id = (newRow._id_ ?? newRow.id) ?? undefined;
+    return new Promise((resolve, reject) => {
+      setEditDialog({ open: true, newRow, oldRow, resolve, reject, id, field: changedField });
+    });
+  };
+
+  // Handler for confirming edit
+  const handleConfirmEdit = async () => {
+    if (!editDialog.newRow) return;
+    try {
+      await handleSaveData(editDialog.newRow);
+      editDialog.resolve && editDialog.resolve(editDialog.newRow);
+    } catch (e) {
+      editDialog.reject && editDialog.reject(e);
+    } finally {
+      setEditDialog({ open: false, newRow: null, oldRow: null, resolve: null, reject: null, id: undefined, field: undefined });
+      // Đảm bảo cell trở về view mode
+      if (editDialog.id !== undefined && editDialog.field !== undefined) {
+        apiRef.current.stopCellEditMode({ id: editDialog.id, field: editDialog.field });
+      }
+    }
+  };
+
+  // Handler for canceling edit
+  const handleCancelEdit = () => {
+    // Đảm bảo cell trở về view mode trước khi đóng dialog
+    if (editDialog.id !== undefined && editDialog.field !== undefined) {
+      apiRef.current.stopCellEditMode({ id: editDialog.id, field: editDialog.field });
+    }
+    if (editDialog.reject && editDialog.oldRow) {
+      editDialog.reject(editDialog.oldRow);
+    } else if (editDialog.reject) {
+      editDialog.reject();
+    }
+    setEditDialog({ open: false, newRow: null, oldRow: null, resolve: null, reject: null, id: undefined, field: undefined });
+    setForceUpdate(f => f + 1);
   };
 
   if (!source_id) {
@@ -231,15 +358,21 @@ export default function SourceViewDataPage() {
     );
   }
 
+  // Filter out _id_ field from schema for display, but keep it in records
+  const displaySchema = previewData.schema.filter(field => field.field_mapping !== '_id_');
+
   // Validate schema and records
-  if (!previewData.schema || !Array.isArray(previewData.schema) || previewData.schema.length === 0) {
+  if (!displaySchema || !Array.isArray(displaySchema) || displaySchema.length === 0) {
     const firstRecord = previewData.records && previewData.records.length > 0 ? previewData.records[0] : {};
-    const columns: GridColDef[] = Object.keys(firstRecord).map((key) => ({
-      field: key,
-      headerName: key,
-      flex: 1,
-      minWidth: 150,
-    }));
+    const columns: GridColDef[] = Object.keys(firstRecord)
+      .filter(key => key !== '_id_') // Filter out _id_ field
+      .map((key) => ({
+        field: key,
+        headerName: key,
+        flex: 1,
+        minWidth: 150,
+        editable: true,
+      }));
 
     return (
       <Stack gap={2} sx={{ height: '100%', width: '100%' }}>
@@ -292,14 +425,12 @@ export default function SourceViewDataPage() {
             Refresh
           </Button>
         </Stack>
-        <CustomizedDataGrid
+        <CustomDataGrid
+          apiRef={apiRef}
           rows={previewData.records}
           columns={columns}
-          getRowId={(row) => {
-            // Use existing id if available, otherwise create a unique hash
-            if (row.id !== undefined) return row.id;
-            return createRowHash(row);
-          }}
+          getRowId={(row: any) => row._id_ ?? row.id ?? createRowHash(row)}
+          key={forceUpdate}
           sx={{
             height: '100% !important',
             minHeight: '500px',
@@ -328,21 +459,36 @@ export default function SourceViewDataPage() {
             page: currentPage,
             pageSize: pageSize
           }}
-          onPaginationModelChange={(model) => {
+          onPaginationModelChange={(model: any) => {
             handlePageChange(model.page, model.pageSize);
           }}
-          loading={loading}
+          loading={loading || editLoading}
           hideFooterSelectedRowCount
+          processRowUpdate={processRowUpdate}
         />
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Stack>
     );
   }
 
-  const columns: GridColDef[] = previewData.schema.map((field) => ({
+  const columns: GridColDef[] = displaySchema.map((field) => ({
     field: field.field_mapping,
     headerName: field.field_name,
     flex: 1,
     minWidth: 150,
+    editable: true,
   }));
 
   return (
@@ -396,14 +542,12 @@ export default function SourceViewDataPage() {
           Refresh
         </Button>
       </Stack>
-      <CustomizedDataGrid
+      <CustomDataGrid
+        apiRef={apiRef}
         rows={previewData.records}
         columns={columns}
-        getRowId={(row) => {
-          // Use existing id if available, otherwise create a unique hash
-          if (row.id !== undefined) return row.id;
-          return createRowHash(row);
-        }}
+        getRowId={(row: any) => row._id_ ?? row.id ?? createRowHash(row)}
+        key={forceUpdate}
         sx={{
           height: '100% !important',
           minHeight: '500px',
@@ -432,12 +576,52 @@ export default function SourceViewDataPage() {
           page: currentPage,
           pageSize: pageSize
         }}
-        onPaginationModelChange={(model) => {
+        onPaginationModelChange={(model: any) => {
           handlePageChange(model.page, model.pageSize);
         }}
-        loading={loading}
+        loading={loading || editLoading}
         hideFooterSelectedRowCount
+        processRowUpdate={processRowUpdate}
       />
+      <Dialog open={editDialog.open} onClose={handleCancelEdit}>
+        <DialogTitle>Confirm Edit</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to save these changes?
+          </DialogContentText>
+          {editDialog.oldRow && editDialog.newRow && (
+            <Box sx={{ mt: 2 }}>
+              {Object.keys(editDialog.newRow).map((key) => {
+                if (editDialog.oldRow[key] !== editDialog.newRow[key]) {
+                  return (
+                    <Typography key={key} variant="body2">
+                      <b>{key}:</b> "{editDialog.oldRow[key]}" → "{editDialog.newRow[key]}"
+                    </Typography>
+                  );
+                }
+                return null;
+              })}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelEdit} color="inherit">Cancel</Button>
+          <Button onClick={handleConfirmEdit} color="primary" variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 } 
