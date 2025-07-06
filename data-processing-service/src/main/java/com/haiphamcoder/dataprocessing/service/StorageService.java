@@ -1,6 +1,7 @@
 package com.haiphamcoder.dataprocessing.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -16,5 +17,7 @@ public interface StorageService {
     List<JSONObject> getPreviewData(SourceDto sourceDto, Integer page, Integer limit);
 
     List<JSONObject> getPreviewDataByQuery(String sqlQuery);
+
+    void updateSourceData(SourceDto sourceDto, Map<String, Object> data);
 
 }

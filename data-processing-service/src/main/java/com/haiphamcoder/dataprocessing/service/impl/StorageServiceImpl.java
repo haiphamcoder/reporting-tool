@@ -37,6 +37,7 @@ public class StorageServiceImpl implements StorageService {
     public List<Mapping> createStorageSource(SourceDto sourceDto) {
         String tableName = sourceDto.getTableName();
         Map<String, String> schemaMap = new LinkedHashMap<>();
+        schemaMap.put("_id_", "text");
         for (Mapping mapping : sourceDto.getMapping()) {
             schemaMap.put(mapping.getFieldMapping(), mapping.getFieldType());
         }
@@ -48,6 +49,19 @@ public class StorageServiceImpl implements StorageService {
         }
 
         return sourceDto.getMapping();
+    }
+
+    @Override
+    public void updateSourceData(SourceDto sourceDto, Map<String, Object> data) {
+        String tableName = sourceDto.getTableName();
+
+        try (TidbWriter tidbWriter = new TidbWriter(url, username, password)) {
+            tidbWriter.update(tableName, data.get("_id_").toString(), data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error("Update source data failed! {}", e.getMessage());
+            throw new RuntimeException("Update source data failed! " + e.getMessage());
+        }
     }
 
     @Override

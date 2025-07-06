@@ -2,6 +2,8 @@ package com.haiphamcoder.dataprocessing.service.impl;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import com.haiphamcoder.dataprocessing.domain.exception.SourceNotFoundException;
 import com.haiphamcoder.dataprocessing.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.dataprocessing.domain.model.GetChartPreviewDataRequest;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
+import com.haiphamcoder.dataprocessing.domain.model.request.UpdateSourceDataRequest;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 import com.haiphamcoder.dataprocessing.service.StorageService;
@@ -50,6 +53,21 @@ public class RawDataServiceImpl implements RawDataService {
             }
         }
         return previewData;
+    }
+
+    @Override
+    public void updateSourceData(Long sourceId, UpdateSourceDataRequest request) {
+        SourceDto source = sourceGrpcClient.getSourceById(sourceId);
+        if (source == null || source.getMapping() == null) {
+            throw new SourceNotFoundException("Source not found");
+        }
+
+        Map<String, Object> data = request.getData();
+        if (data == null) {
+            throw new InvalidInputException("Data is required");
+        }
+
+        storageService.updateSourceData(source, data);
     }
 
     @Override

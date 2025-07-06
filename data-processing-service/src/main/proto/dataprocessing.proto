@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.dataprocessing.proto";
+
+package data_processing;
+
+// Data processing service definition
+service DataProcessingService {
+  rpc CreateStorageSource(CreateStorageSourceRequest) returns (CreateStorageSourceResponse);
+}
+
+message CreateStorageSourceRequest {
+
+}
+
+message CreateStorageSourceResponse {
+  
+}

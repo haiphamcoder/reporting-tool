@@ -53,6 +53,7 @@ public class TidbReader extends TidbAdapterImpl {
                 sql.append(mapping.getFieldMapping() + ",");
             }
         });
+        sql.append("_id_,");
         sql.deleteCharAt(sql.length() - 1);
         sql.append(" FROM ");
         sql.append(tableName);
@@ -71,6 +72,7 @@ public class TidbReader extends TidbAdapterImpl {
                     record.put(mapping.getFieldMapping(), row.get(mapping.getFieldMapping()));
                 }
             }
+            record.put("_id_", row.get("_id_"));
             records.add(record);
         }
         return records;
