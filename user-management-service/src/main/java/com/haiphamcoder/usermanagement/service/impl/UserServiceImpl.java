@@ -72,9 +72,6 @@ public class UserServiceImpl implements UserService {
         if (user.isEmpty()) {
             throw new ResourceNotFoundException("User", userId);
         }
-        if (!user.get().getRole().equals(ADMIN_ROLE)) {
-            throw new ForbiddenException("You are not allowed to get all users");
-        }
 
         Page<User> users = userRepository.getAllUsers(search, page, limit);
 

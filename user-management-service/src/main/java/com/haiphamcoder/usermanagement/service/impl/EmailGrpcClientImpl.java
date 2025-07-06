@@ -1,8 +1,5 @@
 package com.haiphamcoder.usermanagement.service.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -10,7 +7,6 @@ import com.haiphamcoder.integrated.proto.EmailDetailsProto;
 import com.haiphamcoder.integrated.proto.EmailResponseProto;
 import com.haiphamcoder.integrated.proto.EmailServiceGrpc;
 import com.haiphamcoder.usermanagement.domain.dto.EmailDetailsDto;
-import com.haiphamcoder.usermanagement.domain.dto.EmailDetailsDto.EmailDetailsDtoBuilder;
 import com.haiphamcoder.usermanagement.service.EmailGrpcClient;
 
 import io.grpc.ManagedChannel;
@@ -78,44 +74,6 @@ public class EmailGrpcClientImpl implements EmailGrpcClient {
 
         if (emailDetails.getVariables() != null) {
             emailDetails.getVariables().forEach((key, value) -> builder.putVariables(key, value));
-        }
-
-        return builder.build();
-    }
-
-    private EmailDetailsDto convertToEmailDetailsDto(EmailDetailsProto emailDetails) {
-        EmailDetailsDtoBuilder builder = EmailDetailsDto.builder();
-
-        if (emailDetails.getTo() != null) {
-            builder.to(emailDetails.getTo());
-        }
-
-        if (emailDetails.getSubject() != null) {
-            builder.subject(emailDetails.getSubject());
-        }
-
-        if (emailDetails.getBody() != null) {
-            builder.body(emailDetails.getBody());
-        }
-
-        if (emailDetails.getFrom() != null) {
-            builder.from(emailDetails.getFrom());
-        }
-
-        if (emailDetails.getCcCount() > 0) {
-            List<String> cc = new ArrayList<>();
-            for (int i = 0; i < emailDetails.getCcCount(); i++) {
-                cc.add(emailDetails.getCc(i));
-            }
-            builder.cc(cc);
-        }
-
-        if (emailDetails.getBccCount() > 0) {
-            List<String> bcc = new ArrayList<>();
-            for (int i = 0; i < emailDetails.getBccCount(); i++) {
-                bcc.add(emailDetails.getBcc(i));
-            }
-            builder.bcc(bcc);
         }
 
         return builder.build();
