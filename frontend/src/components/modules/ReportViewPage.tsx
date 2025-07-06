@@ -346,6 +346,8 @@ const ReportViewPage: React.FC = () => {
     const [blocks, setBlocks] = useState<ReportBlock[]>([]);
     const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
     const [editingText, setEditingText] = useState('');
+    const [editingFormat, setEditingFormat] = useState<any>(null);
+    const [saving, setSaving] = useState(false);
 
     const fetchReport = async () => {
         setLoading(true);
@@ -406,6 +408,7 @@ const ReportViewPage: React.FC = () => {
         setBlocks(newBlocks);
         setEditingBlockId(newBlock.id);
         setEditingText('');
+        setEditingFormat(null);
         handleAddBlockClose();
     };
     const handleAddChartBlock = () => {
@@ -433,22 +436,28 @@ const ReportViewPage: React.FC = () => {
     // Sửa block text
     const handleEditTextBlock = (block: ReportBlock) => {
         if (block.type === 'text') {
+            const textContent = (block.content as import('../../types/report').TextBlockContent).text || '';
+            const formatContent = (block.content as import('../../types/report').TextBlockContent).format || null;
+            console.log('Editing text block:', block.id, 'with content:', textContent, 'format:', formatContent);
             setEditingBlockId(block.id);
-            setEditingText((block.content as import('../../types/report').TextBlockContent).text || '');
+            setEditingText(textContent);
+            setEditingFormat(formatContent);
         }
     };
     const handleSaveTextBlock = () => {
         setBlocks(blocks.map(b =>
             b.id === editingBlockId && b.type === 'text'
-                ? { ...b, content: { ...(b.content as import('../../types/report').TextBlockContent), text: editingText } }
+                ? { ...b, content: { ...(b.content as import('../../types/report').TextBlockContent), text: editingText, format: editingFormat } }
                 : b
         ));
         setEditingBlockId(null);
         setEditingText('');
+        setEditingFormat(null);
     };
     const handleCancelEditTextBlock = () => {
         setEditingBlockId(null);
         setEditingText('');
+        setEditingFormat(null);
     };
     // Xóa block
     const handleDeleteBlock = (id: string) => {
@@ -467,9 +476,46 @@ const ReportViewPage: React.FC = () => {
         setBlocks(newBlocks);
     };
     // Lưu blocks (chuẩn bị cho API PUT)
-    const handleSaveBlocks = () => {
-        // TODO: Gọi API PUT để lưu blocks vào report
-        setEditMode(false);
+    const handleSaveBlocks = async () => {
+        if (!report || !id) return;
+        
+        setSaving(true);
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${id}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: report.name,
+                    description: report.description,
+                    config: {
+                        blocks: blocks
+                    }
+                }),
+            });
+            
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Failed to save report');
+            }
+            
+            // Cập nhật report state với data mới
+            setReport(data.result);
+            setEditMode(false);
+            
+            // Có thể thêm notification thành công ở đây
+            console.log('Report saved successfully');
+            
+        } catch (error: any) {
+            console.error('Error saving report:', error);
+            // Có thể thêm notification lỗi ở đây
+            alert('Failed to save report: ' + error.message);
+        } finally {
+            setSaving(false);
+        }
     };
 
     // Export PDF handler (nhận options từ dialog)
@@ -572,10 +618,18 @@ const ReportViewPage: React.FC = () => {
     // Helper: convert old charts to blocks if needed
     const getBlocks = (report: ReportDetail | null): ReportBlock[] => {
         if (!report) return [];
-        if (report.blocks && Array.isArray(report.blocks) && report.blocks.length > 0) {
-            return report.blocks;
+        
+        // Check for new structure: config.blocks
+        if (report.config && report.config.blocks && Array.isArray(report.config.blocks)) {
+            return report.config.blocks;
         }
-        // Nếu chưa có blocks, convert từ charts (giữ thứ tự)
+        
+        // Legacy: check if config is directly an array of blocks (for backward compatibility)
+        if (report.config && Array.isArray(report.config as any) && (report.config as any).length > 0) {
+            return report.config as any;
+        }
+        
+        // Legacy: convert from charts array
         if ((report as any).charts && Array.isArray((report as any).charts)) {
             return (report as any).charts.map((chart: any) => ({
                 id: chart.id,
@@ -583,6 +637,7 @@ const ReportViewPage: React.FC = () => {
                 content: { chartId: chart.id, chart },
             }));
         }
+        
         return [];
     };
 
@@ -622,9 +677,10 @@ const ReportViewPage: React.FC = () => {
                         <Button
                             variant="contained"
                             color="primary"
-                            startIcon={<SaveIcon />}
-                            onClick={handleSaveBlocks}>
-                            Save
+                            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
+                            onClick={handleSaveBlocks}
+                            disabled={saving}>
+                            {saving ? 'Saving...' : 'Save'}
                         </Button>
                     )}
                 </Stack>
@@ -658,7 +714,41 @@ const ReportViewPage: React.FC = () => {
                     <>
                         <Box>
                             {blocks.length === 0 ? (
-                                <Alert severity="info">No content in this report.</Alert>
+                                editMode ? (
+                                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                                        <Typography variant="body1" color="text.secondary" mb={2}>
+                                            No content in this report. Add your first block to get started.
+                                        </Typography>
+                                        <Stack direction="row" gap={1} justifyContent="center">
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<TextFieldsIcon />}
+                                                onClick={() => {
+                                                    const newBlock: ReportBlock = {
+                                                        id: uuidv4(),
+                                                        type: 'text',
+                                                        content: { text: '' },
+                                                    };
+                                                    setBlocks([newBlock]);
+                                                    setEditingBlockId(newBlock.id);
+                                                    setEditingText('');
+                                                    setEditingFormat(null);
+                                                }}
+                                            >
+                                                Add Text Block
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<InsertChartIcon />}
+                                                onClick={() => setAddChartDialogOpen(true)}
+                                            >
+                                                Add Chart Block
+                                            </Button>
+                                        </Stack>
+                                    </Box>
+                                ) : (
+                                    <Alert severity="info">No content in this report.</Alert>
+                                )
                             ) : (
                                 <Stack gap={2}>
                                     {blocks.map((block, idx) => (
@@ -683,14 +773,35 @@ const ReportViewPage: React.FC = () => {
                                                 editingBlockId === block.id && editMode ? (
                                                     <TextBlockEditor
                                                         value={editingText}
-                                                        onChange={setEditingText}
+                                                        format={editingFormat}
+                                                        onChange={(text, format) => {
+                                                            setEditingText(text);
+                                                            setEditingFormat(format);
+                                                        }}
                                                         onSave={handleSaveTextBlock}
                                                         onCancel={handleCancelEditTextBlock}
                                                         autoFocus
                                                     />
                                                 ) : (
                                                     <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
-                                                        <Typography variant="body1" style={{ whiteSpace: 'pre-line', ...(block.content && (block.content as import('../../types/report').TextBlockContent).format ? (block.content as import('../../types/report').TextBlockContent).format : {}) }}>{(block.content as import('../../types/report').TextBlockContent).text}</Typography>
+                                                        <Typography 
+                                                            variant="body1" 
+                                                            style={{ 
+                                                                whiteSpace: 'pre-line',
+                                                                textAlign: (block.content as any).format?.text_align || 'left',
+                                                                fontSize: (block.content as any).format?.font_size ? `${(block.content as any).format.font_size}px` : undefined,
+                                                                fontWeight: (block.content as any).format?.font_weight || 'normal',
+                                                                fontStyle: (block.content as any).format?.font_style || 'normal',
+                                                                color: (block.content as any).format?.color,
+                                                                backgroundColor: (block.content as any).format?.background_color,
+                                                                textDecoration: [
+                                                                    (block.content as any).format?.underline ? 'underline' : '',
+                                                                    (block.content as any).format?.strikethrough ? 'line-through' : ''
+                                                                ].filter(Boolean).join(' ') || 'none'
+                                                            }}
+                                                        >
+                                                            {(block.content as import('../../types/report').TextBlockContent).text}
+                                                        </Typography>
                                                     </Paper>
                                                 )
                                             ) : null}

@@ -22,9 +22,7 @@ import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFo
 import com.haiphamcoder.reporting.domain.exception.business.detail.ReportPersistenceException;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
-import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
-import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
@@ -58,11 +56,7 @@ public class ReportServiceImpl implements ReportService {
         Set<Long> reportIds = reportPermissions.stream().map(ReportPermission::getReportId).collect(Collectors.toSet());
         Page<Report> reports = reportRepository.getReportsByUserIdOrReportId(userId, reportIds, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
-            List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
-            List<Chart> charts = chartReports.stream()
-                    .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
             ReportDto reportDto = ReportMapper.toReportDto(report);
-            reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
             UserDto userDto = userGrpcClient.getUserById(report.getUserId());
             reportDto.setOwner(ReportDto.Owner.builder()
                     .id(String.valueOf(userDto.getId()))
@@ -90,16 +84,11 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        ReportDto reportDto = ReportMapper.toReportDto(report.get());
-        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
-        List<Chart> charts = chartReports.stream()
-                .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
-        reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
-        return reportDto;
+        return ReportMapper.toReportDto(report.get());
     }
 
     @Override
-    public ReportDto updateReport(Long userId, Long reportId, UpdateReportRequest updateReportRequest) {
+    public ReportDto updateReport(Long userId, Long reportId, ReportDto reportDto) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
@@ -109,36 +98,13 @@ public class ReportServiceImpl implements ReportService {
                 throw new ForbiddenException("You are not allowed to update this report");
             }
         }
-        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), ReportDto.builder()
-                .id(reportId.toString())
-                .name(updateReportRequest.getName())
-                .description(updateReportRequest.getDescription())
-                .chartIds(updateReportRequest.getChartIds())
-                .build());
-
-        removeAllChartsFromReport(reportId);
-        addChartsToReport(reportId, updateReportRequest.getChartIds().stream().map(Long::parseLong).toList());
+        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), reportDto);
 
         Optional<Report> updatedReport = reportRepository.updateReport(ReportMapper.toEntity(updatedReportDto));
         if (updatedReport.isEmpty()) {
             throw new ReportPersistenceException("Update report failed");
         }
         return ReportMapper.toReportDto(updatedReport.get());
-    }
-
-    private void removeAllChartsFromReport(Long reportId) {
-        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
-        chartReports.forEach(chartReport -> chartReportRepository.deleteByChartIdAndReportId(chartReport.getChartId(),
-                reportId));
-    }
-
-    private void addChartsToReport(Long reportId, List<Long> chartIds) {
-        chartIds.forEach(chartId -> {
-            ChartReport chartReport = new ChartReport();
-            chartReport.setReportId(reportId);
-            chartReport.setChartId(chartId);
-            chartReportRepository.save(chartReport);
-        });
     }
 
     @Override
@@ -178,11 +144,7 @@ public class ReportServiceImpl implements ReportService {
             throw new ReportPersistenceException("Create report failed");
         }
 
-        addChartsToReport(savedReport.get().getId(),
-                createReportRequest.getChartIds().stream().map(Long::parseLong).toList());
-        ReportDto savedReportDto = ReportMapper.toReportDto(savedReport.get());
-        savedReportDto.setChartIds(createReportRequest.getChartIds());
-        return savedReportDto;
+        return ReportMapper.toReportDto(savedReport.get());
     }
 
     @Override

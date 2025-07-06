@@ -207,7 +207,7 @@ export default function Home() {
                         </ListItemAvatar>
                         <ListItemText
                           primary={report.name}
-                          secondary={`${report.number_of_charts} charts • ${new Date(report.created_at).toLocaleDateString()}`}
+                          // secondary={`${report.number_of_charts} charts • ${new Date(report.created_at).toLocaleDateString()}`}
                           primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                           secondaryTypographyProps={{ variant: 'caption' }}
                         />

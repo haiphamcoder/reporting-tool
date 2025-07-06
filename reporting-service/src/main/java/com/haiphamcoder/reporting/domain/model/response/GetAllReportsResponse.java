@@ -45,9 +45,6 @@ public class GetAllReportsResponse {
         @JsonProperty("description")
         private String description;
 
-        @JsonProperty("number_of_charts")
-        private Integer numberOfCharts;
-
         @JsonProperty("type")
         private String type;
 

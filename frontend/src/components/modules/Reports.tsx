@@ -422,44 +422,6 @@ export default function Reports() {
                 );
             }
         },
-        {
-            field: 'number_of_charts',
-            headerName: 'Number of Charts',
-            flex: 0.6,
-            minWidth: 100,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params: GridRenderCellParams<ReportSummary>) => (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        height: '100%',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <Box
-                        component="span"
-                        sx={{
-                            color: 'success.main',
-                            border: '1.5px solid',
-                            borderColor: 'success.light',
-                            backgroundColor: 'white',
-                            borderRadius: '12px',
-                            px: 1,
-                            py: 0.5,
-                            fontWeight: 600,
-                            fontSize: '0.75rem',
-                            minWidth: 50,
-                            textAlign: 'center',
-                            lineHeight: 1.2,
-                        }}
-                    >
-                        {params.value}
-                    </Box>
-                </Box>
-            ),
-        },
         { 
             field: 'updated_at', 
             headerName: 'Updated At', 

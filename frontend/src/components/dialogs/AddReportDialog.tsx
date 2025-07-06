@@ -11,16 +11,9 @@ import {
     CircularProgress,
     Alert,
     IconButton,
-    Checkbox,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { chartApi } from '../../api/chart/chartApi';
 import { API_CONFIG } from '../../config/api';
-import { ChartSummary } from '../../types/chart';
 
 interface AddReportDialogProps {
     open: boolean;
@@ -31,45 +24,16 @@ interface AddReportDialogProps {
 const AddReportDialog: React.FC<AddReportDialogProps> = ({ open, onClose, onSuccess }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [charts, setCharts] = useState<ChartSummary[]>([]);
-    const [selectedChartIds, setSelectedChartIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [fetchingCharts, setFetchingCharts] = useState(false);
 
     useEffect(() => {
         if (open) {
             setName('');
             setDescription('');
-            setSelectedChartIds([]);
             setError(null);
-            fetchCharts();
         }
     }, [open]);
-
-    const fetchCharts = async () => {
-        setFetchingCharts(true);
-        try {
-            const data = await chartApi.getCharts();
-            if (data.success && data.result && data.result.charts) {
-                setCharts(data.result.charts);
-            } else {
-                setCharts([]);
-            }
-        } catch (err) {
-            setCharts([]);
-        } finally {
-            setFetchingCharts(false);
-        }
-    };
-
-    const handleToggleChart = (chartId: string) => {
-        setSelectedChartIds((prev) =>
-            prev.includes(chartId)
-                ? prev.filter((id) => id !== chartId)
-                : [...prev, chartId]
-        );
-    };
 
     const handleCreate = async () => {
         if (!name.trim()) {
@@ -89,7 +53,6 @@ const AddReportDialog: React.FC<AddReportDialogProps> = ({ open, onClose, onSucc
                 body: JSON.stringify({
                     name: name.trim(),
                     description: description.trim(),
-                    chart_ids: selectedChartIds
                 }),
             });
             const data = await response.json();
@@ -124,13 +87,14 @@ const AddReportDialog: React.FC<AddReportDialogProps> = ({ open, onClose, onSucc
             <DialogContent>
                 <Box display="flex" flexDirection="column" gap={2}>
                     <Box>
-                        <Typography variant="subtitle1" sx={{ mb: 1 }}>Name</Typography>
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>Name *</Typography>
                         <TextField
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             fullWidth
                             required
                             disabled={loading}
+                            placeholder="Enter report name"
                         />
                     </Box>
                     <Box>
@@ -140,44 +104,9 @@ const AddReportDialog: React.FC<AddReportDialogProps> = ({ open, onClose, onSucc
                             onChange={(e) => setDescription(e.target.value)}
                             fullWidth
                             disabled={loading}
+                            placeholder="Enter report description (optional)"
                         />
                     </Box>
-                    <Typography variant="subtitle1" sx={{ mt: 2 }}>Select Charts</Typography>
-                    {fetchingCharts ? (
-                        <Box display="flex" justifyContent="center" alignItems="center" minHeight={80}>
-                            <CircularProgress size={24} />
-                        </Box>
-                    ) : (
-                        <List dense sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #eee', borderRadius: 1 }}>
-                            {charts.length === 0 ? (
-                                <ListItem>
-                                    <ListItemText primary="No charts available" />
-                                </ListItem>
-                            ) : (
-                                charts.map((chart) => (
-                                    <ListItem
-                                        key={chart.id}
-                                        onClick={() => handleToggleChart(chart.id)}
-                                    >
-                                        <ListItemIcon>
-                                            <Checkbox
-                                                edge="start"
-                                                checked={selectedChartIds.includes(chart.id)}
-                                                tabIndex={-1}
-                                                disableRipple
-                                                inputProps={{ 'aria-labelledby': `checkbox-list-label-${chart.id}` }}
-                                            />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            id={`checkbox-list-label-${chart.id}`}
-                                            primary={chart.name}
-                                            secondary={chart.description}
-                                        />
-                                    </ListItem>
-                                ))
-                            )}
-                        </List>
-                    )}
                     {error && <Alert severity="error">{error}</Alert>}
                 </Box>
             </DialogContent>
