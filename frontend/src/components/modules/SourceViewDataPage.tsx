@@ -7,7 +7,7 @@ import CustomDataGrid from '../CustomizedDataGrid';
 import { Button, Stack, Alert, CircularProgress, Snackbar } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { API_CONFIG } from '../../config/api';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -15,6 +15,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogActions from '@mui/material/DialogActions';
 import { useGridApiRef } from '@mui/x-data-grid';
+import SearchWithField from '../SearchWithField';
 
 interface Schema {
   field_name: string;
@@ -44,6 +45,7 @@ export default function SourceViewDataPage() {
     message: string;
     severity: 'success' | 'error';
   }>({ open: false, message: '', severity: 'success' });
+  
   // State for edit confirmation dialog
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
@@ -54,62 +56,74 @@ export default function SourceViewDataPage() {
     id?: string | number;
     field?: string;
   }>({ open: false, newRow: null, oldRow: null, resolve: null, reject: null, id: undefined, field: undefined });
+  
   const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSearchField, setSelectedSearchField] = useState('');
+  const [searchFields, setSearchFields] = useState<Array<{field: string, label: string}>>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Function to update URL with pagination parameters
-  const updateURLWithPagination = (page: number, size: number) => {
+  const updateURLWithPagination = useCallback((page: number, size: number, search: string = '', field: string = '') => {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set('page', page.toString());
     urlParams.set('pageSize', size.toString());
     
+    if (search) {
+      urlParams.set('search', search);
+    } else {
+      urlParams.delete('search');
+    }
+    
+    if (field) {
+      urlParams.set('search-by', field);
+    } else {
+      urlParams.delete('search-by');
+    }
+
     // Preserve other URL parameters
     const newSearch = urlParams.toString();
     const newPath = `/dashboard/sources/${source_id}/view-data${newSearch ? `?${newSearch}` : ''}`;
-    
+
     navigate(newPath, { replace: true });
-  };
+  }, [source_id, navigate]);
 
-  // Function to get pagination parameters from URL
-  const getPaginationFromURL = () => {
-    const urlParams = new URLSearchParams(location.search);
-    const page = parseInt(urlParams.get('page') || '0', 10);
-    const size = parseInt(urlParams.get('pageSize') || '10', 10);
-    return { page, size };
-  };
 
-  // Initialize URL with default pagination values on first load
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const hasPageParam = urlParams.has('page');
-    const hasPageSizeParam = urlParams.has('pageSize');
-    
-    // If URL doesn't have pagination parameters, add default values
-    if (!hasPageParam || !hasPageSizeParam) {
-      const defaultPage = hasPageParam ? parseInt(urlParams.get('page') || '0', 10) : 0;
-      const defaultSize = hasPageSizeParam ? parseInt(urlParams.get('pageSize') || '10', 10) : 10;
-      
-      urlParams.set('page', defaultPage.toString());
-      urlParams.set('pageSize', defaultSize.toString());
-      
-      const newSearch = urlParams.toString();
-      const newPath = `/dashboard/sources/${source_id}/view-data?${newSearch}`;
-      navigate(newPath, { replace: true });
-    }
-  }, [source_id]); // Run when source_id changes
+
+
+
+  // Memoize URL parameters to avoid unnecessary re-renders
+  const urlParams = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const page = parseInt(params.get('page') || '0', 10);
+    const size = parseInt(params.get('pageSize') || '10', 10);
+    const search = params.get('search') || '';
+    const field = params.get('search-by') || '';
+    return { page, size, search, field };
+  }, [location.search]);
 
   const handleBack = () => {
     navigate('/dashboard/sources');
   };
 
-  const fetchSourceData = async (page: number = 0, size: number = 10) => {
-    if (!source_id) {
+  const fetchSourceData = useCallback(async (page: number = 0, size: number = 10, search: string = '', field: string = '') => {
+    const currentSourceId = source_id;
+    if (!currentSourceId) {
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_PREVIEW.replace(':source_id', source_id)}?page=${page}&limit=${size}`;
+      let url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_PREVIEW.replace(':source_id', currentSourceId)}?page=${page}&limit=${size}`;
+      
+      // Add search parameters if provided
+      if (search && field) {
+        url += `&search=${encodeURIComponent(search)}&search-by=${encodeURIComponent(field)}`;
+      }
+      
       const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
@@ -166,8 +180,6 @@ export default function SourceViewDataPage() {
         }
 
         setPreviewData(previewDataToSet);
-        setCurrentPage(page);
-        setPageSize(size);
       } else {
         setError(data.message || 'Failed to fetch preview data');
       }
@@ -176,16 +188,51 @@ export default function SourceViewDataPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array like in Sources
 
-  const handlePageChange = (page: number, size: number) => {
-    updateURLWithPagination(page, size);
-    fetchSourceData(page, size);
-  };
+  const handlePageChange = useCallback((page: number, size: number) => {
+    updateURLWithPagination(page, size, searchTerm, selectedSearchField);
+  }, [searchTerm, selectedSearchField, updateURLWithPagination]);
 
-  const handleRefresh = () => {
-    fetchSourceData(currentPage, pageSize);
-  };
+  const handleRefresh = useCallback(() => {
+    fetchSourceData(urlParams.page, urlParams.size, searchTerm, selectedSearchField);
+  }, [searchTerm, selectedSearchField, urlParams]);
+
+  // Handle search change
+  const handleSearchChange = useCallback((newSearchTerm: string, newSelectedField: string) => {
+    console.log('handleSearchChange called with:', { newSearchTerm, newSelectedField });
+    console.log('Current state:', { searchTerm, selectedSearchField, isInitialized });
+    
+    // Only update URL if component is initialized and there's a real change
+    if (isInitialized && (newSearchTerm !== searchTerm || newSelectedField !== selectedSearchField)) {
+      setSearchTerm(newSearchTerm);
+      setSelectedSearchField(newSelectedField);
+      // Reset to first page when searching
+      const newPage = 0;
+      updateURLWithPagination(newPage, urlParams.size, newSearchTerm, newSelectedField);
+    } else {
+      // Just update state without changing URL
+      setSearchTerm(newSearchTerm);
+      setSelectedSearchField(newSelectedField);
+    }
+  }, [searchTerm, selectedSearchField, isInitialized, updateURLWithPagination, urlParams.size]);
+
+  // Handle field change
+  const handleFieldChange = useCallback((field: string) => {
+    console.log('handleFieldChange called with:', { field });
+    console.log('Current selectedSearchField:', selectedSearchField, 'isInitialized:', isInitialized);
+    
+    // Only update URL if component is initialized and field actually changed
+    if (isInitialized && field !== selectedSearchField) {
+      setSelectedSearchField(field);
+      // Reset to first page when changing field
+      const newPage = 0;
+      updateURLWithPagination(newPage, urlParams.size, searchTerm, field);
+    } else {
+      // Just update state without changing URL
+      setSelectedSearchField(field);
+    }
+  }, [searchTerm, selectedSearchField, isInitialized, updateURLWithPagination, urlParams.size]);
 
   // Function to save edited data
   const handleSaveData = async (updatedData: any) => {
@@ -223,7 +270,7 @@ export default function SourceViewDataPage() {
           severity: 'success'
         });
         // Refresh data to show updated values
-        fetchSourceData(currentPage, pageSize);
+        handleRefresh();
       } else {
         setSnackbar({
           open: true,
@@ -242,15 +289,44 @@ export default function SourceViewDataPage() {
     }
   };
 
-  // Fetch data on component mount
+  // Read URL parameters, update state, and fetch data
   useEffect(() => {
     if (source_id) {
-      const { page, size } = getPaginationFromURL();
-      fetchSourceData(page, size);
-    } else {
-      console.log('No source_id in useEffect');
+      // Read directly from location.search to avoid timing issues
+      const params = new URLSearchParams(location.search);
+      const page = parseInt(params.get('page') || '0', 10);
+      const size = parseInt(params.get('pageSize') || '10', 10);
+      const search = params.get('search') || '';
+      const field = params.get('search-by') || '';
+      
+      setCurrentPage(page);
+      setPageSize(size);
+      setSearchTerm(search);
+      setSelectedSearchField(field);
+      fetchSourceData(page, size, search, field);
+      setIsInitialized(true);
     }
-  }, [source_id, location.search]); // Also listen to location.search changes
+  }, [location.search, source_id]);
+
+
+
+  // Update search fields when preview data changes
+  useEffect(() => {
+    if (previewData && previewData.schema && previewData.schema.length > 0) {
+      const fields = previewData.schema
+        .filter((field: Schema) => field.field_mapping !== '_id_')
+        .map((field: Schema) => ({
+          field: field.field_mapping,
+          label: field.field_name
+        }));
+      setSearchFields(fields);
+      
+      // Set default search field if not already set
+      if (!selectedSearchField && fields.length > 0) {
+        setSelectedSearchField(fields[0].field);
+      }
+    }
+  }, [previewData]); // Only depend on previewData
 
   // Function to create a unique, stable hash from row data (no timestamp/random)
   const createRowHash = (row: any): string => {
@@ -374,6 +450,22 @@ export default function SourceViewDataPage() {
         editable: true,
       }));
 
+    // Create search fields from first record if no schema
+    if (Object.keys(firstRecord).length > 0 && searchFields.length === 0) {
+      const fields = Object.keys(firstRecord)
+        .filter(key => key !== '_id_')
+        .map(key => ({
+          field: key,
+          label: key
+        }));
+      setSearchFields(fields);
+      
+      // Set default search field if not already set
+      if (!selectedSearchField && fields.length > 0) {
+        setSelectedSearchField(fields[0].field);
+      }
+    }
+
     return (
       <Stack gap={2} sx={{ height: '100%', width: '100%' }}>
         <Stack direction="row" justifyContent="start" alignItems="center" gap={1}>
@@ -414,16 +506,28 @@ export default function SourceViewDataPage() {
             </Box>
           </Typography>
         </Stack>
-        <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-          <Button
-            variant="contained"
-            startIcon={<RefreshIcon />}
-            onClick={handleRefresh}
-            disabled={loading}
-            sx={{ minWidth: '120px' }}
-          >
-            Refresh
-          </Button>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+          <Stack direction="row" justifyContent="start" alignItems="center" gap={1}>
+            <SearchWithField
+              value={searchTerm}
+              onSearchChange={handleSearchChange}
+              onFieldChange={handleFieldChange}
+              fields={searchFields}
+              selectedField={selectedSearchField}
+              placeholder="Search data..."
+            />
+          </Stack>
+          <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
+            <Button
+              variant="contained"
+              startIcon={<RefreshIcon />}
+              onClick={handleRefresh}
+              disabled={loading}
+              sx={{ minWidth: '120px' }}
+            >
+              Refresh
+            </Button>
+          </Stack>
         </Stack>
         <CustomDataGrid
           apiRef={apiRef}
@@ -466,13 +570,39 @@ export default function SourceViewDataPage() {
           hideFooterSelectedRowCount
           processRowUpdate={processRowUpdate}
         />
+        <Dialog open={editDialog.open} onClose={handleCancelEdit}>
+          <DialogTitle>Confirm Edit</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to save these changes?
+            </DialogContentText>
+            {editDialog.oldRow && editDialog.newRow && (
+              <Box sx={{ mt: 2 }}>
+                {Object.keys(editDialog.newRow).map((key) => {
+                  if (editDialog.oldRow[key] !== editDialog.newRow[key]) {
+                    return (
+                      <Typography key={key} variant="body2">
+                        <b>{key}:</b> "{editDialog.oldRow[key]}" → "{editDialog.newRow[key]}"
+                      </Typography>
+                    );
+                  }
+                  return null;
+                })}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCancelEdit} color="inherit">Cancel</Button>
+            <Button onClick={handleConfirmEdit} color="primary" variant="contained">Save</Button>
+          </DialogActions>
+        </Dialog>
         <Snackbar
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          <Alert 
-            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
             severity={snackbar.severity}
             sx={{ width: '100%' }}
           >
@@ -483,7 +613,7 @@ export default function SourceViewDataPage() {
     );
   }
 
-  const columns: GridColDef[] = displaySchema.map((field) => ({
+  const columns: GridColDef[] = displaySchema.map((field: Schema) => ({
     field: field.field_mapping,
     headerName: field.field_name,
     flex: 1,
@@ -531,16 +661,28 @@ export default function SourceViewDataPage() {
           </Box>
         </Typography>
       </Stack>
-      <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
-        <Button
-          variant="contained"
-          startIcon={<RefreshIcon />}
-          onClick={handleRefresh}
-          disabled={loading}
-          sx={{ minWidth: '140px', maxWidth: '140px' }}
-        >
-          Refresh
-        </Button>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+        <Stack direction="row" justifyContent="start" alignItems="center" gap={1}>
+          <SearchWithField
+            value={searchTerm}
+            onSearchChange={handleSearchChange}
+            onFieldChange={handleFieldChange}
+            fields={searchFields}
+            selectedField={selectedSearchField}
+            placeholder="Search data..."
+          />
+        </Stack>
+        <Stack direction="row" justifyContent="end" alignItems="center" gap={1}>
+          <Button
+            variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={loading}
+            sx={{ minWidth: '140px', maxWidth: '140px' }}
+          >
+            Refresh
+          </Button>
+        </Stack>
       </Stack>
       <CustomDataGrid
         apiRef={apiRef}
@@ -614,8 +756,8 @@ export default function SourceViewDataPage() {
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert 
-          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
           sx={{ width: '100%' }}
         >
