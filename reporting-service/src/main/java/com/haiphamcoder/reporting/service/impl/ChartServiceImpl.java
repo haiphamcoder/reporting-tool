@@ -69,6 +69,8 @@ public class ChartServiceImpl implements ChartService {
                     .email(userDto.getEmail())
                     .avatar(userDto.getAvatarUrl())
                     .build());
+            chartDto.setCanEdit(permissionService.hasEditChartPermission(userId, chart.getId()));
+            chartDto.setCanShare(chart.getUserId().equals(userId));
             return chartDto;
         }).toList(),
                 Metadata.builder()
@@ -86,6 +88,11 @@ public class ChartServiceImpl implements ChartService {
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
+            if (!permissionService.hasViewChartPermission(userId, chartId)) {
+                throw new ForbiddenException("You are not allowed to view this chart");
+            }
+        }
         return ChartMapper.toChartDto(chart.get());
     }
 
@@ -94,6 +101,11 @@ public class ChartServiceImpl implements ChartService {
         Optional<Chart> chart = chartRepository.getChartById(chartId);
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
+        }
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
+            if (!permissionService.hasEditChartPermission(userId, chartId)) {
+                throw new ForbiddenException("You are not allowed to edit this chart");
+            }
         }
         try {
             log.info("chart: {}", MapperUtils.objectMapper.writeValueAsString(chart.get()));
@@ -114,8 +126,21 @@ public class ChartServiceImpl implements ChartService {
         if (chart.isEmpty()) {
             throw new ResourceNotFoundException("Chart", chartId);
         }
-        chart.get().setIsDeleted(true);
-        chartRepository.updateChart(chart.get());
+        if (!Objects.equals(chart.get().getUserId(), userId)) {
+            if (!permissionService.hasViewChartPermission(userId, chartId)) {
+                chartPermissionRepository.deleteAllChartPermissionsByChartIdAndUserId(chartId, userId);
+            } else if (permissionService.hasEditChartPermission(userId, chartId)) {
+                chart.get().setIsDeleted(true);
+                chartRepository.updateChart(chart.get());
+                chartPermissionRepository.deleteAllChartPermissionsByChartId(chartId);
+            } else {
+                throw new ForbiddenException("You are not allowed to delete this chart");
+            }
+        } else {
+            chart.get().setIsDeleted(true);
+            chartRepository.updateChart(chart.get());
+            chartPermissionRepository.deleteAllChartPermissionsByChartId(chartId);
+        }
     }
 
     @Override

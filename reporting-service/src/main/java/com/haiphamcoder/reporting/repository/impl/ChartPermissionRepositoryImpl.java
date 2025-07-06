@@ -24,6 +24,8 @@ interface ChartPermissionJpaRepository extends JpaRepository<ChartPermission, Ch
     List<ChartPermission> findAllByChartId(Long chartId);
 
     void deleteAllByChartId(Long chartId);
+
+    void deleteAllByChartIdAndUserId(Long chartId, Long userId);
 }
 
 @Component
@@ -56,5 +58,10 @@ public class ChartPermissionRepositoryImpl implements ChartPermissionRepository 
     @Transactional
     public void deleteAllChartPermissionsByChartId(Long chartId) {
         chartPermissionJpaRepository.deleteAllByChartId(chartId);
+    }
+
+    @Override
+    public void deleteAllChartPermissionsByChartIdAndUserId(Long chartId, Long userId) {
+        chartPermissionJpaRepository.deleteAllByChartIdAndUserId(chartId, userId);
     }
 }
