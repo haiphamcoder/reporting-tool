@@ -101,10 +101,14 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public SourceDto getSourceById(Long sourceId) {
+    public SourceDto getSourceById(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            return SourceMapper.toDto(source.get());
+            SourceDto sourceDto = SourceMapper.toDto(source.get());
+            sourceDto.setCanEdit(source.get().getUserId().equals(userId)
+                    || permissionService.hasEditSourcePermission(userId, source.get().getId()));
+            sourceDto.setCanShare(source.get().getUserId().equals(userId));
+            return sourceDto;
         }
         throw new ResourceNotFoundException("Source", sourceId);
     }

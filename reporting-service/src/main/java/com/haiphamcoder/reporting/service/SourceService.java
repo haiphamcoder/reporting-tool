@@ -20,7 +20,7 @@ public interface SourceService {
 
     public Boolean checkSourceName(Long userId, String sourceName);
 
-    public SourceDto getSourceById(Long sourceId);
+    public SourceDto getSourceById(Long userId, Long sourceId);
 
     public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit);
 

@@ -62,6 +62,8 @@ public class SourceController {
                         .description(source.getDescription())
                         .type(source.getConnectorType())
                         .owner(source.getOwner())
+                        .canEdit(source.getCanEdit())
+                        .canShare(source.getCanShare())
                         .status(CommonConstants.SOURCE_STATUS_MAP.get(source.getStatus()))
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
@@ -90,7 +92,7 @@ public class SourceController {
     @GetMapping("/{source-id}")
     public ResponseEntity<ApiResponse<Object>> getSourceById(@CookieValue(name = "user-id") Long userId,
             @PathVariable("source-id") Long sourceId) {
-        SourceDto source = sourceService.getSourceById(sourceId);
+        SourceDto source = sourceService.getSourceById(userId, sourceId);
         return ResponseEntity.ok(ApiResponse.success(source, "Source fetched successfully"));
     }
 
