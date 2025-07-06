@@ -128,7 +128,7 @@ public class SourceController {
     @DeleteMapping("/{source-id}")
     public ResponseEntity<ApiResponse<Object>> deleteSource(@CookieValue(name = "user-id") Long userId,
             @PathVariable("source-id") Long sourceId) {
-        sourceService.deleteSource(sourceId);
+        sourceService.deleteSource(userId, sourceId);
         return ResponseEntity.ok(ApiResponse.success(null, "Source deleted successfully"));
     }
 

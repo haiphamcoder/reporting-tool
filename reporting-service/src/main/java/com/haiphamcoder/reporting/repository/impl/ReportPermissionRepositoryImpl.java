@@ -11,6 +11,7 @@ import com.haiphamcoder.reporting.domain.entity.ReportPermission;
 import com.haiphamcoder.reporting.domain.model.ReportPermissionComposeKey;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +20,10 @@ interface ReportPermissionJpaRepository extends JpaRepository<ReportPermission, 
     Optional<ReportPermission> findByReportIdAndUserId(Long reportId, Long userId);
 
     List<ReportPermission> findAllByUserId(Long userId);
+
+    void deleteAllByReportIdAndUserId(Long reportId, Long userId);
+
+    void deleteAllByReportId(Long reportId);
 }
 
 @Component
@@ -33,6 +38,7 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
     }
 
     @Override
+    @Transactional
     public Optional<ReportPermission> saveReportPermission(ReportPermission reportPermission) {
         return Optional.of(reportPermissionJpaRepository.save(reportPermission));
     }
@@ -40,5 +46,17 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
     @Override
     public List<ReportPermission> getAllReportPermissionsByUserId(Long userId) {
         return reportPermissionJpaRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllReportPermissionsByReportIdAndUserId(Long reportId, Long userId) {
+        reportPermissionJpaRepository.deleteAllByReportIdAndUserId(reportId, userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllReportPermissionsByReportId(Long reportId) {
+        reportPermissionJpaRepository.deleteAllByReportId(reportId);
     }
 }

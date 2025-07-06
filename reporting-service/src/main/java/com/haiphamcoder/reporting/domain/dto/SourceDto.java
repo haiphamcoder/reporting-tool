@@ -66,6 +66,12 @@ public class SourceDto {
     @JsonProperty("modified_at")
     private LocalDateTime modifiedAt;
 
+    @JsonProperty("can_edit")
+    private Boolean canEdit;
+
+    @JsonProperty("can_share")
+    private Boolean canShare;
+
     @Data
     @Builder
     @NoArgsConstructor

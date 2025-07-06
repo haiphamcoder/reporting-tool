@@ -11,6 +11,7 @@ import com.haiphamcoder.reporting.domain.entity.SourcePermission;
 import com.haiphamcoder.reporting.domain.model.SourcePermissionComposeKey;
 import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -20,6 +21,10 @@ interface SourcePermissionJpaRepository extends JpaRepository<SourcePermission, 
     List<SourcePermission> findAllBySourceId(Long sourceId);
 
     List<SourcePermission> findAllByUserId(Long userId);
+
+    void deleteAllBySourceIdAndUserId(Long sourceId, Long userId);
+
+    void deleteAllBySourceId(Long sourceId);
 }
 
 @Component
@@ -39,11 +44,13 @@ public class SourcePermissionRepositoryImpl implements SourcePermissionRepositor
     }
 
     @Override
+    @Transactional
     public SourcePermission createSourcePermission(SourcePermission sourcePermission) {
         return sourcePermissionJpaRepository.save(sourcePermission);
     }
 
     @Override
+    @Transactional
     public SourcePermission saveSourcePermission(SourcePermission sourcePermission) {
         return sourcePermissionJpaRepository.save(sourcePermission);
     }
@@ -51,6 +58,18 @@ public class SourcePermissionRepositoryImpl implements SourcePermissionRepositor
     @Override
     public List<SourcePermission> getAllSourcePermissionsByUserId(Long userId) {
         return sourcePermissionJpaRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllSourcePermissionsBySourceIdAndUserId(Long sourceId, Long userId) {
+        sourcePermissionJpaRepository.deleteAllBySourceIdAndUserId(sourceId, userId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllSourcePermissionsBySourceId(Long sourceId) {
+        sourcePermissionJpaRepository.deleteAllBySourceId(sourceId);
     }
 
 }

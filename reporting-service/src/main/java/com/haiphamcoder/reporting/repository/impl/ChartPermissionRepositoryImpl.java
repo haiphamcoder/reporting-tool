@@ -40,6 +40,7 @@ public class ChartPermissionRepositoryImpl implements ChartPermissionRepository 
     }
 
     @Override
+    @Transactional
     public Optional<ChartPermission> saveChartPermission(ChartPermission chartPermission) {
         return Optional.of(chartPermissionJpaRepository.save(chartPermission));
     }
@@ -61,6 +62,7 @@ public class ChartPermissionRepositoryImpl implements ChartPermissionRepository 
     }
 
     @Override
+    @Transactional
     public void deleteAllChartPermissionsByChartIdAndUserId(Long chartId, Long userId) {
         chartPermissionJpaRepository.deleteAllByChartIdAndUserId(chartId, userId);
     }

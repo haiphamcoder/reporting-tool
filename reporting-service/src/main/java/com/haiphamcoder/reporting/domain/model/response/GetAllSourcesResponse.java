@@ -54,6 +54,12 @@ public class GetAllSourcesResponse {
         @JsonProperty("status")
         private String status;
 
+        @JsonProperty("can_edit")
+        private Boolean canEdit;
+
+        @JsonProperty("can_share")
+        private Boolean canShare;
+
         @JsonProperty("created_at")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;

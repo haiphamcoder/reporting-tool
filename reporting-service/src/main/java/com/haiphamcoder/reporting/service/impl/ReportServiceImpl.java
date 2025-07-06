@@ -70,6 +70,9 @@ public class ReportServiceImpl implements ReportService {
                     .email(userDto.getEmail())
                     .avatar(userDto.getAvatarUrl())
                     .build());
+            reportDto.setCanEdit(report.getUserId().equals(userId)
+                    || permissionService.hasEditReportPermission(userId, report.getId()));
+            reportDto.setCanShare(report.getUserId().equals(userId));
             return reportDto;
         }).toList(),
                 Metadata.builder()
@@ -100,6 +103,11 @@ public class ReportServiceImpl implements ReportService {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
+        }
+        if (!report.get().getUserId().equals(userId)) {
+            if (!permissionService.hasEditReportPermission(userId, reportId)) {
+                throw new ForbiddenException("You are not allowed to update this report");
+            }
         }
         ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), ReportDto.builder()
                 .id(reportId.toString())
@@ -139,8 +147,16 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        report.get().setIsDeleted(true);
-        reportRepository.updateReport(report.get());
+        if (report.get().getUserId().equals(userId)) {
+            report.get().setIsDeleted(true);
+            reportRepository.updateReport(report.get());
+            reportPermissionRepository.deleteAllReportPermissionsByReportId(reportId);
+        } else {
+            if (!permissionService.hasEditReportPermission(userId, reportId)
+                    || !permissionService.hasViewReportPermission(userId, reportId)) {
+                reportPermissionRepository.deleteAllReportPermissionsByReportIdAndUserId(reportId, userId);
+            }
+        }
     }
 
     @Override

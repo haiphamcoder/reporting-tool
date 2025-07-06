@@ -33,7 +33,7 @@ public interface SourceService {
 
     public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest);
 
-    public void deleteSource(Long sourceId);
+    public void deleteSource(Long userId, Long sourceId);
 
     public SourceDto updateSource(Long userId, Long sourceId, UpdateSourceRequest request);
 
