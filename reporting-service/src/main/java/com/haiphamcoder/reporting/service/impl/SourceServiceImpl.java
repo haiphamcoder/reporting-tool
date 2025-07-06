@@ -1,6 +1,7 @@
 package com.haiphamcoder.reporting.service.impl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.haiphamcoder.reporting.service.DataProcessingGrpcClient;
 import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.config.CommonConstants;
@@ -51,6 +53,7 @@ public class SourceServiceImpl implements SourceService {
     private final SourcePermissionRepository sourcePermissionRepository;
     private final HdfsFileService hdfsFileService;
     private final PermissionService permissionService;
+    private final DataProcessingGrpcClient dataProcessingGrpcClient;
 
     @Override
     public SourceDto initSource(Long userId, InitSourceRequest request) {
@@ -303,6 +306,34 @@ public class SourceServiceImpl implements SourceService {
             }
         } else {
             throw new ResourceNotFoundException("Source", sourceId);
+        }
+    }
+
+    @Override
+    public void cloneSource(Long userId, Long sourceId) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            if (source.get().getUserId().equals(userId)
+                    || permissionService.hasViewSourcePermission(userId, sourceId)) {
+                SourceDto clonedSource = SourceMapper.toDto(source.get());
+                clonedSource.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+                clonedSource.setName(clonedSource.getName() + " (Copy)");
+                clonedSource.setUserId(String.valueOf(userId));
+                clonedSource.setTableName("data_" + userId + "_" + System.currentTimeMillis());
+                clonedSource.setCreatedAt(LocalDateTime.now());
+                Optional<Source> savedSource = sourceRepository.createSource(SourceMapper.toEntity(clonedSource));
+                if (savedSource.isPresent()) {
+                    boolean success = dataProcessingGrpcClient.cloneData(source.get().getTableName(),
+                            savedSource.get().getTableName());
+                    if (!success) {
+                        throw new RuntimeException("Clone source failed");
+                    }
+                } else {
+                    throw new RuntimeException("Clone source failed");
+                }
+            } else {
+                throw new ForbiddenException("You are not allowed to clone this source");
+            }
         }
     }
 

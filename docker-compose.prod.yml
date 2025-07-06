@@ -179,6 +179,8 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - USER_MANAGEMENT_SERVICE_HOST=user-management-service
       - USER_MANAGEMENT_SERVICE_PORT=9090
+      - DATA_PROCESSING_SERVICE_HOST=data-processing-service
+      - DATA_PROCESSING_SERVICE_PORT=9094
     ports:
       - "8093:8080"
       - "9091:9091"

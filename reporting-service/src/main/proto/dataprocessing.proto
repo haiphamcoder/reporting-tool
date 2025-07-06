@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.haiphamcoder.dataprocessing.proto";
+
+package data_processing;
+
+// Data processing service definition
+service DataProcessingService {
+  rpc CloneSource(CloneSourceRequest) returns (CloneSourceResponse);
+}
+
+message CloneSourceRequest {
+  string source_table = 1;
+  string target_table = 2;
+}
+
+message CloneSourceResponse {
+  bool success = 1;
+}

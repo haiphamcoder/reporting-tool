@@ -39,4 +39,6 @@ public interface SourceService {
 
     public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest);
 
+    public void cloneSource(Long userId, Long sourceId);
+
 }

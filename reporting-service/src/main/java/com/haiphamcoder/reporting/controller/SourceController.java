@@ -132,4 +132,11 @@ public class SourceController {
         return ResponseEntity.ok(ApiResponse.success(null, "Source deleted successfully"));
     }
 
+    @GetMapping("/{source-id}/clone")
+    public ResponseEntity<ApiResponse<Object>> cloneSource(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId) {
+        sourceService.cloneSource(userId, sourceId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Source cloned successfully"));
+    }
+
 }
