@@ -20,4 +20,6 @@ public interface StorageService {
 
     void updateSourceData(SourceDto sourceDto, Map<String, Object> data);
 
+    void cloneTable(String sourceTable, String targetTable);
+
 }

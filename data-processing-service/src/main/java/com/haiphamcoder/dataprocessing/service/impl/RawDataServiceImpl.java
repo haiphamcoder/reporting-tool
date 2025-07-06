@@ -96,4 +96,13 @@ public class RawDataServiceImpl implements RawDataService {
         }
         return previewData;
     }
+
+    @Override
+    public boolean cloneTable(String sourceTable, String targetTable) {
+        if (StringUtils.isNullOrEmpty(sourceTable) || StringUtils.isNullOrEmpty(targetTable)) {
+            throw new InvalidInputException("Source table and target table are required");
+        }
+        storageService.cloneTable(sourceTable, targetTable);
+        return true;
+    }
 }

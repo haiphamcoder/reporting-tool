@@ -7,13 +7,14 @@ package data_processing;
 
 // Data processing service definition
 service DataProcessingService {
-  rpc CreateStorageSource(CreateStorageSourceRequest) returns (CreateStorageSourceResponse);
+  rpc CloneSource(CloneSourceRequest) returns (CloneSourceResponse);
 }
 
-message CreateStorageSourceRequest {
-
+message CloneSourceRequest {
+  string source_table = 1;
+  string target_table = 2;
 }
 
-message CreateStorageSourceResponse {
-  
+message CloneSourceResponse {
+  bool success = 1;
 }

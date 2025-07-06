@@ -12,4 +12,6 @@ public interface RawDataService {
 
     void updateSourceData(Long sourceId, UpdateSourceDataRequest request);
 
+    boolean cloneTable(String sourceTable, String targetTable);
+
 }

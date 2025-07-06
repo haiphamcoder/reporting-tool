@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.haiphamcoder.dataprocessing.domain.dto.Mapping;
 import com.haiphamcoder.dataprocessing.domain.model.GetChartPreviewDataRequest;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
+import com.haiphamcoder.dataprocessing.domain.model.request.CloneSourceRequest;
 import com.haiphamcoder.dataprocessing.domain.model.request.UpdateSourceDataRequest;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SchemaSourceService;
@@ -50,6 +51,15 @@ public class DataProcessingController {
         boolean isSuccess = importDataSourceManager.submit(sourceId, true);
         return ResponseEntity.ok().body(ApiResponse.success(isSuccess, "Source imported successfully"));
     }
+
+    @PostMapping("/sources/clone")
+    public ResponseEntity<ApiResponse<Object>> cloneSource(
+            @CookieValue(value = "user-id", required = true) Long userId,
+            @RequestBody(required = true) CloneSourceRequest request) {
+        boolean isSuccess = rawDataService.cloneTable(request.getSourceTable(), request.getTargetTable());
+        return ResponseEntity.ok().body(ApiResponse.success(isSuccess, "Source cloned successfully"));
+    }
+
 
     @PutMapping("/sources/{id}/data")
     public ResponseEntity<ApiResponse<Object>> updateSourceData(

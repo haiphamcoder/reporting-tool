@@ -149,4 +149,9 @@ public class TidbWriter extends TidbAdapterImpl {
         executeUpdate(sql.toString());
     }
 
+    public void dropTable(String table) throws SQLException {
+        StringBuilder sql = new StringBuilder("DROP TABLE IF EXISTS ").append(table);
+        executeUpdate(sql.toString());
+    }
+
 }
