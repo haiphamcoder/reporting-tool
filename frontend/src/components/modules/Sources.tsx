@@ -276,6 +276,23 @@ export default function Sources() {
         }
     };
 
+    const handleCloneClick = async (row: SourceSummary) => {
+        try {
+            setError(null);
+            setSuccess(null);
+
+            await sourceApi.cloneSource(row.id);
+
+            setSuccess('Source cloned successfully');
+            setShowSuccessPopup(true);
+            fetchSources(metadata.current_page, metadata.page_size, searchTerm);
+        } catch (error) {
+            console.error('Error cloning source:', error);
+            setError(error instanceof Error ? error.message : 'Failed to clone source');
+            setShowErrorPopup(true);
+        }
+    };
+
     const handleAddClick = () => {
         setAddDialogOpen(true);
     };
@@ -650,7 +667,7 @@ export default function Sources() {
                                 <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Edit</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
