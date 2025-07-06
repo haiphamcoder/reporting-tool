@@ -4,7 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { GridColDef } from '@mui/x-data-grid';
 import CustomDataGrid from '../CustomizedDataGrid';
-import { Button, Stack, Alert, CircularProgress, Snackbar } from '@mui/material';
+import { Button, Stack, Alert, CircularProgress, Snackbar, Chip } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -29,12 +29,32 @@ interface PreviewData {
   records: any[];
 }
 
+interface SourceDetail {
+  id: string;
+  name: string;
+  description: string;
+  connector_type: number;
+  table_name?: string;
+  config?: any;
+  mapping?: any[];
+  status: number;
+  last_sync_time?: string;
+  created_at?: string;
+  modified_at?: string;
+  is_deleted?: boolean;
+  is_starred?: boolean;
+  user_id?: string;
+  can_edit?: boolean;
+  can_share?: boolean;
+}
+
 export default function SourceViewDataPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { source_id } = useParams();
   const apiRef = useGridApiRef();
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [sourceDetail, setSourceDetail] = useState<SourceDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -43,7 +63,7 @@ export default function SourceViewDataPage() {
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
-    severity: 'success' | 'error';
+    severity: 'success' | 'error' | 'warning' | 'info';
   }>({ open: false, message: '', severity: 'success' });
   
   // State for edit confirmation dialog
@@ -64,6 +84,36 @@ export default function SourceViewDataPage() {
   const [selectedSearchField, setSelectedSearchField] = useState('');
   const [searchFields, setSearchFields] = useState<Array<{field: string, label: string}>>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Function to fetch source detail
+  const fetchSourceDetail = useCallback(async () => {
+    if (!source_id) return;
+    
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SOURCE_DETAILS.replace(':id', source_id)}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.result) {
+        setSourceDetail(data.result);
+      } else {
+        console.warn('Failed to fetch source detail:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching source detail:', error);
+      // Don't set error state here as it's not critical for the main functionality
+    }
+  }, [source_id]);
 
   // Function to update URL with pagination parameters
   const updateURLWithPagination = useCallback((page: number, size: number, search: string = '', field: string = '') => {
@@ -308,7 +358,10 @@ export default function SourceViewDataPage() {
     }
   }, [location.search, source_id]);
 
-
+  // Fetch source detail when component mounts or source_id changes
+  useEffect(() => {
+    fetchSourceDetail();
+  }, [source_id, fetchSourceDetail]);
 
   // Update search fields when preview data changes
   useEffect(() => {
@@ -348,6 +401,16 @@ export default function SourceViewDataPage() {
 
   // Handle row update (cell edit) with confirmation dialog
   const processRowUpdate = (newRow: any, oldRow: any) => {
+    // Block edit if can_edit is false
+    if (sourceDetail?.can_edit === false) {
+      setSnackbar({
+        open: true,
+        message: 'This source is in view-only mode. Editing is not allowed.',
+        severity: 'warning'
+      });
+      return Promise.reject(oldRow);
+    }
+    
     // Chỉ cho phép 1 cell edit tại 1 thời điểm
     if (editDialog.open) {
       return Promise.reject(oldRow);
@@ -447,7 +510,7 @@ export default function SourceViewDataPage() {
         headerName: key,
         flex: 1,
         minWidth: 150,
-        editable: true,
+        editable: sourceDetail?.can_edit !== false,
       }));
 
     // Create search fields from first record if no schema
@@ -504,6 +567,9 @@ export default function SourceViewDataPage() {
             >
               {source_id}
             </Box>
+            {sourceDetail?.can_edit === false && (
+              <Chip label="View Only" color="warning" size="small" sx={{ ml: 1 }} />
+            )}
           </Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
@@ -618,7 +684,7 @@ export default function SourceViewDataPage() {
     headerName: field.field_name,
     flex: 1,
     minWidth: 150,
-    editable: true,
+    editable: sourceDetail?.can_edit !== false,
   }));
 
   return (
@@ -659,6 +725,9 @@ export default function SourceViewDataPage() {
           >
             {source_id}
           </Box>
+          {sourceDetail?.can_edit === false && (
+            <Chip label="View Only" color="warning" size="small" sx={{ ml: 1 }} />
+          )}
         </Typography>
       </Stack>
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
