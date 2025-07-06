@@ -178,10 +178,16 @@ export default function Charts() {
             }
             const data = await response.json();
             if (data.success) {
-                const processedCharts = data.result.charts.map((chart: any) => ({
-                    ...chart,
-                    id: chart.id.toString()
-                }));
+                const processedCharts = data.result.charts.map((chart: any) => {
+                    console.log('Chart data:', chart); // Debug log
+                    return {
+                        ...chart,
+                        id: chart.id.toString(),
+                        can_edit: chart.can_edit ?? false,
+                        can_share: chart.can_share ?? false
+                    };
+                });
+                console.log('Processed charts:', processedCharts); // Debug log
                 setChartsData(processedCharts);
                 setMetadata(data.result.metadata);
                 setCurrentPage(page);
@@ -232,6 +238,11 @@ export default function Charts() {
     }
 
     const handleEditClick = (row: any) => {
+        if (!row.can_edit) {
+            setError('You do not have permission to edit this chart');
+            setShowErrorPopup(true);
+            return;
+        }
         setChartToEdit(row);
         setEditDialogOpen(true);
     };
@@ -246,6 +257,11 @@ export default function Charts() {
     };
 
     const handleShareClick = (row: ChartSummary) => {
+        if (!row.can_share) {
+            setError('You do not have permission to share this chart');
+            setShowErrorPopup(true);
+            return;
+        }
         setChartToShare(row);
         setShareDialogOpen(true);
     };
@@ -550,6 +566,15 @@ export default function Charts() {
             renderCell: (params: GridRenderCellParams<ChartSummary>) => {
                 const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
                 const open = Boolean(anchorEl);
+                
+                // Debug log để kiểm tra giá trị can_edit và can_share
+                console.log('Row data in actions:', {
+                    id: params.row.id,
+                    name: params.row.name,
+                    can_edit: params.row.can_edit,
+                    can_share: params.row.can_share
+                });
+                
                 const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
                     event.stopPropagation();
                     setAnchorEl(event.currentTarget);
@@ -579,22 +604,26 @@ export default function Charts() {
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                            <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Edit</ListItemText>
-                            </MenuItem>
+                            {params.row.can_edit && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Edit</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Share</ListItemText>
-                            </MenuItem>
+                            {params.row.can_share && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Share</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-                                <ListItemText>Delete</ListItemText>
-                            </MenuItem>
+                                    <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
+                                    <ListItemText>Delete</ListItemText>
+                                </MenuItem>
                         </Menu>
                     </Box>
                 );
