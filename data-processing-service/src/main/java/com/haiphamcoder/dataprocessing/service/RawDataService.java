@@ -6,7 +6,7 @@ import com.haiphamcoder.dataprocessing.domain.model.request.UpdateSourceDataRequ
 
 public interface RawDataService {
 
-    PreviewData previewSource(Long sourceId, Integer page, Integer limit);
+    PreviewData previewSource(Long sourceId, String search, String searchBy, Integer page, Integer limit);
 
     PreviewData getChartPreviewData(GetChartPreviewDataRequest request, Integer page, Integer limit);
 

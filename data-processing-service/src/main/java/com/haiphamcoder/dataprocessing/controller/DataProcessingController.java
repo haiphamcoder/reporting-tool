@@ -65,9 +65,11 @@ public class DataProcessingController {
     public ResponseEntity<ApiResponse<Object>> previewSource(
             @CookieValue(value = "user-id", required = true) Long userId,
             @PathVariable("id") Long sourceId,
+            @RequestParam(value = "search", required = false, defaultValue = "") String search,
+            @RequestParam(value = "search-by", required = false) String searchBy,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "limit", defaultValue = "10") Integer limit) {
-        PreviewData previewData = rawDataService.previewSource(sourceId, page, limit);
+        PreviewData previewData = rawDataService.previewSource(sourceId, search, searchBy, page, limit);
         return ResponseEntity.ok().body(ApiResponse.success(previewData, "Source previewed successfully"));
     }
 

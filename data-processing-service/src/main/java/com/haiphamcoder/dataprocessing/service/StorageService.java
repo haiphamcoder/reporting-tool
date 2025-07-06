@@ -14,7 +14,7 @@ public interface StorageService {
 
     List<Mapping> createStorageSource(SourceDto sourceDto);
 
-    List<JSONObject> getPreviewData(SourceDto sourceDto, Integer page, Integer limit);
+    List<JSONObject> getPreviewData(SourceDto sourceDto, String search, String searchBy, Integer page, Integer limit);
 
     List<JSONObject> getPreviewDataByQuery(String sqlQuery);
 
