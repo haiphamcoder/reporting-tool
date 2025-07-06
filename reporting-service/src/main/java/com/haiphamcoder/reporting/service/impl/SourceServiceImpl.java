@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,9 +20,11 @@ import com.haiphamcoder.reporting.service.HdfsFileService;
 import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.SourceDto.UserSourcePermission;
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
+import com.haiphamcoder.reporting.domain.enums.SourcePermissionType;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
@@ -338,31 +341,47 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
+    public List<UserSourcePermission> getShareSource(Long userId, Long sourceId) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isEmpty()) {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!Objects.equals(source.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to get share source");
+        }
+        List<SourcePermission> sourcePermissions = sourcePermissionRepository.getSourcePermissionsBySourceId(sourceId);
+        return sourcePermissions.stream().map(sourcePermission -> {
+            UserDto userDto = userGrpcClient.getUserById(sourcePermission.getUserId());
+            return UserSourcePermission.builder()
+                    .userId(String.valueOf(sourcePermission.getUserId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .permission(SourcePermissionType.fromValue(sourcePermission.getPermission()))
+                    .build();
+        }).toList();
+    }
+
+    @Override
     public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
-        if (source.isPresent()) {
-            Source sourceEntity = source.get();
-            if (sourceEntity.getUserId().longValue() != userId.longValue()) {
-                throw new ForbiddenException("You are not allowed to share this source");
-            }
-            for (ShareSourceRequest.UserSourcePermission userSourcePermission : shareSourceRequest
-                    .getUserSourcePermissions()) {
-                Optional<SourcePermission> existingSourcePermission = sourcePermissionRepository
-                        .getSourcePermissionBySourceIdAndUserId(sourceEntity.getId(), userSourcePermission.getUserId());
-                if (existingSourcePermission.isPresent()) {
-                    existingSourcePermission.get().setPermission(userSourcePermission.getPermission().getValue());
-                    sourcePermissionRepository.saveSourcePermission(existingSourcePermission.get());
-                } else {
-                    SourcePermission sourcePermission = SourcePermission.builder()
-                            .sourceId(sourceEntity.getId())
-                            .userId(userSourcePermission.getUserId())
-                            .permission(userSourcePermission.getPermission().getValue())
-                            .build();
-                    sourcePermissionRepository.createSourcePermission(sourcePermission);
-                }
-            }
-        } else {
+        if (source.isEmpty()) {
             throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!Objects.equals(source.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to share this source");
+        }
+        sourcePermissionRepository.deleteAllSourcePermissionsBySourceId(sourceId);
+        for (UserSourcePermission userSourcePermission : shareSourceRequest.getUserSourcePermissions()) {
+            if (String.valueOf(userId).equals(userSourcePermission.getUserId())) {
+                continue;
+            }
+            SourcePermission sourcePermission = SourcePermission.builder()
+                    .sourceId(source.get().getId())
+                    .userId(Long.parseLong(userSourcePermission.getUserId()))
+                    .permission(userSourcePermission.getPermission().getValue())
+                    .build();
+            sourcePermissionRepository.saveSourcePermission(sourcePermission);
         }
     }
 

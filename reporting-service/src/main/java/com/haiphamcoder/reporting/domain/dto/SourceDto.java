@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.haiphamcoder.reporting.domain.enums.SourcePermissionType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -71,6 +72,31 @@ public class SourceDto {
 
     @JsonProperty("can_share")
     private Boolean canShare;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UserSourcePermission {
+
+        @JsonProperty("id")
+        private String userId;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
+
+        @JsonProperty("permission")
+        private SourcePermissionType permission;
+
+    }
 
     @Data
     @Builder

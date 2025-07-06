@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.SourceDto.UserSourcePermission;
 import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
@@ -69,6 +70,13 @@ public class SourceController {
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
+    }
+
+    @GetMapping("/{source-id}/share")
+    public ResponseEntity<ApiResponse<Object>> getShare(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId) {
+        List<UserSourcePermission> shareSource = sourceService.getShareSource(userId, sourceId);
+        return ResponseEntity.ok(ApiResponse.success(shareSource, "Share source fetched successfully"));
     }
 
     @PostMapping("/{source-id}/share")
