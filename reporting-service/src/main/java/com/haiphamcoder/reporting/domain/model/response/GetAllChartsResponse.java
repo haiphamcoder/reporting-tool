@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.haiphamcoder.reporting.domain.dto.ChartDto.ChartConfig;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.Owner;
 
 import lombok.AllArgsConstructor;
@@ -50,6 +51,9 @@ public class GetAllChartsResponse {
 
         @JsonProperty("type")
         private String type;
+
+        @JsonProperty("config")
+        private ChartConfig config;
 
         @JsonProperty("can_edit")
         private Boolean canEdit;

@@ -246,6 +246,9 @@ public class ReportDto {
                 @JsonProperty("chart_id")
                 private String chartId;
 
+                @JsonProperty("chart")
+                private ChartDto chart;
+
             }
 
         }

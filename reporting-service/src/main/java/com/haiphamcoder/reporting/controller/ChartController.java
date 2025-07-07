@@ -45,6 +45,7 @@ public class ChartController {
                         .description(chart.getDescription())
                         .owner(chart.getOwner())
                         .type(chart.getConfig().getType().getValue())
+                        .config(chart.getConfig())
                         .canEdit(chart.getCanEdit())
                         .canShare(chart.getCanShare())
                         .createdAt(chart.getCreatedAt())

@@ -703,7 +703,18 @@ const ReportViewPage: React.FC = () => {
                     </Button>
                 </Stack>
             </Stack>
-            <Box ref={reportContentRef} sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+            <Box 
+                ref={reportContentRef} 
+                sx={{ 
+                    mt: 2, 
+                    p: editMode ? 2 : 0, 
+                    border: editMode ? '1px solid' : 'none', 
+                    borderColor: 'divider', 
+                    borderRadius: editMode ? 2 : 0,
+                    background: editMode ? 'transparent' : 'white',
+                    minHeight: 200
+                }}
+            >
                 {loading ? (
                     <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
                         <CircularProgress />
@@ -750,7 +761,20 @@ const ReportViewPage: React.FC = () => {
                                     <Alert severity="info">No content in this report.</Alert>
                                 )
                             ) : (
-                                <Stack gap={2}>
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    flexDirection: 'column',
+                                    gap: editMode ? 2 : 0,
+                                    '& > *:first-of-type': editMode ? {} : {
+                                        pt: 1.5
+                                    },
+                                    '& > *:not(:last-child)': editMode ? {} : {
+                                        borderBottom: '1px solid',
+                                        borderColor: 'divider',
+                                        pb: 1.5,
+                                        mb: 1.5
+                                    }
+                                }}>
                                     {blocks.map((block, idx) => (
                                         <Box key={block.id}>
                                             {editMode && (
@@ -766,9 +790,15 @@ const ReportViewPage: React.FC = () => {
                                                 </Stack>
                                             )}
                                             {block.type === 'chart' ? (
-                                                <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
-                                                    <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
-                                                </Paper>
+                                                editMode ? (
+                                                    <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
+                                                        <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
+                                                    </Paper>
+                                                ) : (
+                                                    <Box sx={{ py: 1 }} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
+                                                        <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
+                                                    </Box>
+                                                )
                                             ) : block.type === 'text' ? (
                                                 editingBlockId === block.id && editMode ? (
                                                     <TextBlockEditor
@@ -783,31 +813,55 @@ const ReportViewPage: React.FC = () => {
                                                         autoFocus
                                                     />
                                                 ) : (
-                                                    <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
-                                                        <Typography 
-                                                            variant="body1" 
-                                                            style={{ 
-                                                                whiteSpace: 'pre-line',
-                                                                textAlign: (block.content as any).format?.text_align || 'left',
-                                                                fontSize: (block.content as any).format?.font_size ? `${(block.content as any).format.font_size}px` : undefined,
-                                                                fontWeight: (block.content as any).format?.font_weight || 'normal',
-                                                                fontStyle: (block.content as any).format?.font_style || 'normal',
-                                                                color: (block.content as any).format?.color,
-                                                                backgroundColor: (block.content as any).format?.background_color,
-                                                                textDecoration: [
-                                                                    (block.content as any).format?.underline ? 'underline' : '',
-                                                                    (block.content as any).format?.strikethrough ? 'line-through' : ''
-                                                                ].filter(Boolean).join(' ') || 'none'
-                                                            }}
-                                                        >
-                                                            {(block.content as import('../../types/report').TextBlockContent).text}
-                                                        </Typography>
-                                                    </Paper>
+                                                    editMode ? (
+                                                        <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
+                                                            <Typography 
+                                                                variant="body1" 
+                                                                style={{ 
+                                                                    whiteSpace: 'pre-line',
+                                                                    textAlign: (block.content as any).format?.text_align || 'left',
+                                                                    fontSize: (block.content as any).format?.font_size ? `${(block.content as any).format.font_size}px` : undefined,
+                                                                    fontWeight: (block.content as any).format?.font_weight || 'normal',
+                                                                    fontStyle: (block.content as any).format?.font_style || 'normal',
+                                                                    color: (block.content as any).format?.color,
+                                                                    backgroundColor: (block.content as any).format?.background_color,
+                                                                    textDecoration: [
+                                                                        (block.content as any).format?.underline ? 'underline' : '',
+                                                                        (block.content as any).format?.strikethrough ? 'line-through' : ''
+                                                                    ].filter(Boolean).join(' ') || 'none'
+                                                                }}
+                                                            >
+                                                                {(block.content as import('../../types/report').TextBlockContent).text}
+                                                            </Typography>
+                                                        </Paper>
+                                                    ) : (
+                                                        <Box sx={{ py: 1 }}>
+                                                            <Typography 
+                                                                variant="body1" 
+                                                                sx={{
+                                                                    whiteSpace: 'pre-line',
+                                                                    textAlign: (block.content as any).format?.text_align || 'left',
+                                                                    fontSize: (block.content as any).format?.font_size ? `${(block.content as any).format.font_size}px` : undefined,
+                                                                    fontWeight: (block.content as any).format?.font_weight || 'normal',
+                                                                    fontStyle: (block.content as any).format?.font_style || 'normal',
+                                                                    color: (block.content as any).format?.color,
+                                                                    backgroundColor: (block.content as any).format?.background_color,
+                                                                    textDecoration: [
+                                                                        (block.content as any).format?.underline ? 'underline' : '',
+                                                                        (block.content as any).format?.strikethrough ? 'line-through' : ''
+                                                                    ].filter(Boolean).join(' ') || 'none',
+                                                                    lineHeight: 1.6
+                                                                }}
+                                                            >
+                                                                {(block.content as import('../../types/report').TextBlockContent).text}
+                                                            </Typography>
+                                                        </Box>
+                                                    )
                                                 )
                                             ) : null}
                                         </Box>
                                     ))}
-                                </Stack>
+                                </Box>
                             )}
                         </Box>
                     </>

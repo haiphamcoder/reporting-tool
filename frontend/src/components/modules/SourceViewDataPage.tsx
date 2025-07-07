@@ -140,10 +140,6 @@ export default function SourceViewDataPage() {
     navigate(newPath, { replace: true });
   }, [source_id, navigate]);
 
-
-
-
-
   // Memoize URL parameters to avoid unnecessary re-renders
   const urlParams = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -370,7 +366,7 @@ export default function SourceViewDataPage() {
         .filter((field: Schema) => field.field_mapping !== '_id_')
         .map((field: Schema) => ({
           field: field.field_mapping,
-          label: field.field_name
+          label: field.field_mapping
         }));
       setSearchFields(fields);
       
@@ -681,7 +677,7 @@ export default function SourceViewDataPage() {
 
   const columns: GridColDef[] = displaySchema.map((field: Schema) => ({
     field: field.field_mapping,
-    headerName: field.field_name,
+    headerName: field.field_mapping,
     flex: 1,
     minWidth: 150,
     editable: sourceDetail?.can_edit !== false,
