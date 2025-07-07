@@ -556,18 +556,22 @@ export default function Reports() {
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                            <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Edit</ListItemText>
-                            </MenuItem>
+                            {params.row.can_edit && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Edit</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
-                                <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Share</ListItemText>
-                            </MenuItem>
+                            {params.row.can_share && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                                    <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Share</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
                                 <ListItemText>Delete</ListItemText>

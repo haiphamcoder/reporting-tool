@@ -11,11 +11,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.entity.ReportPermission;
+import com.haiphamcoder.reporting.domain.enums.ReportPermissionType;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
@@ -166,29 +168,48 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void shareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest) {
+    public List<UserReportPermission> getShareReport(Long userId, Long reportId) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        if (report.get().getUserId() != userId) {
+        if (!Objects.equals(report.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to get share report");
+        }
+        List<ReportPermission> reportPermissions = reportPermissionRepository
+                .getAllReportPermissionsByReportId(reportId);
+        return reportPermissions.stream().map(reportPermission -> {
+            UserDto userDto = userGrpcClient.getUserById(reportPermission.getUserId());
+            return UserReportPermission.builder()
+                    .userId(String.valueOf(reportPermission.getUserId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .permission(ReportPermissionType.fromValue(reportPermission.getPermission()))
+                    .build();
+        }).toList();
+    }
+
+    @Override
+    public void updateShareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest) {
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        if (!Objects.equals(report.get().getUserId(), userId)) {
             throw new ForbiddenException("You are not allowed to share this report");
         }
-        for (ShareReportRequest.UserReportPermission userReportPermission : shareReportRequest
-                .getUserReportPermissions()) {
-            Optional<ReportPermission> existingReportPermission = reportPermissionRepository
-                    .getReportPermissionByReportIdAndUserId(report.get().getId(), userReportPermission.getUserId());
-            if (existingReportPermission.isPresent()) {
-                existingReportPermission.get().setPermission(userReportPermission.getPermission().getValue());
-                reportPermissionRepository.saveReportPermission(existingReportPermission.get());
-            } else {
-                ReportPermission reportPermission = ReportPermission.builder()
-                        .reportId(report.get().getId())
-                        .userId(userReportPermission.getUserId())
-                        .permission(userReportPermission.getPermission().getValue())
-                        .build();
-                reportPermissionRepository.saveReportPermission(reportPermission);
+        reportPermissionRepository.deleteAllReportPermissionsByReportId(reportId);
+        for (UserReportPermission userReportPermission : shareReportRequest.getUserReportPermissions()) {
+            if (String.valueOf(userId).equals(userReportPermission.getUserId())) {
+                continue;
             }
+            ReportPermission reportPermission = ReportPermission.builder()
+                    .reportId(report.get().getId())
+                    .userId(Long.parseLong(userReportPermission.getUserId()))
+                    .permission(userReportPermission.getPermission().getValue())
+                    .build();
+            reportPermissionRepository.saveReportPermission(reportPermission);
         }
     }
 

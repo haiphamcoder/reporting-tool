@@ -3,6 +3,7 @@ package com.haiphamcoder.reporting.service;
 import java.util.List;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -22,7 +23,9 @@ public interface ReportService {
 
     void addChartToReport(Long userId, Long reportId, Long chartId);
 
-    void shareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest);
+    List<UserReportPermission> getShareReport(Long userId, Long reportId);
+
+    void updateShareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest);
 
     ReportDto cloneReport(Long userId, Long reportId);
 

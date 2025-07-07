@@ -376,8 +376,13 @@ const ReportViewPage: React.FC = () => {
         if (report) {
             const b = getBlocks(report);
             setBlocks(b);
+            
+            // If user doesn't have edit permission, ensure edit mode is disabled
+            if (report.can_edit === false && editMode) {
+                setEditMode(false);
+            }
         }
-    }, [report]);
+    }, [report, editMode]);
 
     const handleBack = () => {
         navigate('/dashboard/reports');
@@ -670,10 +675,12 @@ const ReportViewPage: React.FC = () => {
             </Stack>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Stack direction="row" alignItems="flex-start" gap={1}>
-                    <Button variant={editMode ? 'outlined' : 'contained'} onClick={() => setEditMode(e => !e)}>
-                        {editMode ? 'View Mode' : 'Edit Mode'}
-                    </Button>
-                    {editMode && (
+                    {report?.can_edit && (
+                        <Button variant={editMode ? 'outlined' : 'contained'} onClick={() => setEditMode(e => !e)}>
+                            {editMode ? 'View Mode' : 'Edit Mode'}
+                        </Button>
+                    )}
+                    {editMode && report?.can_edit && (
                         <Button
                             variant="contained"
                             color="primary"
@@ -693,25 +700,27 @@ const ReportViewPage: React.FC = () => {
                     >
                         Refresh
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={() => setAddChartDialogOpen(true)}
-                    >
-                        Add Chart
-                    </Button>
+                    {report?.can_edit && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={() => setAddChartDialogOpen(true)}
+                        >
+                            Add Chart
+                        </Button>
+                    )}
                 </Stack>
             </Stack>
             <Box 
                 ref={reportContentRef} 
                 sx={{ 
                     mt: 2, 
-                    p: editMode ? 2 : 0, 
-                    border: editMode ? '1px solid' : 'none', 
+                    p: editMode && report?.can_edit !== false ? 2 : 0, 
+                    border: editMode && report?.can_edit !== false ? '1px solid' : 'none', 
                     borderColor: 'divider', 
-                    borderRadius: editMode ? 2 : 0,
-                    background: editMode ? 'transparent' : 'white',
+                    borderRadius: editMode && report?.can_edit !== false ? 2 : 0,
+                    background: editMode && report?.can_edit !== false ? 'transparent' : 'white',
                     minHeight: 200
                 }}
             >
@@ -725,7 +734,7 @@ const ReportViewPage: React.FC = () => {
                     <>
                         <Box>
                             {blocks.length === 0 ? (
-                                editMode ? (
+                                editMode && report?.can_edit !== false ? (
                                     <Box sx={{ textAlign: 'center', py: 4 }}>
                                         <Typography variant="body1" color="text.secondary" mb={2}>
                                             No content in this report. Add your first block to get started.
@@ -764,11 +773,11 @@ const ReportViewPage: React.FC = () => {
                                 <Box sx={{ 
                                     display: 'flex', 
                                     flexDirection: 'column',
-                                    gap: editMode ? 2 : 0,
-                                    '& > *:first-of-type': editMode ? {} : {
+                                    gap: editMode && report?.can_edit !== false ? 2 : 0,
+                                    '& > *:first-of-type': editMode && report?.can_edit !== false ? {} : {
                                         pt: 1.5
                                     },
-                                    '& > *:not(:last-child)': editMode ? {} : {
+                                    '& > *:not(:last-child)': editMode && report?.can_edit !== false ? {} : {
                                         borderBottom: '1px solid',
                                         borderColor: 'divider',
                                         pb: 1.5,
@@ -777,7 +786,7 @@ const ReportViewPage: React.FC = () => {
                                 }}>
                                     {blocks.map((block, idx) => (
                                         <Box key={block.id}>
-                                            {editMode && (
+                                            {editMode && report?.can_edit !== false && (
                                                 <Stack direction="row" gap={1} mb={1}>
                                                     <Button size="small" onClick={e => handleAddBlockClick(e, idx - 1)}>Add block above</Button>
                                                     <Button size="small" onClick={e => handleAddBlockClick(e, idx)}>Add block below</Button>
@@ -790,7 +799,7 @@ const ReportViewPage: React.FC = () => {
                                                 </Stack>
                                             )}
                                             {block.type === 'chart' ? (
-                                                editMode ? (
+                                                editMode && report?.can_edit !== false ? (
                                                     <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
                                                         <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
                                                     </Paper>
@@ -813,7 +822,7 @@ const ReportViewPage: React.FC = () => {
                                                         autoFocus
                                                     />
                                                 ) : (
-                                                    editMode ? (
+                                                    editMode && report?.can_edit !== false ? (
                                                         <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
                                                             <Typography 
                                                                 variant="body1" 

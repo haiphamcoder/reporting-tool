@@ -4,6 +4,8 @@ export interface ReportSummary {
     description: string;
     updated_at: string;
     created_at: string;
+    can_edit?: boolean;
+    can_share?: boolean;
     owner?: {
         id: string;
         name: string;
@@ -54,4 +56,6 @@ export interface ReportDetail {
     is_deleted: boolean;
     created_at: string;
     modified_at: string;
+    can_edit?: boolean;
+    can_share?: boolean;
 }

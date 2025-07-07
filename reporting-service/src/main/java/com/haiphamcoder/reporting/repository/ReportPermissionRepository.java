@@ -12,6 +12,8 @@ public interface ReportPermissionRepository {
 
     List<ReportPermission> getAllReportPermissionsByUserId(Long userId);
 
+    List<ReportPermission> getAllReportPermissionsByReportId(Long reportId);
+
     void deleteAllReportPermissionsByReportIdAndUserId(Long reportId, Long userId);
 
     void deleteAllReportPermissionsByReportId(Long reportId);

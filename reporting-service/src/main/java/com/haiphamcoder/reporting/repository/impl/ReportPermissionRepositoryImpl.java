@@ -24,6 +24,8 @@ interface ReportPermissionJpaRepository extends JpaRepository<ReportPermission, 
     void deleteAllByReportIdAndUserId(Long reportId, Long userId);
 
     void deleteAllByReportId(Long reportId);
+
+    List<ReportPermission> findAllByReportId(Long reportId);
 }
 
 @Component
@@ -46,6 +48,11 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
     @Override
     public List<ReportPermission> getAllReportPermissionsByUserId(Long userId) {
         return reportPermissionJpaRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    public List<ReportPermission> getAllReportPermissionsByReportId(Long reportId) {
+        return reportPermissionJpaRepository.findAllByReportId(reportId);
     }
 
     @Override

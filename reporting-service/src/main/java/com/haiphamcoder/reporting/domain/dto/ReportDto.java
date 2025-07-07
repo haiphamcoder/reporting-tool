@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.haiphamcoder.reporting.domain.enums.ReportPermissionType;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,6 +60,31 @@ public class ReportDto {
     @JsonProperty("modified_at")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime modifiedAt;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UserReportPermission {
+
+        @JsonProperty("id")
+        private String userId;
+
+        @JsonProperty("name")
+        private String name;
+
+        @JsonProperty("email")
+        private String email;
+
+        @JsonProperty("avatar")
+        private String avatar;
+
+        @JsonProperty("permission")
+        private ReportPermissionType permission;
+
+    }
 
     @Data
     @Builder
