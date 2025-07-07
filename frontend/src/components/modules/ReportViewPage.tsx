@@ -675,12 +675,12 @@ const ReportViewPage: React.FC = () => {
             </Stack>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Stack direction="row" alignItems="flex-start" gap={1}>
-                    {report?.can_edit && (
+                    {report?.can_edit !== false && (
                         <Button variant={editMode ? 'outlined' : 'contained'} onClick={() => setEditMode(e => !e)}>
                             {editMode ? 'View Mode' : 'Edit Mode'}
                         </Button>
                     )}
-                    {editMode && report?.can_edit && (
+                    {editMode && report?.can_edit !== false && (
                         <Button
                             variant="contained"
                             color="primary"
@@ -700,16 +700,6 @@ const ReportViewPage: React.FC = () => {
                     >
                         Refresh
                     </Button>
-                    {report?.can_edit && (
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            startIcon={<AddIcon />}
-                            onClick={() => setAddChartDialogOpen(true)}
-                        >
-                            Add Chart
-                        </Button>
-                    )}
                 </Stack>
             </Stack>
             <Box 
@@ -766,8 +756,10 @@ const ReportViewPage: React.FC = () => {
                                             </Button>
                                         </Stack>
                                     </Box>
+                                ) : report?.can_edit === false ? (
+                                    <Alert severity="info">No content in this report. You don't have permission to edit this report.</Alert>
                                 ) : (
-                                    <Alert severity="info">No content in this report.</Alert>
+                                    <Alert severity="info">No content in this report. Switch to Edit Mode to add content.</Alert>
                                 )
                             ) : (
                                 <Box sx={{ 

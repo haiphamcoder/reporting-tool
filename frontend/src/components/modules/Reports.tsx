@@ -21,12 +21,12 @@ import CardAlert from '../CardAlert';
 import { Box, CircularProgress } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import { ReportSummary } from '../../types/report';
-import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddReportDialog from '../dialogs/AddReportDialog';
 import EditReportDialog from '../dialogs/EditReportDialog';
 import Search from '../Search';
 import { useAuth } from '../../context/AuthContext';
+import { cloneReport, getReports, deleteReport, getReportDetail } from '../../api/report';
 
 interface ReportsMetadata {
     total_elements: number;
@@ -149,29 +149,7 @@ export default function Reports() {
             setLoading(true);
             setError(null);
             
-            const params = new URLSearchParams();
-            params.append('page', page.toString());
-            params.append('limit', pageSize.toString());
-            if (search.trim()) {
-                params.append('search', search.trim());
-            }
-            
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}?${params.toString()}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch reports');
-            }
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new TypeError("Response was not JSON");
-            }
-            const data = await response.json();
+            const data = await getReports(page, pageSize, search);
             if (data.success) {
                 const processedReports = data.result.reports.map((report: any) => ({
                     ...report,
@@ -228,15 +206,8 @@ export default function Reports() {
     const handleEditClick = async (row: any) => {
         try {
             // Fetch the full report details including charts
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}`, {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Failed to fetch report details');
-            }
-            
-            setReportToEdit(data.result);
+            const data = await getReportDetail(row.id);
+            setReportToEdit(data);
             setEditDialogOpen(true);
         } catch (err: any) {
             setError(err.message || 'Failed to fetch report details');
@@ -258,20 +229,7 @@ export default function Reports() {
             setError(null);
             setSuccess(null);
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}/clone`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await cloneReport(row.id);
 
             if (data.success) {
                 setSuccess('Report cloned successfully');
@@ -295,20 +253,7 @@ export default function Reports() {
             setError(null);
             setSuccess(null);
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${reportToDelete.id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await deleteReport(reportToDelete.id);
 
             if (data.success) {
                 setSuccess('Report deleted successfully');
@@ -317,12 +262,12 @@ export default function Reports() {
                 setReportToDelete(null);
                 fetchReports(metadata.current_page, metadata.page_size, searchTerm);
             } else {
-                setError(data.message || 'Failed to delete source');
+                setError(data.message || 'Failed to delete report');
                 setShowErrorPopup(true);
             }
         } catch (error) {
-            console.error('Error deleting source:', error);
-            setError(error instanceof Error ? error.message : 'Failed to delete source');
+            console.error('Error deleting report:', error);
+            setError(error instanceof Error ? error.message : 'Failed to delete report');
             setShowErrorPopup(true);
         }
     };

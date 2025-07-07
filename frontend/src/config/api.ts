@@ -27,6 +27,7 @@ export const API_CONFIG = {
         CHARTS: '/reporting/charts',
         CHARTS_CLONE: '/reporting/charts/:id/clone',
         REPORTS: '/reporting/reports',
+        REPORTS_CLONE: '/reporting/reports/:id/clone',
         USER_MANAGEMENT: '/user-management',
         NOTIFICATIONS: '/integrated/notifications'
     }
