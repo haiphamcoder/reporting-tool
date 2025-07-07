@@ -2,9 +2,10 @@ export interface ReportSummary {
     id: string;
     name: string;
     description: string;
-    number_of_charts: number;
     updated_at: string;
     created_at: string;
+    can_edit?: boolean;
+    can_share?: boolean;
     owner?: {
         id: string;
         name: string;
@@ -42,13 +43,19 @@ export interface ReportBlock {
     content: TextBlockContent | ChartBlockContent;
 }
 
+export interface ReportConfig {
+    blocks: ReportBlock[];
+}
+
 export interface ReportDetail {
     id: string;
     name: string;
     user_id: string;
     description: string;
-    blocks: ReportBlock[];
+    config: ReportConfig;
     is_deleted: boolean;
     created_at: string;
     modified_at: string;
+    can_edit?: boolean;
+    can_share?: boolean;
 }

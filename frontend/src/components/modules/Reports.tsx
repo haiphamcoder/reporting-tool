@@ -21,12 +21,13 @@ import CardAlert from '../CardAlert';
 import { Box, CircularProgress } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import { ReportSummary } from '../../types/report';
-import { API_CONFIG } from '../../config/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddReportDialog from '../dialogs/AddReportDialog';
 import EditReportDialog from '../dialogs/EditReportDialog';
+import ShareReportDialog from '../dialogs/ShareReportDialog';
 import Search from '../Search';
 import { useAuth } from '../../context/AuthContext';
+import { cloneReport, getReports, deleteReport, getReportDetail } from '../../api/report';
 
 interface ReportsMetadata {
     total_elements: number;
@@ -66,6 +67,10 @@ export default function Reports() {
     // Edit Report dialog state
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [reportToEdit, setReportToEdit] = useState<any>(null);
+    
+    // Share Report dialog state
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [reportToShare, setReportToShare] = useState<ReportSummary | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -149,29 +154,7 @@ export default function Reports() {
             setLoading(true);
             setError(null);
             
-            const params = new URLSearchParams();
-            params.append('page', page.toString());
-            params.append('limit', pageSize.toString());
-            if (search.trim()) {
-                params.append('search', search.trim());
-            }
-            
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}?${params.toString()}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch reports');
-            }
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new TypeError("Response was not JSON");
-            }
-            const data = await response.json();
+            const data = await getReports(page, pageSize, search);
             if (data.success) {
                 const processedReports = data.result.reports.map((report: any) => ({
                     ...report,
@@ -228,15 +211,8 @@ export default function Reports() {
     const handleEditClick = async (row: any) => {
         try {
             // Fetch the full report details including charts
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}`, {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Failed to fetch report details');
-            }
-            
-            setReportToEdit(data.result);
+            const data = await getReportDetail(row.id);
+            setReportToEdit(data);
             setEditDialogOpen(true);
         } catch (err: any) {
             setError(err.message || 'Failed to fetch report details');
@@ -258,20 +234,7 @@ export default function Reports() {
             setError(null);
             setSuccess(null);
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${row.id}/clone`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await cloneReport(row.id);
 
             if (data.success) {
                 setSuccess('Report cloned successfully');
@@ -288,6 +251,11 @@ export default function Reports() {
         }
     };
 
+    const handleShareClick = (row: ReportSummary) => {
+        setReportToShare(row);
+        setShareDialogOpen(true);
+    };
+
     const handleDeleteConfirm = async () => {
         if (!reportToDelete) return;
 
@@ -295,20 +263,7 @@ export default function Reports() {
             setError(null);
             setSuccess(null);
 
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${reportToDelete.id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await deleteReport(reportToDelete.id);
 
             if (data.success) {
                 setSuccess('Report deleted successfully');
@@ -317,12 +272,12 @@ export default function Reports() {
                 setReportToDelete(null);
                 fetchReports(metadata.current_page, metadata.page_size, searchTerm);
             } else {
-                setError(data.message || 'Failed to delete source');
+                setError(data.message || 'Failed to delete report');
                 setShowErrorPopup(true);
             }
         } catch (error) {
-            console.error('Error deleting source:', error);
-            setError(error instanceof Error ? error.message : 'Failed to delete source');
+            console.error('Error deleting report:', error);
+            setError(error instanceof Error ? error.message : 'Failed to delete report');
             setShowErrorPopup(true);
         }
     };
@@ -421,44 +376,6 @@ export default function Reports() {
                     </Stack>
                 );
             }
-        },
-        {
-            field: 'number_of_charts',
-            headerName: 'Number of Charts',
-            flex: 0.6,
-            minWidth: 100,
-            headerAlign: 'center',
-            align: 'center',
-            renderCell: (params: GridRenderCellParams<ReportSummary>) => (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        height: '100%',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <Box
-                        component="span"
-                        sx={{
-                            color: 'success.main',
-                            border: '1.5px solid',
-                            borderColor: 'success.light',
-                            backgroundColor: 'white',
-                            borderRadius: '12px',
-                            px: 1,
-                            py: 0.5,
-                            fontWeight: 600,
-                            fontSize: '0.75rem',
-                            minWidth: 50,
-                            textAlign: 'center',
-                            lineHeight: 1.2,
-                        }}
-                    >
-                        {params.value}
-                    </Box>
-                </Box>
-            ),
         },
         { 
             field: 'updated_at', 
@@ -594,18 +511,22 @@ export default function Reports() {
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                            <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Edit</ListItemText>
-                            </MenuItem>
+                            {params.row.can_edit && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Edit</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
-                                <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Share</ListItemText>
-                            </MenuItem>
+                            {params.row.can_share && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Share</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
                                 <ListItemText>Delete</ListItemText>
@@ -758,6 +679,19 @@ export default function Reports() {
                     setShowSuccessPopup(true);
                 }}
                 report={reportToEdit}
+            />
+
+            <ShareReportDialog
+                open={shareDialogOpen}
+                onClose={() => setShareDialogOpen(false)}
+                reportId={reportToShare?.id || ''}
+                reportName={reportToShare?.name}
+                onSuccess={(message) => {
+                    setShareDialogOpen(false);
+                    setReportToShare(null);
+                    setSuccess(message);
+                    setShowSuccessPopup(true);
+                }}
             />
         </Stack>
     );

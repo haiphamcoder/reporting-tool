@@ -16,5 +16,9 @@ public interface SourcePermissionRepository {
     SourcePermission saveSourcePermission(SourcePermission sourcePermission);
 
     List<SourcePermission> getAllSourcePermissionsByUserId(Long userId);
+
+    void deleteAllSourcePermissionsBySourceIdAndUserId(Long sourceId, Long userId);
+
+    void deleteAllSourcePermissionsBySourceId(Long sourceId);
     
 }

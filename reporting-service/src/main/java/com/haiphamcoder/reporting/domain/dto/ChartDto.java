@@ -54,6 +54,12 @@ public class ChartDto {
     @JsonProperty("owner")
     private Owner owner;
 
+    @JsonProperty("can_edit")
+    private Boolean canEdit;
+
+    @JsonProperty("can_share")
+    private Boolean canShare;
+
     @Data
     @Builder
     @NoArgsConstructor

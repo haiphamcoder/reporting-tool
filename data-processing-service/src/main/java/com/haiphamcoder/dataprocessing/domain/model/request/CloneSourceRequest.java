@@ -1,11 +1,8 @@
-package com.haiphamcoder.reporting.domain.model.request;
-
-import java.util.List;
+package com.haiphamcoder.dataprocessing.domain.model.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +15,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ShareReportRequest {
+public class CloneSourceRequest {
 
-    @JsonProperty("users")
-    private List<UserReportPermission> userReportPermissions;
+    @JsonProperty("source_table")
+    private String sourceTable;
+
+    @JsonProperty("target_table")
+    private String targetTable;
 
 }

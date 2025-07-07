@@ -11,20 +11,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.entity.ReportPermission;
+import com.haiphamcoder.reporting.domain.enums.ReportPermissionType;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceNotFoundException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ReportPersistenceException;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
-import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
-import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
@@ -58,11 +58,7 @@ public class ReportServiceImpl implements ReportService {
         Set<Long> reportIds = reportPermissions.stream().map(ReportPermission::getReportId).collect(Collectors.toSet());
         Page<Report> reports = reportRepository.getReportsByUserIdOrReportId(userId, reportIds, search, page, limit);
         return new Pair<>(reports.stream().map(report -> {
-            List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(report.getId());
-            List<Chart> charts = chartReports.stream()
-                    .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
             ReportDto reportDto = ReportMapper.toReportDto(report);
-            reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
             UserDto userDto = userGrpcClient.getUserById(report.getUserId());
             reportDto.setOwner(ReportDto.Owner.builder()
                     .id(String.valueOf(userDto.getId()))
@@ -70,6 +66,9 @@ public class ReportServiceImpl implements ReportService {
                     .email(userDto.getEmail())
                     .avatar(userDto.getAvatarUrl())
                     .build());
+            reportDto.setCanEdit(report.getUserId().equals(userId)
+                    || permissionService.hasEditReportPermission(userId, report.getId()));
+            reportDto.setCanShare(report.getUserId().equals(userId));
             return reportDto;
         }).toList(),
                 Metadata.builder()
@@ -87,29 +86,21 @@ public class ReportServiceImpl implements ReportService {
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        ReportDto reportDto = ReportMapper.toReportDto(report.get());
-        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
-        List<Chart> charts = chartReports.stream()
-                .map(chartReport -> chartRepository.getChartById(chartReport.getChartId()).get()).toList();
-        reportDto.setCharts(charts.stream().map(ChartMapper::toChartDto).toList());
-        return reportDto;
+        return ReportMapper.toReportDto(report.get());
     }
 
     @Override
-    public ReportDto updateReport(Long userId, Long reportId, UpdateReportRequest updateReportRequest) {
+    public ReportDto updateReport(Long userId, Long reportId, ReportDto reportDto) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), ReportDto.builder()
-                .id(reportId.toString())
-                .name(updateReportRequest.getName())
-                .description(updateReportRequest.getDescription())
-                .chartIds(updateReportRequest.getChartIds())
-                .build());
-
-        removeAllChartsFromReport(reportId);
-        addChartsToReport(reportId, updateReportRequest.getChartIds().stream().map(Long::parseLong).toList());
+        if (!report.get().getUserId().equals(userId)) {
+            if (!permissionService.hasEditReportPermission(userId, reportId)) {
+                throw new ForbiddenException("You are not allowed to update this report");
+            }
+        }
+        ReportDto updatedReportDto = ReportMapper.updateReportDto(report.get(), reportDto);
 
         Optional<Report> updatedReport = reportRepository.updateReport(ReportMapper.toEntity(updatedReportDto));
         if (updatedReport.isEmpty()) {
@@ -118,29 +109,22 @@ public class ReportServiceImpl implements ReportService {
         return ReportMapper.toReportDto(updatedReport.get());
     }
 
-    private void removeAllChartsFromReport(Long reportId) {
-        List<ChartReport> chartReports = chartReportRepository.getChartReportsByReportId(reportId);
-        chartReports.forEach(chartReport -> chartReportRepository.deleteByChartIdAndReportId(chartReport.getChartId(),
-                reportId));
-    }
-
-    private void addChartsToReport(Long reportId, List<Long> chartIds) {
-        chartIds.forEach(chartId -> {
-            ChartReport chartReport = new ChartReport();
-            chartReport.setReportId(reportId);
-            chartReport.setChartId(chartId);
-            chartReportRepository.save(chartReport);
-        });
-    }
-
     @Override
     public void deleteReport(Long userId, Long reportId) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        report.get().setIsDeleted(true);
-        reportRepository.updateReport(report.get());
+        if (report.get().getUserId().equals(userId)) {
+            report.get().setIsDeleted(true);
+            reportRepository.updateReport(report.get());
+            reportPermissionRepository.deleteAllReportPermissionsByReportId(reportId);
+        } else {
+            if (!permissionService.hasEditReportPermission(userId, reportId)
+                    || !permissionService.hasViewReportPermission(userId, reportId)) {
+                reportPermissionRepository.deleteAllReportPermissionsByReportIdAndUserId(reportId, userId);
+            }
+        }
     }
 
     @Override
@@ -162,11 +146,7 @@ public class ReportServiceImpl implements ReportService {
             throw new ReportPersistenceException("Create report failed");
         }
 
-        addChartsToReport(savedReport.get().getId(),
-                createReportRequest.getChartIds().stream().map(Long::parseLong).toList());
-        ReportDto savedReportDto = ReportMapper.toReportDto(savedReport.get());
-        savedReportDto.setChartIds(createReportRequest.getChartIds());
-        return savedReportDto;
+        return ReportMapper.toReportDto(savedReport.get());
     }
 
     @Override
@@ -188,29 +168,48 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public void shareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest) {
+    public List<UserReportPermission> getShareReport(Long userId, Long reportId) {
         Optional<Report> report = reportRepository.getReportById(reportId);
         if (report.isEmpty()) {
             throw new ResourceNotFoundException("Report", reportId);
         }
-        if (report.get().getUserId() != userId) {
+        if (!Objects.equals(report.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to get share report");
+        }
+        List<ReportPermission> reportPermissions = reportPermissionRepository
+                .getAllReportPermissionsByReportId(reportId);
+        return reportPermissions.stream().map(reportPermission -> {
+            UserDto userDto = userGrpcClient.getUserById(reportPermission.getUserId());
+            return UserReportPermission.builder()
+                    .userId(String.valueOf(reportPermission.getUserId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .permission(ReportPermissionType.fromValue(reportPermission.getPermission()))
+                    .build();
+        }).toList();
+    }
+
+    @Override
+    public void updateShareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest) {
+        Optional<Report> report = reportRepository.getReportById(reportId);
+        if (report.isEmpty()) {
+            throw new ResourceNotFoundException("Report", reportId);
+        }
+        if (!Objects.equals(report.get().getUserId(), userId)) {
             throw new ForbiddenException("You are not allowed to share this report");
         }
-        for (ShareReportRequest.UserReportPermission userReportPermission : shareReportRequest
-                .getUserReportPermissions()) {
-            Optional<ReportPermission> existingReportPermission = reportPermissionRepository
-                    .getReportPermissionByReportIdAndUserId(report.get().getId(), userReportPermission.getUserId());
-            if (existingReportPermission.isPresent()) {
-                existingReportPermission.get().setPermission(userReportPermission.getPermission().getValue());
-                reportPermissionRepository.saveReportPermission(existingReportPermission.get());
-            } else {
-                ReportPermission reportPermission = ReportPermission.builder()
-                        .reportId(report.get().getId())
-                        .userId(userReportPermission.getUserId())
-                        .permission(userReportPermission.getPermission().getValue())
-                        .build();
-                reportPermissionRepository.saveReportPermission(reportPermission);
+        reportPermissionRepository.deleteAllReportPermissionsByReportId(reportId);
+        for (UserReportPermission userReportPermission : shareReportRequest.getUserReportPermissions()) {
+            if (String.valueOf(userId).equals(userReportPermission.getUserId())) {
+                continue;
             }
+            ReportPermission reportPermission = ReportPermission.builder()
+                    .reportId(report.get().getId())
+                    .userId(Long.parseLong(userReportPermission.getUserId()))
+                    .permission(userReportPermission.getPermission().getValue())
+                    .build();
+            reportPermissionRepository.saveReportPermission(reportPermission);
         }
     }
 

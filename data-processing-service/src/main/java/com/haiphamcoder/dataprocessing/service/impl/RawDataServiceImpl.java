@@ -2,6 +2,8 @@ package com.haiphamcoder.dataprocessing.service.impl;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import com.haiphamcoder.dataprocessing.domain.exception.SourceNotFoundException;
 import com.haiphamcoder.dataprocessing.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.dataprocessing.domain.model.GetChartPreviewDataRequest;
 import com.haiphamcoder.dataprocessing.domain.model.PreviewData;
+import com.haiphamcoder.dataprocessing.domain.model.request.UpdateSourceDataRequest;
 import com.haiphamcoder.dataprocessing.service.RawDataService;
 import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 import com.haiphamcoder.dataprocessing.service.StorageService;
@@ -29,14 +32,14 @@ public class RawDataServiceImpl implements RawDataService {
     private final StorageService storageService;
 
     @Override
-    public PreviewData previewSource(Long sourceId, Integer page, Integer limit) {
+    public PreviewData previewSource(Long sourceId, String search, String searchBy, Integer page, Integer limit) {
         SourceDto source = sourceGrpcClient.getSourceById(sourceId);
 
         if (source == null || source.getMapping() == null) {
             throw new SourceNotFoundException("Source not found");
         }
 
-        List<JSONObject> data = storageService.getPreviewData(source, page, limit);
+        List<JSONObject> data = storageService.getPreviewData(source, search, searchBy, page, limit);
 
         PreviewData previewData = new PreviewData();
         previewData.setSchema(source.getMapping());
@@ -50,6 +53,21 @@ public class RawDataServiceImpl implements RawDataService {
             }
         }
         return previewData;
+    }
+
+    @Override
+    public void updateSourceData(Long sourceId, UpdateSourceDataRequest request) {
+        SourceDto source = sourceGrpcClient.getSourceById(sourceId);
+        if (source == null || source.getMapping() == null) {
+            throw new SourceNotFoundException("Source not found");
+        }
+
+        Map<String, Object> data = request.getData();
+        if (data == null) {
+            throw new InvalidInputException("Data is required");
+        }
+
+        storageService.updateSourceData(source, data);
     }
 
     @Override
@@ -77,5 +95,14 @@ public class RawDataServiceImpl implements RawDataService {
             }
         }
         return previewData;
+    }
+
+    @Override
+    public boolean cloneTable(String sourceTable, String targetTable) {
+        if (StringUtils.isNullOrEmpty(sourceTable) || StringUtils.isNullOrEmpty(targetTable)) {
+            throw new InvalidInputException("Source table and target table are required");
+        }
+        storageService.cloneTable(sourceTable, targetTable);
+        return true;
     }
 }

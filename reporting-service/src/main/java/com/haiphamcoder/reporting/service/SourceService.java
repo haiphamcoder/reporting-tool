@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.SourceDto.UserSourcePermission;
 import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
@@ -19,7 +20,7 @@ public interface SourceService {
 
     public Boolean checkSourceName(Long userId, String sourceName);
 
-    public SourceDto getSourceById(Long sourceId);
+    public SourceDto getSourceById(Long userId, Long sourceId);
 
     public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit);
 
@@ -33,10 +34,14 @@ public interface SourceService {
 
     public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest);
 
-    public void deleteSource(Long sourceId);
+    public void deleteSource(Long userId, Long sourceId);
 
     public SourceDto updateSource(Long userId, Long sourceId, UpdateSourceRequest request);
 
     public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest);
+
+    public List<UserSourcePermission> getShareSource(Long userId, Long sourceId);
+
+    public void cloneSource(Long userId, Long sourceId);
 
 }

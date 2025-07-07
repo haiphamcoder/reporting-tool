@@ -21,11 +21,13 @@ export const API_CONFIG = {
         SOURCE_PREVIEW: '/data-processing/sources/:source_id/preview',
         SOURCE_GET_SCHEMA: '/data-processing/sources/schema',
         SOURCE_DETAILS: '/reporting/sources/:id',
+        SOURCE_CLONE: '/reporting/sources/:id/clone',
         EXCEL_GET_SHEETS: '/data-processing/excel/sheets',
         SOURCE_CONFIRM_SHEET: '/reporting/sources/:id/confirm-sheet',
         CHARTS: '/reporting/charts',
         CHARTS_CLONE: '/reporting/charts/:id/clone',
         REPORTS: '/reporting/reports',
+        REPORTS_CLONE: '/reporting/reports/:id/clone',
         USER_MANAGEMENT: '/user-management',
         NOTIFICATIONS: '/integrated/notifications'
     }

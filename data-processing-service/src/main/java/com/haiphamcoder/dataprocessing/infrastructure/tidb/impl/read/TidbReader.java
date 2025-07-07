@@ -44,7 +44,8 @@ public class TidbReader extends TidbAdapterImpl {
         }
     }
 
-    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, Integer page, Integer limit)
+    public List<JSONObject> getPreviewData(String tableName, List<Mapping> mappings, String search, String searchBy,
+            Integer page, Integer limit)
             throws SQLException {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ");
@@ -53,9 +54,32 @@ public class TidbReader extends TidbAdapterImpl {
                 sql.append(mapping.getFieldMapping() + ",");
             }
         });
+        sql.append("_id_,");
         sql.deleteCharAt(sql.length() - 1);
         sql.append(" FROM ");
         sql.append(tableName);
+        if (search != null && searchBy != null) {
+            for (Mapping mapping : mappings) {
+                if (mapping.getFieldMapping().equals(searchBy)) {
+                    sql.append(" WHERE ");
+                    if (mapping.getFieldType().equalsIgnoreCase("text")) {
+                        sql.append(mapping.getFieldMapping());
+                        sql.append(" COLLATE utf8mb4_general_ci");
+                        sql.append(" LIKE ");
+                        sql.append("'%");
+                        sql.append(search);
+                        sql.append("%'");
+                    } else {
+                        sql.append(mapping.getFieldMapping());
+                        sql.append(" = ");
+                        sql.append("'");
+                        sql.append(search);
+                        sql.append("'");
+                    }
+                    break;
+                }
+            }
+        }
         sql.append(" LIMIT ");
         sql.append(limit);
         sql.append(" OFFSET ");
@@ -71,6 +95,7 @@ public class TidbReader extends TidbAdapterImpl {
                     record.put(mapping.getFieldMapping(), row.get(mapping.getFieldMapping()));
                 }
             }
+            record.put("_id_", row.get("_id_"));
             records.add(record);
         }
         return records;

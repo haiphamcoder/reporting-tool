@@ -15,9 +15,22 @@ public class GrpcConfiguration {
     @Value("${grpc.user-management-service.port:9090}")
     private int userManagementServicePort;
 
-    @Bean
+    @Value("${grpc.data-processing-service.host:localhost}")
+    private String dataProcessingServiceHost;
+
+    @Value("${grpc.data-processing-service.port:9094}")
+    private int dataProcessingServicePort;
+
+    @Bean(name = "userManagementServiceChannel")
     ManagedChannel userManagementServiceChannel() {
         return ManagedChannelBuilder.forAddress(userManagementServiceHost, userManagementServicePort)
+                .usePlaintext()
+                .build();
+    }
+
+    @Bean(name = "dataProcessingServiceChannel")
+    ManagedChannel dataProcessingServiceChannel() {
+        return ManagedChannelBuilder.forAddress(dataProcessingServiceHost, dataProcessingServicePort)
                 .usePlaintext()
                 .build();
     }

@@ -1,8 +1,10 @@
 package com.haiphamcoder.reporting.service.impl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,12 +15,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.haiphamcoder.reporting.service.DataProcessingGrpcClient;
 import com.haiphamcoder.reporting.service.HdfsFileService;
+import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.SourceDto.UserSourcePermission;
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
+import com.haiphamcoder.reporting.domain.enums.SourcePermissionType;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ForbiddenException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.InvalidInputException;
 import com.haiphamcoder.reporting.domain.exception.business.detail.ResourceAlreadyExistsException;
@@ -49,6 +55,8 @@ public class SourceServiceImpl implements SourceService {
     private final UserGrpcClient userGrpcClient;
     private final SourcePermissionRepository sourcePermissionRepository;
     private final HdfsFileService hdfsFileService;
+    private final PermissionService permissionService;
+    private final DataProcessingGrpcClient dataProcessingGrpcClient;
 
     @Override
     public SourceDto initSource(Long userId, InitSourceRequest request) {
@@ -93,10 +101,14 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public SourceDto getSourceById(Long sourceId) {
+    public SourceDto getSourceById(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            return SourceMapper.toDto(source.get());
+            SourceDto sourceDto = SourceMapper.toDto(source.get());
+            sourceDto.setCanEdit(source.get().getUserId().equals(userId)
+                    || permissionService.hasEditSourcePermission(userId, source.get().getId()));
+            sourceDto.setCanShare(source.get().getUserId().equals(userId));
+            return sourceDto;
         }
         throw new ResourceNotFoundException("Source", sourceId);
     }
@@ -120,6 +132,9 @@ public class SourceServiceImpl implements SourceService {
                             .email(userDto.getEmail())
                             .avatar(userDto.getAvatarUrl())
                             .build());
+                    sourceDto.setCanEdit(source.getUserId().equals(userId)
+                            || permissionService.hasEditSourcePermission(userId, source.getId()));
+                    sourceDto.setCanShare(source.getUserId().equals(userId));
                     return sourceDto;
                 })
                 .toList(),
@@ -153,43 +168,39 @@ public class SourceServiceImpl implements SourceService {
             throw new InvalidInputException("file_name");
         }
 
-        if (hasWritePermission(userId, sourceId)) {
-            Optional<Source> source = sourceRepository.getSourceById(sourceId);
-            if (source.isPresent()) {
-                String config = source.get().getConfig();
-                ObjectNode objectNode = null;
-                if (StringUtils.isNullOrEmpty(config)) {
-                    objectNode = MapperUtils.objectMapper.createObjectNode();
-                } else {
-                    try {
-                        objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
-                    } catch (IOException e) {
-                        throw new InvalidInputException("config");
-                    }
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            String config = source.get().getConfig();
+            ObjectNode objectNode = null;
+            if (StringUtils.isNullOrEmpty(config)) {
+                objectNode = MapperUtils.objectMapper.createObjectNode();
+            } else {
+                try {
+                    objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
+                } catch (IOException e) {
+                    throw new InvalidInputException("config");
                 }
+            }
 
-                Integer connectorType = source.get().getConnectorType();
-                if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV
-                        || connectorType == CommonConstants.CONNECTOR_TYPE_EXCEL) {
-                    try {
-                        String filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
-                                connectorType + "/" + fileName.trim().replaceAll("\s+", "_"));
-                        objectNode.put("file_path", filePath);
-                        source.get().setConfig(objectNode.toString());
-                        sourceRepository.updateSource(source.get());
+            Integer connectorType = source.get().getConnectorType();
+            if (connectorType == CommonConstants.CONNECTOR_TYPE_CSV
+                    || connectorType == CommonConstants.CONNECTOR_TYPE_EXCEL) {
+                try {
+                    String filePath = hdfsFileService.uploadFile(userId, file.getInputStream(),
+                            connectorType + "/" + fileName.trim().replaceAll("\s+", "_"));
+                    objectNode.put("file_path", filePath);
+                    source.get().setConfig(objectNode.toString());
+                    sourceRepository.updateSource(source.get());
 
-                        return filePath;
-                    } catch (IOException e) {
-                        throw new RuntimeException("Upload file failed");
-                    }
-                } else {
-                    throw new RuntimeException("Unsupported connector type");
+                    return filePath;
+                } catch (IOException e) {
+                    throw new RuntimeException("Upload file failed");
                 }
             } else {
-                throw new ResourceNotFoundException("Source", sourceId);
+                throw new RuntimeException("Unsupported connector type");
             }
         } else {
-            throw new ForbiddenException("You are not allowed to upload file to this source");
+            throw new ResourceNotFoundException("Source", sourceId);
         }
     }
 
@@ -209,85 +220,80 @@ public class SourceServiceImpl implements SourceService {
             throw new InvalidInputException("mapping");
         }
 
-        if (hasWritePermission(userId, Long.parseLong(sourceDto.getId()))) {
-            Optional<Source> existingSource = sourceRepository.getSourceById(Long.parseLong(sourceDto.getId()));
-            if (existingSource.isPresent()) {
-                try {
-                    existingSource.get()
-                            .setMapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException("Invalid mapping format");
-                }
-                Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
-                if (updatedSource.isPresent()) {
-                    return SourceMapper.toDto(updatedSource.get());
-                } else {
-                    throw new RuntimeException("Update source failed");
-                }
+        Optional<Source> existingSource = sourceRepository.getSourceById(Long.parseLong(sourceDto.getId()));
+        if (existingSource.isPresent()) {
+            try {
+                existingSource.get()
+                        .setMapping(MapperUtils.objectMapper.writeValueAsString(sourceDto.getMapping()));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Invalid mapping format");
+            }
+            Optional<Source> updatedSource = sourceRepository.updateSource(existingSource.get());
+            if (updatedSource.isPresent()) {
+                return SourceMapper.toDto(updatedSource.get());
             } else {
-                throw new ResourceNotFoundException("Source", sourceDto.getId());
+                throw new RuntimeException("Update source failed");
             }
         } else {
-            throw new ForbiddenException("You are not allowed to update this source");
+            throw new ResourceNotFoundException("Source", sourceDto.getId());
         }
     }
 
     @Override
     public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest) {
-        if (hasWritePermission(userId, sourceId)) {
-            Optional<Source> source = sourceRepository.getSourceById(sourceId);
-            if (source.isPresent()) {
-                if (source.get().getConnectorType() == CommonConstants.CONNECTOR_TYPE_EXCEL) {
-                    if (StringUtils.isNullOrEmpty(confirmSheetRequest.getSheetName())) {
-                        throw new InvalidInputException("sheet_name");
-                    }
-                    if (StringUtils.isNullOrEmpty(confirmSheetRequest.getDataRangeSelected())) {
-                        throw new InvalidInputException("data_range_selected");
-                    }
-                    String config = source.get().getConfig();
-                    ObjectNode objectNode = null;
-                    if (StringUtils.isNullOrEmpty(config)) {
-                        objectNode = MapperUtils.objectMapper.createObjectNode();
-                    } else {
-                        try {
-                            objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
-                        } catch (IOException e) {
-                            throw new InvalidInputException("config");
-                        }
-                    }
-                    objectNode.put("sheet_name", confirmSheetRequest.getSheetName());
-                    objectNode.put("data_range_selected", confirmSheetRequest.getDataRangeSelected());
-                    source.get().setConfig(objectNode.toString());
-                    Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
-                    if (updatedSource.isPresent()) {
-                        return;
-                    } else {
-                        throw new RuntimeException("Update source failed");
-                    }
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isPresent()) {
+            if (source.get().getConnectorType() == CommonConstants.CONNECTOR_TYPE_EXCEL) {
+                if (StringUtils.isNullOrEmpty(confirmSheetRequest.getSheetName())) {
+                    throw new InvalidInputException("sheet_name");
+                }
+                if (StringUtils.isNullOrEmpty(confirmSheetRequest.getDataRangeSelected())) {
+                    throw new InvalidInputException("data_range_selected");
+                }
+                String config = source.get().getConfig();
+                ObjectNode objectNode = null;
+                if (StringUtils.isNullOrEmpty(config)) {
+                    objectNode = MapperUtils.objectMapper.createObjectNode();
                 } else {
-                    throw new RuntimeException("Unsupported connector type");
+                    try {
+                        objectNode = MapperUtils.objectMapper.readValue(config, ObjectNode.class);
+                    } catch (IOException e) {
+                        throw new InvalidInputException("config");
+                    }
+                }
+                objectNode.put("sheet_name", confirmSheetRequest.getSheetName());
+                objectNode.put("data_range_selected", confirmSheetRequest.getDataRangeSelected());
+                source.get().setConfig(objectNode.toString());
+                Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
+                if (updatedSource.isPresent()) {
+                    return;
+                } else {
+                    throw new RuntimeException("Update source failed");
                 }
             } else {
-                throw new ResourceNotFoundException("Source", sourceId);
+                throw new RuntimeException("Unsupported connector type");
             }
+        } else {
+            throw new ResourceNotFoundException("Source", sourceId);
         }
-    }
-
-    private boolean hasWritePermission(Long userId, Long sourceId) {
-        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
-                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
-        if (sourcePermission.isPresent()) {
-            return sourcePermission.get().getPermission().charAt(1) == 'w';
-        }
-        return false;
     }
 
     @Override
-    public void deleteSource(Long sourceId) {
+    public void deleteSource(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            source.get().setIsDeleted(true);
-            sourceRepository.updateSource(source.get());
+            if (source.get().getUserId().equals(userId)) {
+                source.get().setIsDeleted(true);
+                sourceRepository.updateSource(source.get());
+                sourcePermissionRepository.deleteAllSourcePermissionsBySourceId(sourceId);
+            } else {
+                if (!permissionService.hasEditSourcePermission(userId, sourceId)
+                        || !permissionService.hasViewSourcePermission(userId, sourceId)) {
+                    sourcePermissionRepository.deleteAllSourcePermissionsBySourceIdAndUserId(sourceId, userId);
+                } else {
+                    throw new ForbiddenException("You are not allowed to delete this source");
+                }
+            }
         } else {
             throw new ResourceNotFoundException("Source", sourceId);
         }
@@ -311,31 +317,75 @@ public class SourceServiceImpl implements SourceService {
     }
 
     @Override
-    public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest) {
+    public void cloneSource(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            Source sourceEntity = source.get();
-            if (sourceEntity.getUserId().longValue() != userId.longValue()) {
-                throw new ForbiddenException("You are not allowed to share this source");
-            }
-            for (ShareSourceRequest.UserSourcePermission userSourcePermission : shareSourceRequest
-                    .getUserSourcePermissions()) {
-                Optional<SourcePermission> existingSourcePermission = sourcePermissionRepository
-                        .getSourcePermissionBySourceIdAndUserId(sourceEntity.getId(), userSourcePermission.getUserId());
-                if (existingSourcePermission.isPresent()) {
-                    existingSourcePermission.get().setPermission(userSourcePermission.getPermission().getValue());
-                    sourcePermissionRepository.saveSourcePermission(existingSourcePermission.get());
+            if (source.get().getUserId().equals(userId)
+                    || permissionService.hasViewSourcePermission(userId, sourceId)) {
+                SourceDto clonedSource = SourceMapper.toDto(source.get());
+                clonedSource.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
+                clonedSource.setName(clonedSource.getName() + " (Copy)");
+                clonedSource.setUserId(String.valueOf(userId));
+                clonedSource.setTableName("data_" + userId + "_" + System.currentTimeMillis());
+                clonedSource.setCreatedAt(LocalDateTime.now());
+                Optional<Source> savedSource = sourceRepository.createSource(SourceMapper.toEntity(clonedSource));
+                if (savedSource.isPresent()) {
+                    boolean success = dataProcessingGrpcClient.cloneData(source.get().getTableName(),
+                            savedSource.get().getTableName());
+                    if (!success) {
+                        throw new RuntimeException("Clone source failed");
+                    }
                 } else {
-                    SourcePermission sourcePermission = SourcePermission.builder()
-                            .sourceId(sourceEntity.getId())
-                            .userId(userSourcePermission.getUserId())
-                            .permission(userSourcePermission.getPermission().getValue())
-                            .build();
-                    sourcePermissionRepository.createSourcePermission(sourcePermission);
+                    throw new RuntimeException("Clone source failed");
                 }
+            } else {
+                throw new ForbiddenException("You are not allowed to clone this source");
             }
-        } else {
+        }
+    }
+
+    @Override
+    public List<UserSourcePermission> getShareSource(Long userId, Long sourceId) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isEmpty()) {
             throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!Objects.equals(source.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to get share source");
+        }
+        List<SourcePermission> sourcePermissions = sourcePermissionRepository.getSourcePermissionsBySourceId(sourceId);
+        return sourcePermissions.stream().map(sourcePermission -> {
+            UserDto userDto = userGrpcClient.getUserById(sourcePermission.getUserId());
+            return UserSourcePermission.builder()
+                    .userId(String.valueOf(sourcePermission.getUserId()))
+                    .name(userDto.getFirstName() + " " + userDto.getLastName())
+                    .email(userDto.getEmail())
+                    .avatar(userDto.getAvatarUrl())
+                    .permission(SourcePermissionType.fromValue(sourcePermission.getPermission()))
+                    .build();
+        }).toList();
+    }
+
+    @Override
+    public void shareSource(Long userId, Long sourceId, ShareSourceRequest shareSourceRequest) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isEmpty()) {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!Objects.equals(source.get().getUserId(), userId)) {
+            throw new ForbiddenException("You are not allowed to share this source");
+        }
+        sourcePermissionRepository.deleteAllSourcePermissionsBySourceId(sourceId);
+        for (UserSourcePermission userSourcePermission : shareSourceRequest.getUserSourcePermissions()) {
+            if (String.valueOf(userId).equals(userSourcePermission.getUserId())) {
+                continue;
+            }
+            SourcePermission sourcePermission = SourcePermission.builder()
+                    .sourceId(source.get().getId())
+                    .userId(Long.parseLong(userSourcePermission.getUserId()))
+                    .permission(userSourcePermission.getPermission().getValue())
+                    .build();
+            sourcePermissionRepository.saveSourcePermission(sourcePermission);
         }
     }
 

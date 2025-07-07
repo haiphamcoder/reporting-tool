@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.haiphamcoder.reporting.config.CommonConstants;
 import com.haiphamcoder.reporting.domain.dto.SourceDto;
+import com.haiphamcoder.reporting.domain.dto.SourceDto.UserSourcePermission;
 import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
@@ -61,6 +62,8 @@ public class SourceController {
                         .description(source.getDescription())
                         .type(source.getConnectorType())
                         .owner(source.getOwner())
+                        .canEdit(source.getCanEdit())
+                        .canShare(source.getCanShare())
                         .status(CommonConstants.SOURCE_STATUS_MAP.get(source.getStatus()))
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
@@ -69,6 +72,13 @@ public class SourceController {
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
+    }
+
+    @GetMapping("/{source-id}/share")
+    public ResponseEntity<ApiResponse<Object>> getShare(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId) {
+        List<UserSourcePermission> shareSource = sourceService.getShareSource(userId, sourceId);
+        return ResponseEntity.ok(ApiResponse.success(shareSource, "Share source fetched successfully"));
     }
 
     @PostMapping("/{source-id}/share")
@@ -82,7 +92,7 @@ public class SourceController {
     @GetMapping("/{source-id}")
     public ResponseEntity<ApiResponse<Object>> getSourceById(@CookieValue(name = "user-id") Long userId,
             @PathVariable("source-id") Long sourceId) {
-        SourceDto source = sourceService.getSourceById(sourceId);
+        SourceDto source = sourceService.getSourceById(userId, sourceId);
         return ResponseEntity.ok(ApiResponse.success(source, "Source fetched successfully"));
     }
 
@@ -128,8 +138,15 @@ public class SourceController {
     @DeleteMapping("/{source-id}")
     public ResponseEntity<ApiResponse<Object>> deleteSource(@CookieValue(name = "user-id") Long userId,
             @PathVariable("source-id") Long sourceId) {
-        sourceService.deleteSource(sourceId);
+        sourceService.deleteSource(userId, sourceId);
         return ResponseEntity.ok(ApiResponse.success(null, "Source deleted successfully"));
+    }
+
+    @GetMapping("/{source-id}/clone")
+    public ResponseEntity<ApiResponse<Object>> cloneSource(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId) {
+        sourceService.cloneSource(userId, sourceId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Source cloned successfully"));
     }
 
 }

@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ReportDto;
+import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
-import com.haiphamcoder.reporting.domain.model.request.UpdateReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllReportsResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.ReportService;
@@ -42,8 +42,9 @@ public class ReportController {
                         .id(report.getId())
                         .name(report.getName())
                         .description(report.getDescription())
-                        .numberOfCharts(report.getCharts() != null ? report.getCharts().size() : 0)
                         .owner(report.getOwner())
+                        .canEdit(report.getCanEdit())
+                        .canShare(report.getCanShare())
                         .createdAt(report.getCreatedAt())
                         .updatedAt(report.getModifiedAt())
                         .build())
@@ -67,19 +68,26 @@ public class ReportController {
         return ResponseEntity.ok(ApiResponse.success(clonedReport, "Report cloned successfully"));
     }
 
+    @GetMapping("/{report-id}/share")
+    public ResponseEntity<ApiResponse<Object>> getShare(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("report-id") Long reportId) {
+        List<UserReportPermission> shareReport = reportService.getShareReport(userId, reportId);
+        return ResponseEntity.ok(ApiResponse.success(shareReport, "Share report fetched successfully"));
+    }
+
     @PostMapping("/{report-id}/share")
     public ResponseEntity<ApiResponse<Object>> share(@CookieValue(name = "user-id") Long userId,
             @PathVariable("report-id") Long reportId,
             @RequestBody ShareReportRequest shareReportRequest) {
-        reportService.shareReport(userId, reportId, shareReportRequest);
+        reportService.updateShareReport(userId, reportId, shareReportRequest);
         return ResponseEntity.ok(ApiResponse.success(null, "Report shared successfully"));
     }
 
     @PutMapping("/{report-id}")
     public ResponseEntity<ApiResponse<Object>> update(@CookieValue(name = "user-id") Long userId,
             @PathVariable("report-id") Long reportId,
-            @RequestBody UpdateReportRequest updateReportRequest) {
-        ReportDto updatedReport = reportService.updateReport(userId, reportId, updateReportRequest);
+            @RequestBody ReportDto reportDto) {
+        ReportDto updatedReport = reportService.updateReport(userId, reportId, reportDto);
         return ResponseEntity.ok(ApiResponse.success(updatedReport, "Report updated successfully"));
     }
 

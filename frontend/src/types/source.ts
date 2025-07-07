@@ -12,6 +12,8 @@ export interface SourceSummary {
   status: string;
   created_at: string;
   updated_at: string;
+  can_edit?: boolean;
+  can_share?: boolean;
 }
 
 export interface SourceMapping {

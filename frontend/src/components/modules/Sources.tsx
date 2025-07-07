@@ -17,6 +17,7 @@ import Avatar from '@mui/material/Avatar';
 import { sourceApi } from '../../api/source';
 import { AddSourceDialog } from '../dialogs/source';
 import DeleteConfirmationDialog from '../dialogs/DeleteConfirmationDialog';
+import ShareSourceDialog from '../dialogs/ShareSourceDialog';
 import CardAlert from '../CardAlert';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SourceSummary } from '../../types/source';
@@ -62,6 +63,8 @@ export default function Sources() {
     // Dialog states
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [sourceToDelete, setSourceToDelete] = useState<SourceSummary | null>(null);
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [sourceToShare, setSourceToShare] = useState<SourceSummary | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -192,7 +195,9 @@ export default function Sources() {
                 const processedSources = data.result.sources.map((source: any) => ({
                     ...source,
                     id: source.id.toString(),
-                    owner: source.owner || null
+                    owner: source.owner || null,
+                    can_edit: source.can_edit ?? false,
+                    can_share: source.can_share ?? false
                 }));
                 setSourcesData(processedSources);
                 setMetadata(data.result.metadata);
@@ -274,6 +279,38 @@ export default function Sources() {
             setError(error instanceof Error ? error.message : 'Failed to delete source');
             setShowErrorPopup(true);
         }
+    };
+
+    const handleCloneClick = async (row: SourceSummary) => {
+        try {
+            setError(null);
+            setSuccess(null);
+
+            await sourceApi.cloneSource(row.id);
+
+            setSuccess('Source cloned successfully');
+            setShowSuccessPopup(true);
+            fetchSources(metadata.current_page, metadata.page_size, searchTerm);
+        } catch (error) {
+            console.error('Error cloning source:', error);
+            setError(error instanceof Error ? error.message : 'Failed to clone source');
+            setShowErrorPopup(true);
+        }
+    };
+
+    const handleShareClick = (row: SourceSummary) => {
+        setSourceToShare(row);
+        setShareDialogOpen(true);
+    };
+
+    const handleShareClose = () => {
+        setShareDialogOpen(false);
+        setSourceToShare(null);
+    };
+
+    const handleShareSuccess = (message: string) => {
+        setSuccess(message);
+        setShowSuccessPopup(true);
     };
 
     const handleAddClick = () => {
@@ -646,18 +683,22 @@ export default function Sources() {
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                         >
-                            <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
-                                <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Edit</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Clone logic */ handleMenuClose(); }}>
+                            {params.row.can_edit && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Edit</ListItemText>
+                                </MenuItem>
+                            )}
+                            <MenuItem onClick={(e) => { e.stopPropagation(); handleCloneClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><ContentCopyIcon fontSize="small" /></ListItemIcon>
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
-                                <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                                <ListItemText>Share</ListItemText>
-                            </MenuItem>
+                            {params.row.can_share && (
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
+                                    <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
+                                    <ListItemText>Share</ListItemText>
+                                </MenuItem>
+                            )}
                             <MenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClick(params.row); handleMenuClose(); }}>
                                 <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
                                 <ListItemText>Delete</ListItemText>
@@ -801,6 +842,14 @@ export default function Sources() {
                 title="Delete Source"
                 message={`Are you sure you want to delete "${sourceToDelete?.name}"? This action cannot be undone.`}
                 severity="error"
+            />
+
+            <ShareSourceDialog
+                open={shareDialogOpen}
+                onClose={handleShareClose}
+                sourceId={sourceToShare?.id || ''}
+                sourceName={sourceToShare?.name}
+                onSuccess={handleShareSuccess}
             />
         </Stack>
     );

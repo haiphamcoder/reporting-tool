@@ -3,6 +3,8 @@ package com.haiphamcoder.reporting.service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.haiphamcoder.reporting.domain.dto.UserDto;
@@ -16,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserGrpcClient {
     private final UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub;
 
-    public UserGrpcClient(ManagedChannel userManagementServiceChannel) {
+    public UserGrpcClient(@Qualifier("userManagementServiceChannel") ManagedChannel userManagementServiceChannel) {
         this.userServiceBlockingStub = UserServiceGrpc.newBlockingStub(userManagementServiceChannel);
     }
 

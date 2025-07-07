@@ -5,6 +5,8 @@ export interface ChartSummary {
     type: string;
     updated_at: string;
     created_at: string;
+    can_edit?: boolean;
+    can_share?: boolean;
     owner?: {
         id: string;
         name: string;

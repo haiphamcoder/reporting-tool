@@ -1,11 +1,10 @@
-package com.haiphamcoder.reporting.domain.model.request;
+package com.haiphamcoder.dataprocessing.domain.model.request;
 
-import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.haiphamcoder.reporting.domain.dto.ReportDto.UserReportPermission;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,9 +17,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ShareReportRequest {
+public class UpdateSourceDataRequest {
 
-    @JsonProperty("users")
-    private List<UserReportPermission> userReportPermissions;
+    @JsonProperty("data")
+    private Map<String, Object> data;
 
 }

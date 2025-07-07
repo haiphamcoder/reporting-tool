@@ -45,9 +45,6 @@ public class GetAllReportsResponse {
         @JsonProperty("description")
         private String description;
 
-        @JsonProperty("number_of_charts")
-        private Integer numberOfCharts;
-
         @JsonProperty("type")
         private String type;
 
@@ -56,6 +53,12 @@ public class GetAllReportsResponse {
 
         @JsonProperty("status")
         private String status;
+
+        @JsonProperty("can_edit")
+        private Boolean canEdit;
+
+        @JsonProperty("can_share")
+        private Boolean canShare;
 
         @JsonProperty("created_at")
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -10,6 +10,7 @@ CREATE TABLE
         name VARCHAR(255) NOT NULL COMMENT 'Tên của report',
         description VARCHAR(255) COMMENT 'Mô tả của report',
         user_id BIGINT NOT NULL COMMENT 'ID của user',
+        config TEXT NOT NULL COMMENT 'Cấu hình của chart',
         is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Trạng thái xóa của report',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo tài khoản',
         modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
