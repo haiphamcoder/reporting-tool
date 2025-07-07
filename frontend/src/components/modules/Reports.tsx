@@ -24,6 +24,7 @@ import { ReportSummary } from '../../types/report';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddReportDialog from '../dialogs/AddReportDialog';
 import EditReportDialog from '../dialogs/EditReportDialog';
+import ShareReportDialog from '../dialogs/ShareReportDialog';
 import Search from '../Search';
 import { useAuth } from '../../context/AuthContext';
 import { cloneReport, getReports, deleteReport, getReportDetail } from '../../api/report';
@@ -66,6 +67,10 @@ export default function Reports() {
     // Edit Report dialog state
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [reportToEdit, setReportToEdit] = useState<any>(null);
+    
+    // Share Report dialog state
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+    const [reportToShare, setReportToShare] = useState<ReportSummary | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(0);
@@ -244,6 +249,11 @@ export default function Reports() {
             setError(error instanceof Error ? error.message : 'Failed to clone report');
             setShowErrorPopup(true);
         }
+    };
+
+    const handleShareClick = (row: ReportSummary) => {
+        setReportToShare(row);
+        setShareDialogOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
@@ -512,7 +522,7 @@ export default function Reports() {
                                 <ListItemText>Clone</ListItemText>
                             </MenuItem>
                             {params.row.can_share && (
-                                <MenuItem onClick={(e) => { e.stopPropagation(); /* TODO: Share logic */ handleMenuClose(); }}>
+                                <MenuItem onClick={(e) => { e.stopPropagation(); handleShareClick(params.row); handleMenuClose(); }}>
                                     <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
                                     <ListItemText>Share</ListItemText>
                                 </MenuItem>
@@ -669,6 +679,19 @@ export default function Reports() {
                     setShowSuccessPopup(true);
                 }}
                 report={reportToEdit}
+            />
+
+            <ShareReportDialog
+                open={shareDialogOpen}
+                onClose={() => setShareDialogOpen(false)}
+                reportId={reportToShare?.id || ''}
+                reportName={reportToShare?.name}
+                onSuccess={(message) => {
+                    setShareDialogOpen(false);
+                    setReportToShare(null);
+                    setSuccess(message);
+                    setShowSuccessPopup(true);
+                }}
             />
         </Stack>
     );
