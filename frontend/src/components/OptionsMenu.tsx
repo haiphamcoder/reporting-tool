@@ -14,7 +14,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth/authApi';
 import AccountInfoDialog from './AccountInfoDialog';
-import SettingsDialog from './SettingsDialog';
 
 const MenuItem = styled(MuiMenuItem)({
   margin: '2px 0',
@@ -33,7 +32,6 @@ export default function OptionsMenu() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [openAccountDialog, setOpenAccountDialog] = React.useState(false);
-  const [openSettingsDialog, setOpenSettingsDialog] = React.useState(false);
 
   const handleLogout = async () => {
     try {
@@ -46,6 +44,10 @@ export default function OptionsMenu() {
       logout();
       navigate('/auth/signin');
     }
+  };
+
+  const handleGithubClick = () => {
+    window.open('https://github.com/haiphamcoder/reporting-tool', '_blank');
   };
 
   return (
@@ -78,7 +80,9 @@ export default function OptionsMenu() {
         }}
       >
         <MenuItem onClick={() => setOpenAccountDialog(true)}>My account</MenuItem>
-        <MenuItem onClick={() => setOpenSettingsDialog(true)}>Settings</MenuItem>
+        <MenuItem onClick={handleGithubClick}>
+          <ListItemText>GitHub</ListItemText>
+        </MenuItem>
         <Divider />
         <MenuItem
           onClick={handleLogout}
@@ -96,7 +100,6 @@ export default function OptionsMenu() {
         </MenuItem>
       </Menu>
       <AccountInfoDialog open={openAccountDialog} onClose={() => setOpenAccountDialog(false)} />
-      <SettingsDialog open={openSettingsDialog} onClose={() => setOpenSettingsDialog(false)} />
     </React.Fragment>
   );
 }
