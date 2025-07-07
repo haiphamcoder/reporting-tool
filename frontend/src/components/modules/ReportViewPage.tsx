@@ -16,8 +16,7 @@ import {
 } from '@mui/material';
 import {
     ArrowBack as ArrowBackIcon,
-    Refresh as RefreshIcon,
-    Add as AddIcon
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { Bar, Pie, Line, Doughnut } from 'react-chartjs-2';
 import { API_CONFIG } from '../../config/api';
@@ -376,7 +375,7 @@ const ReportViewPage: React.FC = () => {
         if (report) {
             const b = getBlocks(report);
             setBlocks(b);
-            
+
             // If user doesn't have edit permission, ensure edit mode is disabled
             if (report.can_edit === false && editMode) {
                 setEditMode(false);
@@ -483,7 +482,7 @@ const ReportViewPage: React.FC = () => {
     // Lưu blocks (chuẩn bị cho API PUT)
     const handleSaveBlocks = async () => {
         if (!report || !id) return;
-        
+
         setSaving(true);
         try {
             const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${id}`, {
@@ -501,19 +500,19 @@ const ReportViewPage: React.FC = () => {
                     }
                 }),
             });
-            
+
             const data = await response.json();
             if (!response.ok || !data.success) {
                 throw new Error(data.message || 'Failed to save report');
             }
-            
+
             // Cập nhật report state với data mới
             setReport(data.result);
             setEditMode(false);
-            
+
             // Có thể thêm notification thành công ở đây
             console.log('Report saved successfully');
-            
+
         } catch (error: any) {
             console.error('Error saving report:', error);
             // Có thể thêm notification lỗi ở đây
@@ -623,17 +622,17 @@ const ReportViewPage: React.FC = () => {
     // Helper: convert old charts to blocks if needed
     const getBlocks = (report: ReportDetail | null): ReportBlock[] => {
         if (!report) return [];
-        
+
         // Check for new structure: config.blocks
         if (report.config && report.config.blocks && Array.isArray(report.config.blocks)) {
             return report.config.blocks;
         }
-        
+
         // Legacy: check if config is directly an array of blocks (for backward compatibility)
         if (report.config && Array.isArray(report.config as any) && (report.config as any).length > 0) {
             return report.config as any;
         }
-        
+
         // Legacy: convert from charts array
         if ((report as any).charts && Array.isArray((report as any).charts)) {
             return (report as any).charts.map((chart: any) => ({
@@ -642,7 +641,7 @@ const ReportViewPage: React.FC = () => {
                 content: { chartId: chart.id, chart },
             }));
         }
-        
+
         return [];
     };
 
@@ -702,13 +701,13 @@ const ReportViewPage: React.FC = () => {
                     </Button>
                 </Stack>
             </Stack>
-            <Box 
-                ref={reportContentRef} 
-                sx={{ 
-                    mt: 2, 
-                    p: editMode && report?.can_edit !== false ? 2 : 0, 
-                    border: editMode && report?.can_edit !== false ? '1px solid' : 'none', 
-                    borderColor: 'divider', 
+            <Box
+                ref={reportContentRef}
+                sx={{
+                    mt: 2,
+                    p: editMode && report?.can_edit !== false ? 2 : 0,
+                    border: editMode && report?.can_edit !== false ? '1px solid' : 'none',
+                    borderColor: 'divider',
                     borderRadius: editMode && report?.can_edit !== false ? 2 : 0,
                     background: editMode && report?.can_edit !== false ? 'transparent' : 'white',
                     minHeight: 200
@@ -762,8 +761,8 @@ const ReportViewPage: React.FC = () => {
                                     <Alert severity="info">No content in this report. Switch to Edit Mode to add content.</Alert>
                                 )
                             ) : (
-                                <Box sx={{ 
-                                    display: 'flex', 
+                                <Box sx={{
+                                    display: 'flex',
                                     flexDirection: 'column',
                                     gap: editMode && report?.can_edit !== false ? 2 : 0,
                                     '& > *:first-of-type': editMode && report?.can_edit !== false ? {} : {
@@ -816,9 +815,9 @@ const ReportViewPage: React.FC = () => {
                                                 ) : (
                                                     editMode && report?.can_edit !== false ? (
                                                         <Paper sx={{ p: 2, background: '#f9f9f9' }} elevation={1}>
-                                                            <Typography 
-                                                                variant="body1" 
-                                                                style={{ 
+                                                            <Typography
+                                                                variant="body1"
+                                                                style={{
                                                                     whiteSpace: 'pre-line',
                                                                     textAlign: (block.content as any).format?.text_align || 'left',
                                                                     fontSize: (block.content as any).format?.font_size ? `${(block.content as any).format.font_size}px` : undefined,
@@ -837,8 +836,8 @@ const ReportViewPage: React.FC = () => {
                                                         </Paper>
                                                     ) : (
                                                         <Box sx={{ py: 1 }}>
-                                                            <Typography 
-                                                                variant="body1" 
+                                                            <Typography
+                                                                variant="body1"
                                                                 sx={{
                                                                     whiteSpace: 'pre-line',
                                                                     textAlign: (block.content as any).format?.text_align || 'left',
