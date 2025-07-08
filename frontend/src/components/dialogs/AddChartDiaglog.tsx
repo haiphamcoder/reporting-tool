@@ -35,6 +35,7 @@ import {
     CreateChartRequest
 } from '../../types/chart';
 import { chartApi } from '../../api/chart/chartApi';
+import { generateSqlFromQueryOption } from '../../utils/sqlGenerator';
 
 interface AddChartDialogProps {
     open: boolean;
@@ -72,6 +73,7 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
     const [sqlQuery, setSqlQuery] = useState('');
     const [previewData, setPreviewData] = useState<any>(null);
     const [previewSuccess, setPreviewSuccess] = useState(false);
+    const [sources, setSources] = useState<any[]>([]);
 
     // Step 3 data
     const [barChartConfig, setBarChartConfig] = useState<BarChartConfig>({
@@ -105,6 +107,11 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
             if (chartMode === 'basic') {
                 if (!queryOption.fields.length || !queryOption.fields[0].field_name) {
                     setError('At least one field is required');
+                    return;
+                }
+                // Đảm bảo sqlQuery đã được set cho basic mode
+                if (!sqlQuery.trim()) {
+                    setError('Please preview data to generate SQL query');
                     return;
                 }
             } else {
@@ -182,15 +189,29 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
                     break;
             }
 
+            // Đảm bảo có sql_query cho cả basic và advanced mode
+            let finalSqlQuery = sqlQuery;
+            if (chartMode === 'basic' && !sqlQuery.trim()) {
+                // Nếu basic mode mà chưa có sqlQuery, generate từ queryOption
+                try {
+                    finalSqlQuery = generateSqlFromQueryOption(queryOption, sources);
+                } catch (error) {
+                    console.warn('Failed to generate SQL from queryOption:', error);
+                    throw new Error('Failed to generate SQL query. Please try previewing data first.');
+                }
+            }
+            
+            // Validate SQL query
+            if (!finalSqlQuery || !finalSqlQuery.trim()) {
+                throw new Error('SQL query is required. Please preview data first to generate the query.');
+            }
+
             const chartData: CreateChartRequest = {
                 name: name.trim(),
                 description: description.trim(),
-                config: chartConfig
+                config: chartConfig,
+                sql_query: finalSqlQuery
             };
-
-            if (chartMode === 'advanced') {
-                chartData.sql_query = sqlQuery;
-            }
 
             const response = await chartApi.createChart(chartData);
 
@@ -308,6 +329,7 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
                         onSqlQueryChange={setSqlQuery}
                         onPreviewData={handlePreviewData}
                         onPreviewSuccess={setPreviewSuccess}
+                        onSourcesChange={setSources}
                     />
                 );
             case 2:

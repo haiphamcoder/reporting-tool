@@ -37,7 +37,6 @@ import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.Pair;
-import com.haiphamcoder.reporting.shared.QueryOptionToSqlConverter;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -171,11 +170,10 @@ public class ChartServiceImpl implements ChartService {
             throw new ResourceNotFoundException("Source", queryOption.getTable());
         }
         long sourceUserId = source.get().getUserId();
-        if (sourceUserId != userId) {
-            if (!permissionService.hasViewSourcePermission(userId, source.get().getId())) {
+        if (sourceUserId != userId && !permissionService.hasViewSourcePermission(userId, source.get().getId())) {
                 throw new ForbiddenException("You are not allowed to access this source");
             }
-        }
+        
         Map<String, String> sourceTableNames = new HashMap<>();
         sourceTableNames.put(source.get().getId().toString(), source.get().getTableName());
 
@@ -193,7 +191,8 @@ public class ChartServiceImpl implements ChartService {
                 sourceTableNames.put(joinSource.get().getId().toString(), joinSource.get().getTableName());
             }
         }
-        return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
+        return null;
+        // return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
     }
 
     @Override

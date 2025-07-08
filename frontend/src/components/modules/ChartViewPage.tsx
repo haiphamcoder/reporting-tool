@@ -35,6 +35,7 @@ interface ChartDetail {
         area_chart_config?: any;
         table_config?: any;
     };
+    sql_query?: string;
     created_at: string;
     updated_at: string;
 }
@@ -97,41 +98,31 @@ export default function ChartViewPage() {
             let sqlQuery = '';
             let fields: any[] = [];
 
-            if (chart.config.mode === 'basic' && chart.config.query_option) {
-                console.log('Processing basic mode with query_option:', chart.config.query_option);
-                // Convert query option to SQL
-                const convertResponse = await fetch(`${API_CONFIG.BASE_URL}/reporting/charts/convert-query`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(chart.config.query_option),
-                });
-
-                if (!convertResponse.ok) {
-                    throw new Error('Failed to convert query');
+            // Use sql_query directly from chart detail
+            if (chart.sql_query) {
+                console.log('Using sql_query from chart detail:', chart.sql_query);
+                sqlQuery = chart.sql_query;
+                // Extract fields from query_option if available for field mapping
+                if (chart.config.query_option && chart.config.query_option.fields) {
+                    fields = (chart.config.query_option.fields || []).map((f: any) => ({
+                        field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
+                        data_type: f.data_type,
+                        alias: f.alias || ''
+                    }));
                 }
-
-                const convertData = await convertResponse.json();
-                console.log('Convert query response:', convertData);
-                if (!convertData.success) {
-                    throw new Error(convertData.message || 'Failed to convert query');
-                }
-
-                sqlQuery = convertData.result;
-                fields = (chart.config.query_option.fields || []).map((f: any) => ({
-                    field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
-                    data_type: f.data_type,
-                    alias: f.alias || ''
-                }));
-            } else if (chart.config.mode === 'advanced' && chart.config.sql_query) {
-                console.log('Processing advanced mode with sql_query');
+            } else if (chart.config.sql_query) {
+                console.log('Using sql_query from chart config:', chart.config.sql_query);
                 sqlQuery = chart.config.sql_query;
-                // For advanced mode, we need to extract fields from the SQL query
-                // This is a simplified approach - in real implementation, you might need to parse SQL
-                fields = [];
+                // Extract fields from query_option if available for field mapping
+                if (chart.config.query_option && chart.config.query_option.fields) {
+                    fields = (chart.config.query_option.fields || []).map((f: any) => ({
+                        field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
+                        data_type: f.data_type,
+                        alias: f.alias || ''
+                    }));
+                }
+            } else {
+                throw new Error('No SQL query available in chart detail');
             }
 
             if (!sqlQuery) {
