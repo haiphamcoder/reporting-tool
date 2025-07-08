@@ -170,11 +170,10 @@ public class ChartServiceImpl implements ChartService {
             throw new ResourceNotFoundException("Source", queryOption.getTable());
         }
         long sourceUserId = source.get().getUserId();
-        if (sourceUserId != userId) {
-            if (!permissionService.hasViewSourcePermission(userId, source.get().getId())) {
+        if (sourceUserId != userId && !permissionService.hasViewSourcePermission(userId, source.get().getId())) {
                 throw new ForbiddenException("You are not allowed to access this source");
             }
-        }
+        
         Map<String, String> sourceTableNames = new HashMap<>();
         sourceTableNames.put(source.get().getId().toString(), source.get().getTableName());
 

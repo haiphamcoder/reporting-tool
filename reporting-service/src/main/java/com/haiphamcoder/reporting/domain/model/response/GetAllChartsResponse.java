@@ -55,6 +55,9 @@ public class GetAllChartsResponse {
         @JsonProperty("config")
         private ChartConfig config;
 
+        @JsonProperty("sql_query")
+        private String sqlQuery;
+
         @JsonProperty("can_edit")
         private Boolean canEdit;
 
