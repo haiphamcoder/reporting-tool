@@ -31,26 +31,44 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 import InsertChartIcon from '@mui/icons-material/InsertChart';
 import SaveIcon from '@mui/icons-material/Save';
 
-const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
+const ChartPreviewInReport: React.FC<{ chartId: string }> = ({ chartId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [previewData, setPreviewData] = useState<any>(null);
+    const [chartDetail, setChartDetail] = useState<any>(null);
 
     useEffect(() => {
-        const fetchPreview = async () => {
+        const fetchChartAndPreview = async () => {
             setLoading(true);
             setError(null);
             try {
-                console.log('ChartPreviewInReport: Starting fetch for chart:', chart.id);
-                console.log('Chart config:', chart.config);
+                console.log('ChartPreviewInReport: Starting fetch for chartId:', chartId);
+
+                // First, fetch the latest chart detail from API
+                const chartResponse = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CHARTS}/${chartId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                const chartData = await chartResponse.json();
+                if (!chartResponse.ok || !chartData.success) {
+                    throw new Error(chartData.message || 'Failed to fetch chart details');
+                }
+                
+                const chart = chartData.result;
+                setChartDetail(chart);
+                console.log('Chart detail fetched:', chart);
 
                 let sql_query = '';
                 let fields: any[] = [];
                 
-                // Sử dụng sql_query đã có sẵn trong chart data
+                // Use sql_query from the latest chart detail
                 if (chart.sql_query) {
                     sql_query = chart.sql_query;
-                    console.log('Using sql_query from chart data:', sql_query);
+                    console.log('Using sql_query from chart detail:', sql_query);
                 } else if (chart.config.sql_query) {
                     sql_query = chart.config.sql_query;
                     console.log('Using sql_query from chart config:', sql_query);
@@ -58,7 +76,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                     throw new Error('No SQL query available in chart data');
                 }
                 
-                // Chuẩn bị fields cho API previewData
+                // Prepare fields for API previewData
                 if (chart.config.query_option && chart.config.query_option.fields) {
                     fields = (chart.config.query_option.fields || []).map((f: any) => ({
                         field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
@@ -68,6 +86,7 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 }
                 console.log('Fields:', fields);
                 if (!sql_query) throw new Error('No SQL query available');
+                
                 // Fetch preview data
                 const previewRes = await fetch(`${API_CONFIG.BASE_URL}/data-processing/charts/preview-data`, {
                     method: 'POST',
@@ -89,9 +108,9 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
                 setLoading(false);
             }
         };
-        fetchPreview();
+        fetchChartAndPreview();
         // eslint-disable-next-line
-    }, [chart.id]);
+    }, [chartId]);
 
     // Helper to extract data/fields
     const getDataAndFields = () => {
@@ -128,11 +147,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     const renderBarChart = () => {
         const { data, fields } = getDataAndFields();
         console.log('renderBarChart - data:', data, 'fields:', fields);
-        if (!data.length || !fields.length || !chart.config.bar_chart_config) {
-            console.log('Bar chart render failed:', { dataLength: data.length, fieldsLength: fields.length, barConfig: chart.config.bar_chart_config });
+        if (!data.length || !fields.length || !chartDetail?.config.bar_chart_config) {
+            console.log('Bar chart render failed:', { dataLength: data.length, fieldsLength: fields.length, barConfig: chartDetail?.config.bar_chart_config });
             return <Typography fontSize={14}>No data</Typography>;
         }
-        const config = chart.config.bar_chart_config;
+        const config = chartDetail.config.bar_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
         const labels = data.map((row: any) => String(row[xField] || 'N/A'));
@@ -163,11 +182,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     const renderPieChart = () => {
         const { data, fields } = getDataAndFields();
         console.log('renderPieChart - data:', data, 'fields:', fields);
-        if (!data.length || !fields.length || !chart.config.pie_chart_config) {
-            console.log('Pie chart render failed:', { dataLength: data.length, fieldsLength: fields.length, pieConfig: chart.config.pie_chart_config });
+        if (!data.length || !fields.length || !chartDetail?.config.pie_chart_config) {
+            console.log('Pie chart render failed:', { dataLength: data.length, fieldsLength: fields.length, pieConfig: chartDetail?.config.pie_chart_config });
             return <Typography fontSize={14}>No data</Typography>;
         }
-        const config = chart.config.pie_chart_config;
+        const config = chartDetail.config.pie_chart_config;
         const labelField = config.label_field || fields[0];
         const valueField = config.value_field || fields[1] || fields[0];
         const chartConfig = {
@@ -199,11 +218,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     const renderLineChart = () => {
         const { data, fields } = getDataAndFields();
         console.log('renderLineChart - data:', data, 'fields:', fields);
-        if (!data.length || !fields.length || !chart.config.line_chart_config) {
-            console.log('Line chart render failed:', { dataLength: data.length, fieldsLength: fields.length, lineConfig: chart.config.line_chart_config });
+        if (!data.length || !fields.length || !chartDetail?.config.line_chart_config) {
+            console.log('Line chart render failed:', { dataLength: data.length, fieldsLength: fields.length, lineConfig: chartDetail?.config.line_chart_config });
             return <Typography fontSize={14}>No data</Typography>;
         }
-        const config = chart.config.line_chart_config;
+        const config = chartDetail.config.line_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
         const labels = data.map((row: any) => String(row[xField] || 'N/A'));
@@ -235,11 +254,11 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
     const renderAreaChart = () => {
         const { data, fields } = getDataAndFields();
         console.log('renderAreaChart - data:', data, 'fields:', fields);
-        if (!data.length || !fields.length || !chart.config.area_chart_config) {
-            console.log('Area chart render failed:', { dataLength: data.length, fieldsLength: fields.length, areaConfig: chart.config.area_chart_config });
+        if (!data.length || !fields.length || !chartDetail?.config.area_chart_config) {
+            console.log('Area chart render failed:', { dataLength: data.length, fieldsLength: fields.length, areaConfig: chartDetail?.config.area_chart_config });
             return <Typography fontSize={14}>No data</Typography>;
         }
-        const config = chart.config.area_chart_config;
+        const config = chartDetail.config.area_chart_config;
         const xField = config.x_axis || fields[0];
         const yField = config.y_axis || fields[1] || fields[0];
         const labels = data.map((row: any) => String(row[xField] || 'N/A'));
@@ -294,10 +313,10 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
         );
     };
     const renderChart = () => {
-        console.log('renderChart called with chart type:', chart.config.type);
+        console.log('renderChart called with chart type:', chartDetail?.config.type);
         console.log('previewData available:', !!previewData);
-        if (!previewData) return null;
-        switch (chart.config.type) {
+        if (!previewData || !chartDetail) return null;
+        switch (chartDetail.config.type) {
             case 'bar': return renderBarChart();
             case 'pie': return renderPieChart();
             case 'line': return renderLineChart();
@@ -315,8 +334,8 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
             ) : (
                 <>
                     {renderChart()}
-                    <Typography variant="subtitle1" fontWeight={600} mt={1} mb={0.5} textAlign="center">{chart.name}</Typography>
-                    <Typography variant="body2" color="text.secondary" textAlign="center">{chart.description}</Typography>
+                    <Typography variant="subtitle1" fontWeight={600} mt={1} mb={0.5} textAlign="center">{chartDetail?.name}</Typography>
+                    <Typography variant="body2" color="text.secondary" textAlign="center">{chartDetail?.description}</Typography>
                 </>
             )}
         </Box>
@@ -416,7 +435,7 @@ const ReportViewPage: React.FC = () => {
         const newBlock: ReportBlock = {
             id: uuidv4(),
             type: 'chart',
-            content: { chartId: chart.id, chart },
+            content: { chartId: chart.id },
         };
         let newBlocks = [...blocks];
         if (addBlockIdx === -1) {
@@ -554,7 +573,7 @@ const ReportViewPage: React.FC = () => {
             temp.appendChild(desc);
         }
         // Charts: chụp từng chart thành ảnh rồi gắn vào DOM tạm
-        const chartsToExport = blocks.filter((b: any) => b.type === 'chart' && options.selectedChartIds.includes(b.content.chartId)).map((b: any) => b.content.chart);
+        const chartsToExport = blocks.filter((b: any) => b.type === 'chart' && options.selectedChartIds.includes(b.content.chartId)).map((b: any) => ({ id: b.content.chartId }));
         const html2canvas = (await import('html2canvas')).default;
         // Tạo container cho chart theo layout
         const chartContainer = document.createElement('div');
@@ -631,7 +650,7 @@ const ReportViewPage: React.FC = () => {
             return (report as any).charts.map((chart: any) => ({
                 id: chart.id,
                 type: 'chart',
-                content: { chartId: chart.id, chart },
+                content: { chartId: chart.id },
             }));
         }
 
@@ -785,11 +804,11 @@ const ReportViewPage: React.FC = () => {
                                             {block.type === 'chart' ? (
                                                 editMode && report?.can_edit !== false ? (
                                                     <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
-                                                        <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
+                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chartId} />
                                                     </Paper>
                                                 ) : (
                                                     <Box sx={{ py: 1 }} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
-                                                        <ChartPreviewInReport chart={(block.content as import('../../types/report').ChartBlockContent).chart} />
+                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chartId} />
                                                     </Box>
                                                 )
                                             ) : block.type === 'text' ? (
@@ -897,7 +916,7 @@ const ReportViewPage: React.FC = () => {
                 open={exportDialogOpen}
                 onClose={() => setExportDialogOpen(false)}
                 onExport={handleExportPDF}
-                charts={getBlocks(report).filter(b => b.type === 'chart').map((b: any) => ({ id: b.content.chartId, name: b.content.chart?.name || '' })) || []}
+                charts={getBlocks(report).filter(b => b.type === 'chart').map((b: any) => ({ id: b.content.chartId, name: '' })) || []}
                 defaultScale={3}
             />
         </Stack>
