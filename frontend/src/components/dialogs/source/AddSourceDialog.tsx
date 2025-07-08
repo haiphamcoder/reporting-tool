@@ -336,8 +336,9 @@ const AddSourceDialog: React.FC<AddSourceDialogProps> = ({
       <Dialog
         open={open}
         onClose={onClose}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        sx={{ '& .MuiDialog-paper': { minWidth: 700, maxWidth: 900 } }}
       >
         <DialogTitle>
           {getStepTitle()}

@@ -1,8 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,12 +36,24 @@ interface SourceJpaRepository extends JpaRepository<Source, Long> {
             @Param("search") String search,
             Pageable pageable);
 
+    @Query("SELECT COUNT(s) FROM Source s WHERE (s.userId = :userId OR s.id IN :sourceIds) AND s.isDeleted = :isDeleted")
+    Long countByUserIdOrSourceIdAndIsDeleted(
+            @Param("userId") Long userId,
+            @Param("sourceIds") Set<Long> sourceIds,
+            @Param("isDeleted") Boolean isDeleted);
+
     Optional<Source> findByIdAndUserId(Long id, Long userId);
 
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
     @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND DATE(s.createdAt) = DATE(:date)")
     Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    @Query("SELECT COUNT(s) FROM Source s WHERE (s.userId = :userId OR s.id IN :sourceIds) AND s.isDeleted = :isDeleted AND DATE(s.createdAt) = DATE(:date)")
+    Long countByUserIdOrSourceIdAndIsDeletedAndCreatedDate(@Param("userId") Long userId,
+            @Param("sourceIds") Set<Long> sourceIds,
+            @Param("isDeleted") Boolean isDeleted,
+            @Param("date") LocalDate date);
 
     @Query("SELECT COUNT(s) FROM Source s WHERE s.userId = :userId AND s.name = :sourceName AND s.isDeleted = false")
     Long countByUserIdAndName(@Param("userId") Long userId, @Param("sourceName") String sourceName);
@@ -104,23 +114,20 @@ public class SourceRepositoryImpl implements SourceRepository {
     }
 
     @Override
-    public List<Long> getSourceCountByLast30Days(Long userId) {
-        List<Long> result = new LinkedList<>();
-        LocalDate today = LocalDate.now();
-
-        for (int i = 29; i >= 0; i--) {
-            java.time.LocalDate date = today.minusDays(i);
-            Long count = sourceJpaRepository.countByUserIdAndCreatedDate(userId, date);
-            result.add(count);
-        }
-
-        return result;
+    public Long getSourceCountByUserIdOrSourceIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> sourceIds,
+            Boolean isDeleted, LocalDate date) {
+        return sourceJpaRepository.countByUserIdOrSourceIdAndIsDeletedAndCreatedDate(userId, sourceIds, isDeleted, date);
     }
 
     @Override
     public Optional<Source> updateSource(Source source) {
         Source savedSource = sourceJpaRepository.save(source);
         return Optional.of(savedSource);
+    }
+
+    @Override
+    public Long getTotalSourceByUserIdOrSourceIdAndIsDeleted(Long userId, Set<Long> sourceIds, Boolean isDeleted) {
+        return sourceJpaRepository.countByUserIdOrSourceIdAndIsDeleted(userId, sourceIds, isDeleted);
     }
 
 }
