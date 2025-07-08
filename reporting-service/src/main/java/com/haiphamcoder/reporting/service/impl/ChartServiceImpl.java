@@ -37,7 +37,6 @@ import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.UserGrpcClient;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.Pair;
-import com.haiphamcoder.reporting.shared.QueryOptionToSqlConverter;
 import com.haiphamcoder.reporting.shared.SnowflakeIdGenerator;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -193,7 +192,8 @@ public class ChartServiceImpl implements ChartService {
                 sourceTableNames.put(joinSource.get().getId().toString(), joinSource.get().getTableName());
             }
         }
-        return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
+        return null;
+        // return QueryOptionToSqlConverter.convertToSql(queryOption, source.get().getTableName(), sourceTableNames);
     }
 
     @Override

@@ -46,34 +46,27 @@ const ChartPreviewInReport: React.FC<{ chart: any }> = ({ chart }) => {
 
                 let sql_query = '';
                 let fields: any[] = [];
-                if (chart.config.mode === 'basic') {
-                    if (chart.config.query_option) {
-                        // Convert query_option to SQL query
-                        const res = await fetch(`${API_CONFIG.BASE_URL}/reporting/charts/convert-query`, {
-                            method: 'POST',
-                            credentials: 'include',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify(chart.config.query_option),
-                        });
-                        const data = await res.json();
-                        if (!data.success) throw new Error(data.message || 'Failed to convert query');
-                        sql_query = data.result;
-                        fields = (chart.config.query_option.fields || []).map((f: any) => ({
-                            field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
-                            data_type: f.data_type,
-                            alias: f.alias || ''
-                        }));
-                        console.log('Converted SQL query:', sql_query);
-                        console.log('Fields:', fields);
-                    }
-                } else if (chart.config.mode === 'advanced' && chart.sql_query) {
+                
+                // Sử dụng sql_query đã có sẵn trong chart data
+                if (chart.sql_query) {
                     sql_query = chart.sql_query;
-                    fields = [];
-                    console.log('Using advanced SQL query:', sql_query);
+                    console.log('Using sql_query from chart data:', sql_query);
+                } else if (chart.config.sql_query) {
+                    sql_query = chart.config.sql_query;
+                    console.log('Using sql_query from chart config:', sql_query);
+                } else {
+                    throw new Error('No SQL query available in chart data');
                 }
+                
+                // Chuẩn bị fields cho API previewData
+                if (chart.config.query_option && chart.config.query_option.fields) {
+                    fields = (chart.config.query_option.fields || []).map((f: any) => ({
+                        field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
+                        data_type: f.data_type,
+                        alias: f.alias || ''
+                    }));
+                }
+                console.log('Fields:', fields);
                 if (!sql_query) throw new Error('No SQL query available');
                 // Fetch preview data
                 const previewRes = await fetch(`${API_CONFIG.BASE_URL}/data-processing/charts/preview-data`, {

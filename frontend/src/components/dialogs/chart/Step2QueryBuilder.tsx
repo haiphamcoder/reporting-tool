@@ -221,6 +221,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 let sql_query = '';
                 try {
                     sql_query = generateSqlFromQueryOption(queryOption, sources);
+                    // Set SQL query toàn cục để sử dụng ở step3
+                    onSqlQueryChange(sql_query);
                 } catch (frontendError) {
                     throw new Error('Failed to generate SQL from query options.');
                 }
@@ -314,6 +316,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                 let sql = '';
                 try {
                     sql = generateSqlFromQueryOption(queryOption, sources);
+                    // Set SQL query toàn cục để sử dụng ở step3
+                    onSqlQueryChange(sql);
                 } catch (frontendError) {
                     console.warn('Frontend SQL generation failed, falling back to API:', frontendError);
                     // Fallback: gọi API nếu frontend generation thất bại
@@ -322,6 +326,8 @@ const Step2QueryBuilder: React.FC<Step2QueryBuilderProps> = ({
                         throw new Error(convertRes.message || 'Failed to convert query');
                     }
                     sql = convertRes.result;
+                    // Set SQL query toàn cục từ API result
+                    onSqlQueryChange(sql);
                 }
                 const formattedSql = formatSql(sql);
                 setSqlPreviewText(formattedSql);

@@ -165,31 +165,36 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
             let sql_query = '';
             let fields: any[] = [];
 
-            if (chart.config?.mode === 'basic' && chart.config?.query_option) {
-                // Convert query_option to SQL query
-                const convertRes = await chartApi.convertQuery(chart.config.query_option);
-                if (!convertRes.success || !convertRes.result) {
-                    throw new Error(convertRes.message || 'Failed to convert query');
+            // Sử dụng sql_query đã có sẵn trong chart data
+            if (chart.sql_query) {
+                sql_query = chart.sql_query;
+            } else if (chart.config?.sql_query) {
+                sql_query = chart.config.sql_query;
+            } else {
+                // Fallback: nếu không có sql_query, thử convert từ query_option
+                if (chart.config?.mode === 'basic' && chart.config?.query_option) {
+                    const convertRes = await chartApi.convertQuery(chart.config.query_option);
+                    if (!convertRes.success || !convertRes.result) {
+                        throw new Error(convertRes.message || 'Failed to convert query');
+                    }
+                    sql_query = convertRes.result;
+                } else {
+                    // No data to preview
+                    return;
                 }
-                sql_query = convertRes.result;
+            }
 
-                // Prepare fields for preview-data API
+            if (!sql_query) {
+                return;
+            }
+
+            // Prepare fields for preview-data API
+            if (chart.config?.query_option && chart.config.query_option.fields) {
                 fields = (chart.config.query_option.fields || []).map((f: any) => ({
                     field_name: f.alias && f.alias !== '' ? f.alias : f.field_name,
                     data_type: f.data_type,
                     alias: f.alias || ''
                 }));
-            } else if (chart.config?.mode === 'advanced' && chart.sql_query) {
-                // Use SQL query directly
-                sql_query = chart.sql_query;
-                fields = [];
-            } else {
-                // No data to preview
-                return;
-            }
-
-            if (!sql_query) {
-                return;
             }
 
             // Call preview-data API
@@ -220,12 +225,17 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
             let fields: any[] = [];
 
             if (chartMode === 'basic') {
-                // Convert query_option to SQL query
-                const convertRes = await chartApi.convertQuery(queryOption);
-                if (!convertRes.success || !convertRes.result) {
-                    throw new Error(convertRes.message || 'Failed to convert query');
+                // Sử dụng sqlQuery đã được set từ Step2QueryBuilder
+                if (sqlQuery && sqlQuery.trim()) {
+                    sql_query = sqlQuery;
+                } else {
+                    // Fallback: convert từ queryOption nếu chưa có sqlQuery
+                    const convertRes = await chartApi.convertQuery(queryOption);
+                    if (!convertRes.success || !convertRes.result) {
+                        throw new Error(convertRes.message || 'Failed to convert query');
+                    }
+                    sql_query = convertRes.result;
                 }
-                sql_query = convertRes.result;
 
                 // Prepare fields for preview-data API
                 fields = (queryOption.fields || []).map((f: any) => ({
@@ -349,7 +359,8 @@ const EditChartDialog: React.FC<EditChartDialogProps> = ({
             const chartData: CreateChartRequest = {
                 name: name.trim(),
                 description: description.trim(),
-                config: chartConfig
+                config: chartConfig,
+                sql_query: sqlQuery
             };
 
             if (chartMode === 'advanced') {

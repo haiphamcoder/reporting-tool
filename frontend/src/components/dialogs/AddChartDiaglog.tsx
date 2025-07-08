@@ -109,6 +109,11 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
                     setError('At least one field is required');
                     return;
                 }
+                // Đảm bảo sqlQuery đã được set cho basic mode
+                if (!sqlQuery.trim()) {
+                    setError('Please preview data to generate SQL query');
+                    return;
+                }
             } else {
                 if (!sqlQuery.trim()) {
                     setError('SQL query is required');
@@ -192,7 +197,13 @@ const AddChartDialog: React.FC<AddChartDialogProps> = ({
                     finalSqlQuery = generateSqlFromQueryOption(queryOption, sources);
                 } catch (error) {
                     console.warn('Failed to generate SQL from queryOption:', error);
+                    throw new Error('Failed to generate SQL query. Please try previewing data first.');
                 }
+            }
+            
+            // Validate SQL query
+            if (!finalSqlQuery || !finalSqlQuery.trim()) {
+                throw new Error('SQL query is required. Please preview data first to generate the query.');
             }
 
             const chartData: CreateChartRequest = {
