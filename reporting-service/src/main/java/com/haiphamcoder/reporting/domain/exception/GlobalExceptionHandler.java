@@ -57,7 +57,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Object>> handleAllExceptions(Exception ex, HttpServletRequest request) {
                 String message = "An unexpected error occurred: " + ex.getMessage();
-
+                ex.printStackTrace();
                 return ResponseEntity
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -67,6 +67,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         @ExceptionHandler(RuntimeException.class)
         public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException ex,
                         HttpServletRequest request) {
+                ex.printStackTrace();
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR,
                                                 ex.getMessage(), request.getRequestURI()));

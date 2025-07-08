@@ -73,4 +73,8 @@ public class ChartPermission {
         return permission.contains("edit");
     }
 
+    public boolean hasOwnerPermission() {
+        return permission.contains("owner");
+    }
+
 }

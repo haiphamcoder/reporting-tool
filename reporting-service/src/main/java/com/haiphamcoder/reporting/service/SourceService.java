@@ -24,8 +24,6 @@ public interface SourceService {
 
     public Pair<List<SourceDto>, Metadata> getAllSourcesByUserId(Long userId, String search, Integer page, Integer limit);
 
-    public SourceDto createSource(SourceDto sourceDto);
-
     public String uploadFile(Long userId, Long sourceId, MultipartFile file);
 
     public Map<String, String> getHistoryUploadFile(Long userId, Integer connectorType);

@@ -84,7 +84,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
             </Box>
 
             {/* Chart Mode Selection */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {/* <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography variant="h6" gutterBottom>
                     Chart Mode
                 </Typography>
@@ -148,7 +148,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
                         </Grid>
                     </Grid>
                 </RadioGroup>
-            </Box>
+            </Box> */}
 
             {/* Chart Type Selection */}
             <Typography variant="h6" gutterBottom>

@@ -31,6 +31,7 @@ import {
     Delete as DeleteIcon
 } from '@mui/icons-material';
 import { API_CONFIG } from '../../config/api';
+import SharePermissionWarningDialog from './SharePermissionWarningDialog';
 
 interface User {
     id: string;
@@ -81,6 +82,9 @@ export default function ShareChartDialog({
     // Selected user for adding
     const [, setSelectedUser] = useState<User | null>(null);
     const [selectedPermission, setSelectedPermission] = useState<'view' | 'edit'>('view');
+
+    // Warning dialog state
+    const [showWarningDialog, setShowWarningDialog] = useState(false);
 
     // Utility function to ensure ID is always string
     const ensureStringId = (id: any): string => {
@@ -251,6 +255,18 @@ export default function ShareChartDialog({
 
     // Save shared configuration
     const handleSave = async () => {
+        // Show warning dialog first if there are users to share with
+        if (sharedUsers.length > 0) {
+            setShowWarningDialog(true);
+            return;
+        }
+        
+        // If no users to share, proceed directly
+        await performSave();
+    };
+
+    // Actual save operation
+    const performSave = async () => {
         try {
             setLoading(true);
             setError(null);
@@ -295,6 +311,17 @@ export default function ShareChartDialog({
         } finally {
             setLoading(false);
         }
+    };
+
+    // Handle warning dialog confirmation
+    const handleWarningConfirm = () => {
+        setShowWarningDialog(false);
+        performSave();
+    };
+
+    // Handle warning dialog close
+    const handleWarningClose = () => {
+        setShowWarningDialog(false);
     };
 
     // Reset form when dialog opens/closes
@@ -528,6 +555,15 @@ export default function ShareChartDialog({
                     {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
             </DialogActions>
+
+            {/* Warning Dialog */}
+            <SharePermissionWarningDialog
+                open={showWarningDialog}
+                onClose={handleWarningClose}
+                onConfirm={handleWarningConfirm}
+                type="chart"
+                itemName={chartName}
+            />
         </Dialog>
     );
 } 
