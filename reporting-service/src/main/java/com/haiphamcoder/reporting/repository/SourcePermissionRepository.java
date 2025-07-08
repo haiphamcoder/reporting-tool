@@ -19,6 +19,6 @@ public interface SourcePermissionRepository {
 
     void deleteAllSourcePermissionsBySourceIdAndUserId(Long sourceId, Long userId);
 
-    void deleteAllSourcePermissionsBySourceId(Long sourceId);
+    void deleteAllSourcePermissionsBySourceIdAndUserIdNot(Long sourceId, Long userId);
     
 }

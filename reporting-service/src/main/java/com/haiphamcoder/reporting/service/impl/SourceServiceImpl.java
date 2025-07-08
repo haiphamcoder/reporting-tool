@@ -2,6 +2,7 @@ package com.haiphamcoder.reporting.service.impl;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -86,7 +87,7 @@ public class SourceServiceImpl implements SourceService {
             SourcePermission sourcePermission = SourcePermission.builder()
                     .sourceId(createdSource.get().getId())
                     .userId(userId)
-                    .permission(CommonConstants.SOURCE_PERMISSION_ALL)
+                    .permission(SourcePermissionType.OWNER.getValue())
                     .build();
             sourcePermissionRepository.createSourcePermission(sourcePermission);
 
@@ -105,9 +106,8 @@ public class SourceServiceImpl implements SourceService {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
             SourceDto sourceDto = SourceMapper.toDto(source.get());
-            sourceDto.setCanEdit(source.get().getUserId().equals(userId)
-                    || permissionService.hasEditSourcePermission(userId, source.get().getId()));
-            sourceDto.setCanShare(source.get().getUserId().equals(userId));
+            sourceDto.setCanEdit(permissionService.hasEditSourcePermission(userId, source.get().getId()));
+            sourceDto.setCanShare(permissionService.hasOwnerSourcePermission(userId, source.get().getId()));
             return sourceDto;
         }
         throw new ResourceNotFoundException("Source", sourceId);
@@ -132,10 +132,8 @@ public class SourceServiceImpl implements SourceService {
                             .email(userDto.getEmail())
                             .avatar(userDto.getAvatarUrl())
                             .build());
-                    sourceDto.setCanEdit(source.getUserId().equals(userId)
-                            || permissionService.hasEditSourcePermission(userId, source.getId()));
-                    sourceDto.setCanShare(source.getUserId().equals(userId)
-                            || permissionService.hasViewSourcePermission(userId, source.getId()));
+                    sourceDto.setCanEdit(permissionService.hasEditSourcePermission(userId, source.getId()));
+                    sourceDto.setCanShare(permissionService.hasOwnerSourcePermission(userId, source.getId()));
                     return sourceDto;
                 })
                 .toList(),
@@ -146,15 +144,6 @@ public class SourceServiceImpl implements SourceService {
                         .currentPage(sources.getNumber())
                         .pageSize(sources.getSize())
                         .build());
-    }
-
-    @Override
-    public SourceDto createSource(SourceDto sourceDto) {
-        Optional<Source> createdSource = sourceRepository.createSource(SourceMapper.toEntity(sourceDto));
-        if (createdSource.isPresent()) {
-            return SourceMapper.toDto(createdSource.get());
-        }
-        throw new RuntimeException("Create source failed");
     }
 
     @Override
@@ -282,21 +271,19 @@ public class SourceServiceImpl implements SourceService {
     @Override
     public void deleteSource(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
-        if (source.isPresent()) {
-            if (source.get().getUserId().equals(userId)) {
-                source.get().setIsDeleted(true);
-                sourceRepository.updateSource(source.get());
-                sourcePermissionRepository.deleteAllSourcePermissionsBySourceId(sourceId);
+        if (source.isEmpty()) {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!Objects.equals(source.get().getUserId(), userId)) {
+            if (permissionService.hasViewSourcePermission(userId, sourceId)) {
+                sourcePermissionRepository.deleteAllSourcePermissionsBySourceIdAndUserId(sourceId, userId);
             } else {
-                if (!permissionService.hasEditSourcePermission(userId, sourceId)
-                        || !permissionService.hasViewSourcePermission(userId, sourceId)) {
-                    sourcePermissionRepository.deleteAllSourcePermissionsBySourceIdAndUserId(sourceId, userId);
-                } else {
-                    throw new ForbiddenException("You are not allowed to delete this source");
-                }
+                throw new ForbiddenException("You are not allowed to delete this chart");
             }
         } else {
-            throw new ResourceNotFoundException("Source", sourceId);
+            source.get().setIsDeleted(true);
+            sourceRepository.updateSource(source.get());
+            sourcePermissionRepository.deleteAllSourcePermissionsBySourceIdAndUserIdNot(sourceId, userId);
         }
     }
 
@@ -304,6 +291,9 @@ public class SourceServiceImpl implements SourceService {
     public SourceDto updateSource(Long userId, Long sourceId, UpdateSourceRequest request) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
+            if (!permissionService.hasEditSourcePermission(userId, sourceId)) {
+                throw new ForbiddenException("You are not allowed to update this source");
+            }
             source.get().setName(request.getName());
             source.get().setDescription(request.getDescription());
             Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
@@ -321,8 +311,7 @@ public class SourceServiceImpl implements SourceService {
     public void cloneSource(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isPresent()) {
-            if (source.get().getUserId().equals(userId)
-                    || permissionService.hasViewSourcePermission(userId, sourceId)) {
+            if (permissionService.hasViewSourcePermission(userId, sourceId)) {
                 SourceDto clonedSource = SourceMapper.toDto(source.get());
                 clonedSource.setId(String.valueOf(SnowflakeIdGenerator.getInstance().generateId()));
                 clonedSource.setName(clonedSource.getName() + " (Copy)");
@@ -336,6 +325,12 @@ public class SourceServiceImpl implements SourceService {
                     if (!success) {
                         throw new RuntimeException("Clone source failed");
                     }
+                    SourcePermission sourcePermission = SourcePermission.builder()
+                            .sourceId(savedSource.get().getId())
+                            .userId(userId)
+                            .permission(SourcePermissionType.OWNER.getValue())
+                            .build();
+                    sourcePermissionRepository.createSourcePermission(sourcePermission);
                 } else {
                     throw new RuntimeException("Clone source failed");
                 }
@@ -345,26 +340,49 @@ public class SourceServiceImpl implements SourceService {
         }
     }
 
+    public UserSourcePermission getUserSourcePermission(Long userId, Long sourceId) {
+        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
+                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
+        if (sourcePermission.isEmpty()) {
+            throw new ResourceNotFoundException("Not found source permission", userId);
+        }
+        UserDto userDto = userGrpcClient.getUserById(sourcePermission.get().getUserId());
+        return UserSourcePermission.builder()
+                .userId(String.valueOf(sourcePermission.get().getUserId()))
+                .name(userDto.getFirstName() + " " + userDto.getLastName())
+                .email(userDto.getEmail())
+                .avatar(userDto.getAvatarUrl())
+                .permission(SourcePermissionType.fromValue(sourcePermission.get().getPermission()))
+                .build();
+    }
+
     @Override
     public List<UserSourcePermission> getShareSource(Long userId, Long sourceId) {
         Optional<Source> source = sourceRepository.getSourceById(sourceId);
         if (source.isEmpty()) {
             throw new ResourceNotFoundException("Source", sourceId);
         }
-        if (!Objects.equals(source.get().getUserId(), userId)) {
-            throw new ForbiddenException("You are not allowed to get share source");
+        if (Objects.equals(source.get().getUserId(), userId)) {
+            List<SourcePermission> sourcePermissions = sourcePermissionRepository
+                    .getSourcePermissionsBySourceId(sourceId);
+            List<UserSourcePermission> userSourcePermissions = new ArrayList<>();
+            for (SourcePermission sourcePermission : sourcePermissions) {
+                if (sourcePermission.getPermission().equals(SourcePermissionType.OWNER.getValue())) {
+                    continue;
+                }
+                UserDto userDto = userGrpcClient.getUserById(sourcePermission.getUserId());
+                userSourcePermissions.add(UserSourcePermission.builder()
+                        .userId(String.valueOf(sourcePermission.getUserId()))
+                        .name(userDto.getFirstName() + " " + userDto.getLastName())
+                        .email(userDto.getEmail())
+                        .avatar(userDto.getAvatarUrl())
+                        .permission(SourcePermissionType.fromValue(sourcePermission.getPermission()))
+                        .build());
+            }
+            return userSourcePermissions;
+        } else {
+            throw new ForbiddenException("You are not allowed to get share chart");
         }
-        List<SourcePermission> sourcePermissions = sourcePermissionRepository.getSourcePermissionsBySourceId(sourceId);
-        return sourcePermissions.stream().map(sourcePermission -> {
-            UserDto userDto = userGrpcClient.getUserById(sourcePermission.getUserId());
-            return UserSourcePermission.builder()
-                    .userId(String.valueOf(sourcePermission.getUserId()))
-                    .name(userDto.getFirstName() + " " + userDto.getLastName())
-                    .email(userDto.getEmail())
-                    .avatar(userDto.getAvatarUrl())
-                    .permission(SourcePermissionType.fromValue(sourcePermission.getPermission()))
-                    .build();
-        }).toList();
     }
 
     @Override
@@ -373,20 +391,21 @@ public class SourceServiceImpl implements SourceService {
         if (source.isEmpty()) {
             throw new ResourceNotFoundException("Source", sourceId);
         }
-        if (!Objects.equals(source.get().getUserId(), userId)) {
-            throw new ForbiddenException("You are not allowed to share this source");
-        }
-        sourcePermissionRepository.deleteAllSourcePermissionsBySourceId(sourceId);
-        for (UserSourcePermission userSourcePermission : shareSourceRequest.getUserSourcePermissions()) {
-            if (String.valueOf(userId).equals(userSourcePermission.getUserId())) {
-                continue;
+        if (Objects.equals(source.get().getUserId(), userId)) {
+            sourcePermissionRepository.deleteAllSourcePermissionsBySourceIdAndUserIdNot(sourceId, userId);
+            for (UserSourcePermission userSourcePermission : shareSourceRequest.getUserSourcePermissions()) {
+                if (String.valueOf(userId).equals(userSourcePermission.getUserId())) {
+                    continue;
+                }
+                SourcePermission sourcePermission = SourcePermission.builder()
+                        .sourceId(source.get().getId())
+                        .userId(Long.parseLong(userSourcePermission.getUserId()))
+                        .permission(userSourcePermission.getPermission().getValue())
+                        .build();
+                sourcePermissionRepository.saveSourcePermission(sourcePermission);
             }
-            SourcePermission sourcePermission = SourcePermission.builder()
-                    .sourceId(source.get().getId())
-                    .userId(Long.parseLong(userSourcePermission.getUserId()))
-                    .permission(userSourcePermission.getPermission().getValue())
-                    .build();
-            sourcePermissionRepository.saveSourcePermission(sourcePermission);
+        } else {
+            throw new ForbiddenException("You are not allowed to share this chart");
         }
     }
 

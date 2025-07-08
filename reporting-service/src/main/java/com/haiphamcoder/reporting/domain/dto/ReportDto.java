@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.haiphamcoder.reporting.domain.enums.ReportPermissionType;
 
@@ -133,12 +134,8 @@ public class ReportDto {
             @JsonProperty("type")
             private BlockType type;
 
-            @JsonSubTypes({
-                    @JsonSubTypes.Type(value = TextBlockContent.class, name = "text"),
-                    @JsonSubTypes.Type(value = ChartBlockContent.class, name = "chart")
-            })
             @JsonProperty("content")
-            private Object content;
+            private BlockContent content;
 
             @AllArgsConstructor
             public static enum BlockType {
@@ -163,13 +160,19 @@ public class ReportDto {
             @AllArgsConstructor
             @JsonInclude(JsonInclude.Include.NON_NULL)
             @JsonIgnoreProperties(ignoreUnknown = true)
-            public static class TextBlockContent {
+            public static class BlockContent {
 
                 @JsonProperty("text")
                 private String text;
 
                 @JsonProperty("format")
                 private TextBlockFormat format;
+
+                @JsonProperty("chart_id")
+                private String chartId;
+
+                @JsonProperty("chart")
+                private ChartDto chart;
 
                 @Data
                 @Builder
@@ -258,23 +261,7 @@ public class ReportDto {
                                     .orElse(null);
                         }
                     }
-
                 }
-            }
-
-            @Data
-            @Builder
-            @NoArgsConstructor
-            @AllArgsConstructor
-            @JsonInclude(JsonInclude.Include.NON_NULL)
-            @JsonIgnoreProperties(ignoreUnknown = true)
-            public static class ChartBlockContent {
-
-                @JsonProperty("chart_id")
-                private String chartId;
-
-                @JsonProperty("chart")
-                private ChartDto chart;
 
             }
 

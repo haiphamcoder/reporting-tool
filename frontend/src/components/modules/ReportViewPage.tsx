@@ -435,7 +435,7 @@ const ReportViewPage: React.FC = () => {
         const newBlock: ReportBlock = {
             id: uuidv4(),
             type: 'chart',
-            content: { chartId: chart.id },
+            content: { chart_id: chart.id },
         };
         let newBlocks = [...blocks];
         if (addBlockIdx === -1) {
@@ -497,6 +497,7 @@ const ReportViewPage: React.FC = () => {
 
         setSaving(true);
         try {
+            // Không cần chuyển đổi key nữa, blocks đã là snake_case
             const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REPORTS}/${id}`, {
                 method: 'PUT',
                 credentials: 'include',
@@ -573,7 +574,7 @@ const ReportViewPage: React.FC = () => {
             temp.appendChild(desc);
         }
         // Charts: chụp từng chart thành ảnh rồi gắn vào DOM tạm
-        const chartsToExport = blocks.filter((b: any) => b.type === 'chart' && options.selectedChartIds.includes(b.content.chartId)).map((b: any) => ({ id: b.content.chartId }));
+        const chartsToExport = blocks.filter((b: any) => b.type === 'chart' && options.selectedChartIds.includes(b.content.chart_id)).map((b: any) => ({ id: b.content.chart_id }));
         const html2canvas = (await import('html2canvas')).default;
         // Tạo container cho chart theo layout
         const chartContainer = document.createElement('div');
@@ -650,7 +651,7 @@ const ReportViewPage: React.FC = () => {
             return (report as any).charts.map((chart: any) => ({
                 id: chart.id,
                 type: 'chart',
-                content: { chartId: chart.id },
+                content: { chart_id: chart.id },
             }));
         }
 
@@ -803,12 +804,12 @@ const ReportViewPage: React.FC = () => {
                                             )}
                                             {block.type === 'chart' ? (
                                                 editMode && report?.can_edit !== false ? (
-                                                    <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
-                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chartId} />
+                                                    <Paper sx={{ p: 2 }} elevation={2} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chart_id}>
+                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chart_id} />
                                                     </Paper>
                                                 ) : (
-                                                    <Box sx={{ py: 1 }} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chartId}>
-                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chartId} />
+                                                    <Box sx={{ py: 1 }} data-chart-id={(block.content as import('../../types/report').ChartBlockContent).chart_id}>
+                                                        <ChartPreviewInReport chartId={(block.content as import('../../types/report').ChartBlockContent).chart_id} />
                                                     </Box>
                                                 )
                                             ) : block.type === 'text' ? (
@@ -893,7 +894,7 @@ const ReportViewPage: React.FC = () => {
                 open={addChartDialogOpen}
                 onClose={() => setAddChartDialogOpen(false)}
                 reportId={report?.id || ''}
-                existingChartIds={blocks.filter(b => b.type === 'chart').map((b: any) => b.content.chartId) || []}
+                existingChartIds={blocks.filter(b => b.type === 'chart').map((b: any) => b.content.chart_id) || []}
                 onSuccess={chart => handleChartSelected(chart)}
                 selectMode
             />
@@ -916,7 +917,7 @@ const ReportViewPage: React.FC = () => {
                 open={exportDialogOpen}
                 onClose={() => setExportDialogOpen(false)}
                 onExport={handleExportPDF}
-                charts={getBlocks(report).filter(b => b.type === 'chart').map((b: any) => ({ id: b.content.chartId, name: '' })) || []}
+                charts={getBlocks(report).filter(b => b.type === 'chart').map((b: any) => ({ id: b.content.chart_id, name: '' })) || []}
                 defaultScale={3}
             />
         </Stack>

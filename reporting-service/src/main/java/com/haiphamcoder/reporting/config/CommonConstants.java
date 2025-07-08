@@ -42,15 +42,5 @@ public class CommonConstants {
         SOURCE_STATUS_READY, SOURCE_STATUS_READY_STRING,
         SOURCE_STATUS_FAILED, SOURCE_STATUS_FAILED_STRING
     );
-
-    // Source Permission
-    public static final String SOURCE_PERMISSION_NONE = "---";
-    public static final String SOURCE_PERMISSION_READ = "r--";
-    public static final String SOURCE_PERMISSION_WRITE = "-w-";
-    public static final String SOURCE_PERMISSION_READ_WRITE = "rw-";
-    public static final String SOURCE_PERMISSION_EXECUTE = "--x";
-    public static final String SOURCE_PERMISSION_READ_EXECUTE = "r-x";
-    public static final String SOURCE_PERMISSION_WRITE_EXECUTE = "-wx";
-    public static final String SOURCE_PERMISSION_ALL = "rwx";
     
 }

@@ -11,7 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ReportPermissionType {
     VIEW("view"),
-    EDIT("edit");
+    EDIT("edit"),
+    OWNER("owner");
 
     @JsonProperty("value")
     @JsonValue

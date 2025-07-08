@@ -24,7 +24,7 @@ interface SourcePermissionJpaRepository extends JpaRepository<SourcePermission, 
 
     void deleteAllBySourceIdAndUserId(Long sourceId, Long userId);
 
-    void deleteAllBySourceId(Long sourceId);
+    void deleteAllBySourceIdAndUserIdNot(Long sourceId, Long userId);
 }
 
 @Component
@@ -68,8 +68,8 @@ public class SourcePermissionRepositoryImpl implements SourcePermissionRepositor
 
     @Override
     @Transactional
-    public void deleteAllSourcePermissionsBySourceId(Long sourceId) {
-        sourcePermissionJpaRepository.deleteAllBySourceId(sourceId);
+    public void deleteAllSourcePermissionsBySourceIdAndUserIdNot(Long sourceId, Long userId) {
+        sourcePermissionJpaRepository.deleteAllBySourceIdAndUserIdNot(sourceId, userId);
     }
 
 }

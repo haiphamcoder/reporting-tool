@@ -71,4 +71,8 @@ public class ReportPermission {
         return permission.contains("edit");
     }
 
+    public boolean hasOwnerPermission() {
+        return permission.contains("owner");
+    }
+
 }
