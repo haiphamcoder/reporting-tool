@@ -134,7 +134,8 @@ public class SourceServiceImpl implements SourceService {
                             .build());
                     sourceDto.setCanEdit(source.getUserId().equals(userId)
                             || permissionService.hasEditSourcePermission(userId, source.getId()));
-                    sourceDto.setCanShare(source.getUserId().equals(userId));
+                    sourceDto.setCanShare(source.getUserId().equals(userId)
+                            || permissionService.hasViewSourcePermission(userId, source.getId()));
                     return sourceDto;
                 })
                 .toList(),

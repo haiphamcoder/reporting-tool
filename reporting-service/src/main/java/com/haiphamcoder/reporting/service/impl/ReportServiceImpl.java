@@ -26,10 +26,12 @@ import com.haiphamcoder.reporting.domain.model.request.CreateReportRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareReportRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
+import com.haiphamcoder.reporting.repository.ChartPermissionRepository;
 import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
+import com.haiphamcoder.reporting.repository.SourcePermissionRepository;
 import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.service.ReportService;
 import com.haiphamcoder.reporting.service.UserGrpcClient;
@@ -48,6 +50,8 @@ public class ReportServiceImpl implements ReportService {
     private final ChartRepository chartRepository;
     private final ChartReportRepository chartReportRepository;
     private final ReportPermissionRepository reportPermissionRepository;
+    private final ChartPermissionRepository chartPermissionRepository;
+    private final SourcePermissionRepository sourcePermissionRepository;
     private final UserGrpcClient userGrpcClient;
     private final PermissionService permissionService;
 
@@ -68,7 +72,8 @@ public class ReportServiceImpl implements ReportService {
                     .build());
             reportDto.setCanEdit(report.getUserId().equals(userId)
                     || permissionService.hasEditReportPermission(userId, report.getId()));
-            reportDto.setCanShare(report.getUserId().equals(userId));
+            reportDto.setCanShare(report.getUserId().equals(userId)
+                    || permissionService.hasViewReportPermission(userId, report.getId()));
             return reportDto;
         }).toList(),
                 Metadata.builder()
