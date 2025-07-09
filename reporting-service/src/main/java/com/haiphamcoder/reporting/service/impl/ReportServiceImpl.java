@@ -20,7 +20,6 @@ import com.haiphamcoder.reporting.domain.dto.ReportDto.ReportConfig.Block.BlockT
 import com.haiphamcoder.reporting.domain.dto.UserDto;
 import com.haiphamcoder.reporting.domain.entity.Chart;
 import com.haiphamcoder.reporting.domain.entity.ChartPermission;
-import com.haiphamcoder.reporting.domain.entity.ChartReport;
 import com.haiphamcoder.reporting.domain.entity.Report;
 import com.haiphamcoder.reporting.domain.entity.ReportPermission;
 import com.haiphamcoder.reporting.domain.entity.SourcePermission;
@@ -38,7 +37,6 @@ import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.mapper.ChartMapper;
 import com.haiphamcoder.reporting.mapper.ReportMapper;
 import com.haiphamcoder.reporting.repository.ChartPermissionRepository;
-import com.haiphamcoder.reporting.repository.ChartReportRepository;
 import com.haiphamcoder.reporting.repository.ChartRepository;
 import com.haiphamcoder.reporting.repository.ReportPermissionRepository;
 import com.haiphamcoder.reporting.repository.ReportRepository;
@@ -59,7 +57,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final ChartRepository chartRepository;
-    private final ChartReportRepository chartReportRepository;
     private final ReportPermissionRepository reportPermissionRepository;
     private final ChartPermissionRepository chartPermissionRepository;
     private final SourcePermissionRepository sourcePermissionRepository;
@@ -171,28 +168,6 @@ public class ReportServiceImpl implements ReportService {
                 .build();
         reportPermissionRepository.saveReportPermission(reportPermission);
         return ReportMapper.toReportDto(savedReport.get());
-    }
-
-    @Override
-    public void addChartToReport(Long userId, Long reportId, Long chartId) {
-        Optional<Report> existingReport = reportRepository.getReportById(reportId);
-        if (existingReport.isEmpty()) {
-            throw new ResourceNotFoundException("Report", reportId);
-        }
-        Optional<Chart> existingChart = chartRepository.getChartById(chartId);
-        if (existingChart.isEmpty()) {
-            throw new ResourceNotFoundException("Chart", chartId);
-        }
-        if (!permissionService.hasEditReportPermission(userId, reportId)
-                || !permissionService.hasViewChartPermission(userId, chartId)) {
-            throw new ForbiddenException("You are not allowed to add this chart to report");
-        }
-        ChartReport chartReport = new ChartReport();
-        chartReport.setReportId(reportId);
-        chartReport.setChartId(chartId);
-        chartReport.setCreatedAt(LocalDateTime.now());
-        chartReport.setModifiedAt(LocalDateTime.now());
-        chartReportRepository.save(chartReport);
     }
 
     public UserReportPermission getUserReportPermission(Long userId, Long reportId) {
