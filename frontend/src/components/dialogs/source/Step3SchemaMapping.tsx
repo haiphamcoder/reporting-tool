@@ -45,6 +45,13 @@ const Step3SchemaMapping: React.FC<Step3SchemaMappingProps> = ({
         { value: 'TEXT', label: 'TEXT' },
         { value: 'BIGINT', label: 'BIGINT' },
         { value: 'DOUBLE', label: 'DOUBLE' },
+        { value: 'BOOLEAN', label: 'BOOLEAN' },
+        { value: 'DATE', label: 'DATE' },
+        { value: 'DATETIME', label: 'DATETIME' },
+        { value: 'TIMESTAMP', label: 'TIMESTAMP' },
+        { value: 'ARRAY', label: 'ARRAY' },
+        { value: 'OBJECT', label: 'OBJECT' },
+        { value: 'ENUM', label: 'ENUM' },
         // Thêm các type khác nếu cần
       ],
       align: 'center',

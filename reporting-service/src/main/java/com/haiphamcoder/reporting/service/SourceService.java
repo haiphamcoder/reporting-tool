@@ -30,6 +30,8 @@ public interface SourceService {
 
     public SourceDto confirmSchema(Long userId, SourceDto sourceDto);
 
+    public SourceDto updateStatusSource(Long userId, Long sourceId, Integer status);
+
     public void confirmSheet(Long userId, Long sourceId, ConfirmSheetRequest confirmSheetRequest);
 
     public void deleteSource(Long userId, Long sourceId);

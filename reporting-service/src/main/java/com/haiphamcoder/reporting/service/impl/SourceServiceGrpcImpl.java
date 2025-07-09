@@ -15,7 +15,10 @@ import com.haiphamcoder.reporting.proto.SourceProto;
 import com.haiphamcoder.reporting.proto.SourceServiceGrpc;
 import com.haiphamcoder.reporting.proto.UpdateSourceRequest;
 import com.haiphamcoder.reporting.proto.UpdateSourceResponse;
+import com.haiphamcoder.reporting.proto.UpdateStatusSourceRequest;
+import com.haiphamcoder.reporting.proto.UpdateStatusSourceResponse;
 import com.haiphamcoder.reporting.repository.SourceRepository;
+import com.haiphamcoder.reporting.service.PermissionService;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
 import io.grpc.Status;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SourceServiceGrpcImpl extends SourceServiceGrpc.SourceServiceImplBase {
     private final SourceRepository sourceRepository;
+    private final PermissionService permissionService;
 
     @Override
     public void getSourceById(GetSourceByIdRequest request, StreamObserver<GetSourceByIdResponse> responseObserver) {
@@ -57,6 +61,32 @@ public class SourceServiceGrpcImpl extends SourceServiceGrpc.SourceServiceImplBa
             responseObserver.onCompleted();
         } else {
             responseObserver.onError(Status.INTERNAL.withDescription("Failed to update source").asException());
+        }
+    }
+
+    @Override
+    public void updateStatusSource(UpdateStatusSourceRequest request, StreamObserver<UpdateStatusSourceResponse> responseObserver) {
+        long userId = request.getUserId();
+        long sourceId = request.getSourceId();
+        int status = request.getStatus();
+        if (!permissionService.hasEditSourcePermission(userId, sourceId)) {
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("You are not allowed to update status this source").asException());
+        }
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isEmpty()) {
+            responseObserver.onError(Status.NOT_FOUND.withDescription("Source not found").asException());
+        }
+        Source sourceEntity = source.get();
+        sourceEntity.setStatus(status);
+        Optional<Source> savedSource = sourceRepository.updateSource(sourceEntity);
+        if (savedSource.isPresent()) {
+            UpdateStatusSourceResponse response = UpdateStatusSourceResponse.newBuilder()
+                .setSource(this.convertToSourceProto(savedSource.get()))
+                .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } else {
+            responseObserver.onError(Status.INTERNAL.withDescription("Failed to update source status").asException());
         }
     }
 

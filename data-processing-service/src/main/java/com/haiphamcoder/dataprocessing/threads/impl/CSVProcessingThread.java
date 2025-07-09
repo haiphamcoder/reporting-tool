@@ -2,14 +2,18 @@ package com.haiphamcoder.dataprocessing.threads.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
+import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 import com.haiphamcoder.dataprocessing.threads.AbstractProcessingThread;
 import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.shared.concurrent.ThreadPool;
@@ -26,15 +30,20 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     private final HdfsFileService hdfsFileService;
     private final ExecutorService executorService;
     private final StorageService storageService;
+    private final SourceGrpcClient sourceGrpcClient;
     private final SourceDto sourceDto;
+    private final Long userId;
 
-    public CSVProcessingThread(SourceDto sourceDto,
+    public CSVProcessingThread(Long userId, SourceDto sourceDto,
             StorageService storageService,
-            HdfsFileService hdfsFileService) {
+            HdfsFileService hdfsFileService,
+            SourceGrpcClient sourceGrpcClient) {
         super("csv-processing-thread", false);
         this.hdfsFileService = hdfsFileService;
         this.storageService = storageService;
         this.sourceDto = sourceDto;
+        this.userId = userId;
+        this.sourceGrpcClient = sourceGrpcClient;
 
         executorService = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
@@ -46,6 +55,7 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     }
 
     protected boolean process() {
+        List<Future<?>> futures = new ArrayList<>();
         try (InputStream inputStream = hdfsFileService.streamFile(sourceDto.getConfig().get("file_path").asText())) {
             try (CSVReader csvReader = CSVFileUtils.createCSVReader(inputStream)) {
                 String[] firstLine = csvReader.readNext();
@@ -68,20 +78,29 @@ public class CSVProcessingThread extends AbstractProcessingThread {
 
                     if (records.size() == chunkSize) {
                         final List<String[]> recordsChunk = new LinkedList<>(records);
-                        executorService.submit(() -> processChunk(recordsChunk, header));
+                        futures.add(executorService.submit(() -> processChunk(recordsChunk, header)));
                         records.clear();
                     }
                     records.add(record);
                 }
 
                 if (records.size() > 0) {
-                    executorService.submit(() -> processChunk(records, header));
+                    futures.add(executorService.submit(() -> processChunk(records, header)));
+                }
+
+                for (Future<?> future : futures) {
+                    try {
+                        future.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        log.error("Error processing chunk", e);
+                    }
                 }
 
                 log.info("Total records: {}", recordCount);
             } catch (CsvValidationException e) {
                 throw new RuntimeException(e);
             }
+
             return true;
         } catch (IOException e) {
             log.error("Error processing CSV", e);
@@ -116,15 +135,18 @@ public class CSVProcessingThread extends AbstractProcessingThread {
     public void execute() {
         try {
             log.info("Start processing CSV for source {}", sourceDto.getId());
-
+            sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), 3);
             if (process()) {
                 log.info("CSV of {} processed successfully", sourceDto.getId());
+                sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), 4);
             } else {
                 log.error("CSV of {} processed failed", sourceDto.getId());
+                sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), -1);
             }
         } catch (Exception exception) {
             log.error("CSV of {} process error!", sourceDto.getId());
             log.error(exception.getMessage());
+            sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), 4);
         }
     }
 }

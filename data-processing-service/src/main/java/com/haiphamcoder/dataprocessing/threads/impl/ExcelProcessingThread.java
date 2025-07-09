@@ -2,10 +2,13 @@ package com.haiphamcoder.dataprocessing.threads.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -19,6 +22,7 @@ import org.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.haiphamcoder.dataprocessing.domain.dto.SourceDto;
 import com.haiphamcoder.dataprocessing.service.HdfsFileService;
+import com.haiphamcoder.dataprocessing.service.SourceGrpcClient;
 import com.haiphamcoder.dataprocessing.service.StorageService;
 import com.haiphamcoder.dataprocessing.shared.StringUtils;
 import com.haiphamcoder.dataprocessing.shared.concurrent.ThreadPool;
@@ -35,14 +39,19 @@ public class ExcelProcessingThread extends AbstractProcessingThread {
     private final ExecutorService executorService;
     private final StorageService storageService;
     private final SourceDto sourceDto;
+    private final SourceGrpcClient sourceGrpcClient;
+    private final Long userId;
 
-    public ExcelProcessingThread(SourceDto sourceDto,
+    public ExcelProcessingThread(Long userId, SourceDto sourceDto,
             StorageService storageService,
-            HdfsFileService hdfsFileService) {
+            HdfsFileService hdfsFileService,
+            SourceGrpcClient sourceGrpcClient) {
         super("excel-processing-thread", false);
         this.hdfsFileService = hdfsFileService;
         this.storageService = storageService;
         this.sourceDto = sourceDto;
+        this.sourceGrpcClient = sourceGrpcClient;
+        this.userId = userId;
 
         executorService = ThreadPool.builder()
                 .setCoreSize(Runtime.getRuntime().availableProcessors())
@@ -81,6 +90,7 @@ public class ExcelProcessingThread extends AbstractProcessingThread {
         }
         String dataRangeSelected = dataRangeSelectedNode.asText();
 
+        List<Future<?>> futures = new ArrayList<>();
         try (InputStream inputStream = hdfsFileService.streamFile(filePath)) {
             ExcelFileFormat fileFormat = ExcelFileUtils.getFileFormat(filePath);
             try (Workbook workbook = ExcelFileUtils.createWorkbook(inputStream, fileFormat)) {
@@ -141,20 +151,28 @@ public class ExcelProcessingThread extends AbstractProcessingThread {
                     recordCount++;
                     if (records.size() == chunkSize) {
                         final List<String[]> recordsChunk = new LinkedList<>(records);
-                        executorService.submit(() -> processChunk(recordsChunk, header));
+                        futures.add(executorService.submit(() -> processChunk(recordsChunk, header)));
                         records.clear();
                     }
                     records.add(record);
                 }
 
                 if (records.size() > 0) {
-                    executorService.submit(() -> processChunk(records, header));
+                    futures.add(executorService.submit(() -> processChunk(records, header)));
                 }
 
                 log.info("Total records: {}", recordCount);
             } catch (IOException e) {
                 log.error("Error processing Excel", e);
                 return false;
+            }
+
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error("Error processing chunk", e);
+                }
             }
             return true;
         } catch (IOException e) {
@@ -190,11 +208,13 @@ public class ExcelProcessingThread extends AbstractProcessingThread {
     public void execute() {
         try {
             log.info("Start processing Excel for source {}", sourceDto.getId());
-
+            sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), 3);
             if (process()) {
                 log.info("Excel of {} processed successfully", sourceDto.getId());
+                sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), 4);
             } else {
                 log.error("Excel of {} processed failed", sourceDto.getId());
+                sourceGrpcClient.updateSourceStatus(userId, sourceDto.getId(), -1);
             }
         } catch (Exception exception) {
             log.error("Excel of {} process error!", sourceDto.getId());

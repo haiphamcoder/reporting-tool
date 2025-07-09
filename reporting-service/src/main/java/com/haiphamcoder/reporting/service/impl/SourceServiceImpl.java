@@ -409,4 +409,22 @@ public class SourceServiceImpl implements SourceService {
         }
     }
 
+    @Override
+    public SourceDto updateStatusSource(Long userId, Long sourceId, Integer status) {
+        Optional<Source> source = sourceRepository.getSourceById(sourceId);
+        if (source.isEmpty()) {
+            throw new ResourceNotFoundException("Source", sourceId);
+        }
+        if (!permissionService.hasEditSourcePermission(userId, sourceId)) {
+            throw new ForbiddenException("You are not allowed to update status this source");
+        }
+        source.get().setStatus(status);
+        Optional<Source> updatedSource = sourceRepository.updateSource(source.get());
+        if (updatedSource.isPresent()) {
+            return SourceMapper.toDto(updatedSource.get());
+        } else {
+            throw new RuntimeException("Update source failed");
+        }
+    }
+
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.haiphamcoder.reporting.domain.enums.SourcePermissionType;
+import com.haiphamcoder.reporting.domain.enums.SourceStatusType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,7 +45,8 @@ public class SourceDto {
     private List<Mapping> mapping;
 
     @JsonProperty("status")
-    private Integer status;
+    @Builder.Default
+    private SourceStatusType status = SourceStatusType.INIT;
 
     @JsonProperty("owner")
     private Owner owner;

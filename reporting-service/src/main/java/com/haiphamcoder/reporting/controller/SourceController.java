@@ -12,6 +12,7 @@ import com.haiphamcoder.reporting.domain.model.request.ConfirmSheetRequest;
 import com.haiphamcoder.reporting.domain.model.request.InitSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareSourceRequest;
 import com.haiphamcoder.reporting.domain.model.request.UpdateSourceRequest;
+import com.haiphamcoder.reporting.domain.model.request.UpdateStatusSourceRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllSourcesResponse;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
 import com.haiphamcoder.reporting.service.SourceService;
@@ -64,7 +65,7 @@ public class SourceController {
                         .owner(source.getOwner())
                         .canEdit(source.getCanEdit())
                         .canShare(source.getCanShare())
-                        .status(CommonConstants.SOURCE_STATUS_MAP.get(source.getStatus()))
+                        .status(source.getStatus().getName())
                         .createdAt(source.getCreatedAt())
                         .updatedAt(source.getModifiedAt())
                         .build())
@@ -72,6 +73,14 @@ public class SourceController {
                 .metadata(sources.getSecond())
                 .build();
         return ResponseEntity.ok(ApiResponse.success(response, "Sources fetched successfully"));
+    }
+
+    @PutMapping("/{source-id}/status")
+    public ResponseEntity<ApiResponse<Object>> updateStatusSource(@CookieValue(name = "user-id") Long userId,
+            @PathVariable("source-id") Long sourceId,
+            @RequestBody UpdateStatusSourceRequest updateStatusSourceRequest) {
+        SourceDto updatedSource = sourceService.updateStatusSource(userId, sourceId, updateStatusSourceRequest.getStatus());
+        return ResponseEntity.ok(ApiResponse.success(updatedSource, "Source status updated successfully"));
     }
 
     @GetMapping("/{source-id}/share")

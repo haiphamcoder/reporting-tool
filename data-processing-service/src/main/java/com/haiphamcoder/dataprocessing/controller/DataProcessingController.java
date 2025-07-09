@@ -48,7 +48,7 @@ public class DataProcessingController {
     public ResponseEntity<ApiResponse<Object>> importSource(
             @CookieValue(value = "user-id", required = true) Long userId,
             @PathVariable("id") Long sourceId) {
-        boolean isSuccess = importDataSourceManager.submit(sourceId, true);
+        boolean isSuccess = importDataSourceManager.submit(userId,sourceId, true);
         return ResponseEntity.ok().body(ApiResponse.success(isSuccess, "Source imported successfully"));
     }
 
