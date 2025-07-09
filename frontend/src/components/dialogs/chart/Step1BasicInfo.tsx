@@ -2,9 +2,6 @@ import React from 'react';
 import {
     Box,
     TextField,
-    FormControlLabel,
-    RadioGroup,
-    Radio,
     Typography,
     Grid,
     Card,
@@ -15,9 +12,7 @@ import {
     PieChart as PieChartIcon,
     ShowChart as LineChartIcon,
     StackedLineChart as AreaChartIcon,
-    TableChart as TableChartIcon,
-    Code as AdvancedIcon,
-    Dashboard as BasicIcon
+    TableChart as TableChartIcon
 } from '@mui/icons-material';
 import { ChartType, ChartMode } from '../../../types/chart';
 
@@ -44,11 +39,9 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
     name,
     description,
     chartType,
-    chartMode,
     onNameChange,
     onDescriptionChange,
-    onChartTypeChange,
-    onChartModeChange
+    onChartTypeChange
 }) => {
     return (
         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -84,7 +77,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
             </Box>
 
             {/* Chart Mode Selection */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {/* <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Typography variant="h6" gutterBottom>
                     Chart Mode
                 </Typography>
@@ -148,7 +141,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
                         </Grid>
                     </Grid>
                 </RadioGroup>
-            </Box>
+            </Box> */}
 
             {/* Chart Type Selection */}
             <Typography variant="h6" gutterBottom>

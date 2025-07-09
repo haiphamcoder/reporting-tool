@@ -1,6 +1,6 @@
 package com.haiphamcoder.reporting.repository;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,7 +24,10 @@ public interface ChartRepository {
 
     Long getTotalChartByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    List<Long> getChartCountByLast30Days(Long userId);
+    Long getTotalChartByUserIdOrChartIdAndIsDeleted(Long userId, Set<Long> chartIds, Boolean isDeleted);
+
+    Long getChartCountByUserIdOrChartIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> chartIds, Boolean isDeleted,
+            LocalDate date);
 
     Optional<Chart> updateChart(Chart chart);
 

@@ -202,7 +202,7 @@ export default function SignInPage(props: { disableCustomTheme?: boolean }) {
                                     id="username"
                                     type="username"
                                     name="username"
-                                    placeholder="admin"
+                                    placeholder="Enter your username"
                                     autoComplete="current-username"
                                     autoFocus
                                     required

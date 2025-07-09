@@ -71,4 +71,8 @@ public class SourcePermission {
         return permission.contains("edit");
     }
 
+    public boolean hasOwnerPermission() {
+        return permission.contains("owner");
+    }
+
 }

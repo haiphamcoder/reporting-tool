@@ -29,17 +29,6 @@ CREATE TABLE
         PRIMARY KEY (report_id, user_id)
     );
 
-CREATE TABLE
-    chart_report (
-        chart_id BIGINT NOT NULL COMMENT 'ID của chart',
-        report_id BIGINT NOT NULL COMMENT 'ID của report',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Thời điểm tạo source',
-        modified_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Thời điểm cập nhật gần nhất',
-        CONSTRAINT fk_chart_report_chart FOREIGN KEY (chart_id) REFERENCES chart (id),
-        CONSTRAINT fk_chart_report_report FOREIGN KEY (report_id) REFERENCES report (id),
-        PRIMARY KEY (chart_id, report_id)
-    );
-
 CREATE INDEX idx_report_name ON report (name);
 
 CREATE INDEX idx_report_description ON report (description);

@@ -50,7 +50,7 @@ public class ImportDataSourceManager {
         return true;
     }
 
-    public boolean submit(Long sourceId, boolean isFirstTime) {
+    public boolean submit(Long userId, Long sourceId, boolean isFirstTime) {
         SourceDto source = sourceGrpcClient.getSourceById(sourceId);
         if (source != null) {
             List<Mapping> schema = source.getMapping();
@@ -63,7 +63,7 @@ public class ImportDataSourceManager {
                 storageService.createStorageSource(source);
             }
 
-            AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(source);
+            AbstractProcessingThread task = importDataThreadFactory.getThreadImportData(userId, source);
             if (taskManager.trySubmit(task) == null) {
                 log.info("Submit task failed! Max queue size");
                 try {

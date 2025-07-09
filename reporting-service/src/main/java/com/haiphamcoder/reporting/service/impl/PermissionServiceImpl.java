@@ -29,7 +29,8 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<SourcePermission> sourcePermission = sourcePermissionRepository
                 .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
         if (sourcePermission.isPresent()) {
-            return sourcePermission.get().hasViewPermission() || sourcePermission.get().hasEditPermission();
+            return sourcePermission.get().hasViewPermission() || sourcePermission.get().hasEditPermission()
+                    || sourcePermission.get().hasOwnerPermission();
         }
         return false;
     }
@@ -39,7 +40,17 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<SourcePermission> sourcePermission = sourcePermissionRepository
                 .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
         if (sourcePermission.isPresent()) {
-            return sourcePermission.get().hasEditPermission();
+            return sourcePermission.get().hasEditPermission() || sourcePermission.get().hasOwnerPermission();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hasOwnerSourcePermission(Long userId, Long sourceId) {
+        Optional<SourcePermission> sourcePermission = sourcePermissionRepository
+                .getSourcePermissionBySourceIdAndUserId(sourceId, userId);
+        if (sourcePermission.isPresent()) {
+            return sourcePermission.get().hasOwnerPermission();
         }
         return false;
     }
@@ -49,7 +60,8 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<ReportPermission> reportPermission = reportPermissionRepository
                 .getReportPermissionByReportIdAndUserId(reportId, userId);
         if (reportPermission.isPresent()) {
-            return reportPermission.get().hasViewPermission() || reportPermission.get().hasEditPermission();
+            return reportPermission.get().hasViewPermission() || reportPermission.get().hasEditPermission()
+                    || reportPermission.get().hasOwnerPermission();
         }
         return false;
     }
@@ -59,7 +71,17 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<ReportPermission> reportPermission = reportPermissionRepository
                 .getReportPermissionByReportIdAndUserId(reportId, userId);
         if (reportPermission.isPresent()) {
-            return reportPermission.get().hasEditPermission();
+            return reportPermission.get().hasEditPermission() || reportPermission.get().hasOwnerPermission();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hasOwnerReportPermission(Long userId, Long reportId) {
+        Optional<ReportPermission> reportPermission = reportPermissionRepository
+                .getReportPermissionByReportIdAndUserId(reportId, userId);
+        if (reportPermission.isPresent()) {
+            return reportPermission.get().hasOwnerPermission();
         }
         return false;
     }
@@ -69,7 +91,8 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<ChartPermission> chartPermission = chartPermissionRepository
                 .getChartPermissionByChartIdAndUserId(chartId, userId);
         if (chartPermission.isPresent()) {
-            return chartPermission.get().hasViewPermission() || chartPermission.get().hasEditPermission();
+            return chartPermission.get().hasViewPermission() || chartPermission.get().hasEditPermission()
+                    || chartPermission.get().hasOwnerPermission();
         }
         return false;
     }
@@ -79,7 +102,17 @@ public class PermissionServiceImpl implements PermissionService {
         Optional<ChartPermission> chartPermission = chartPermissionRepository
                 .getChartPermissionByChartIdAndUserId(chartId, userId);
         if (chartPermission.isPresent()) {
-            return chartPermission.get().hasEditPermission();
+            return chartPermission.get().hasEditPermission() || chartPermission.get().hasOwnerPermission();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hasOwnerChartPermission(Long userId, Long chartId) {
+        Optional<ChartPermission> chartPermission = chartPermissionRepository
+                .getChartPermissionByChartIdAndUserId(chartId, userId);
+        if (chartPermission.isPresent()) {
+            return chartPermission.get().hasOwnerPermission();
         }
         return false;
     }

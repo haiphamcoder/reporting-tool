@@ -14,7 +14,7 @@ public interface ChartPermissionRepository {
 
     List<ChartPermission> getChartPermissionsByChartId(Long chartId);
 
-    void deleteAllChartPermissionsByChartId(Long chartId);
+    void deleteAllChartPermissionsByChartIdAndUserIdNot(Long chartId, Long userId);
 
     void deleteAllChartPermissionsByChartIdAndUserId(Long chartId, Long userId);
 }

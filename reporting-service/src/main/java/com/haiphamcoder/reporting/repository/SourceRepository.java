@@ -1,6 +1,6 @@
 package com.haiphamcoder.reporting.repository;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,7 +30,10 @@ public interface SourceRepository {
 
     Long getTotalSourceByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    List<Long> getSourceCountByLast30Days(Long userId);
+    Long getTotalSourceByUserIdOrSourceIdAndIsDeleted(Long userId, Set<Long> sourceIds, Boolean isDeleted);
+
+    Long getSourceCountByUserIdOrSourceIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> sourceIds, Boolean isDeleted,
+            LocalDate date);
 
     Optional<Source> updateSource(Source source);
 

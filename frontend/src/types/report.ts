@@ -33,7 +33,7 @@ export interface TextBlockContent {
 }
 
 export interface ChartBlockContent {
-    chartId: string;
+    chart_id: string;
     chart?: any;
 }
 

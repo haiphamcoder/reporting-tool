@@ -1,6 +1,6 @@
 package com.haiphamcoder.reporting.repository;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,7 +24,10 @@ public interface ReportRepository {
 
     Long getTotalReportByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    List<Long> getReportCountByLast30Days(Long userId);
+    Long getTotalReportByUserIdOrReportIdAndIsDeleted(Long userId, Set<Long> reportIds, Boolean isDeleted);
+
+    Long getReportCountByUserIdOrReportIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> reportIds, Boolean isDeleted,
+            LocalDate date);
 
     Optional<Report> updateReport(Report report);
 

@@ -10,6 +10,7 @@ import com.haiphamcoder.reporting.domain.dto.SourceDto;
 import com.haiphamcoder.reporting.domain.dto.SourceDto.Mapping;
 import com.haiphamcoder.reporting.domain.entity.Source;
 import com.haiphamcoder.reporting.domain.entity.Source.SourceBuilder;
+import com.haiphamcoder.reporting.domain.enums.SourceStatusType;
 import com.haiphamcoder.reporting.shared.MapperUtils;
 import com.haiphamcoder.reporting.shared.StringUtils;
 
@@ -34,7 +35,7 @@ public class SourceMapper {
                                     .readValue(source.getMapping(), new TypeReference<List<Mapping>>() {
                                     })
                             : new ArrayList<>())
-                    .status(source.getStatus() != null ? source.getStatus() : null)
+                    .status(source.getStatus() != null ? SourceStatusType.fromValue(source.getStatus()) : null)
                     .userId(source.getUserId() != null ? source.getUserId().toString() : null)
                     .isDeleted(source.getIsDeleted() != null ? source.getIsDeleted() : null)
                     .isStarred(source.getIsStarred() != null ? source.getIsStarred() : null)
@@ -80,7 +81,7 @@ public class SourceMapper {
             }
         }
         if (sourceDto.getStatus() != null) {
-            builder.status(sourceDto.getStatus());
+            builder.status(sourceDto.getStatus().getValue());
         }
         if (!StringUtils.isNullOrEmpty(sourceDto.getUserId())) {
             builder.userId(Long.parseLong(sourceDto.getUserId()));

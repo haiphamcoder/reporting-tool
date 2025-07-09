@@ -1,8 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -28,10 +26,15 @@ interface ChartJpaRepository extends JpaRepository<Chart, Long> {
     Page<Chart> findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(@Param("userId") Long userId,
             @Param("isDeleted") Boolean isDeleted, @Param("search") String search, Pageable pageable);
 
+    @Query("SELECT COUNT(c) FROM Chart c WHERE (c.userId = :userId OR c.id IN :chartIds) AND c.isDeleted = :isDeleted")
+    Long countByUserIdOrChartIdAndIsDeleted(@Param("userId") Long userId, @Param("chartIds") Set<Long> chartIds,
+            @Param("isDeleted") Boolean isDeleted);
+
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    @Query("SELECT COUNT(c) FROM Chart c WHERE c.userId = :userId AND DATE(c.createdAt) = DATE(:date)")
-    Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+    @Query("SELECT COUNT(c) FROM Chart c WHERE (c.userId = :userId OR c.id IN :chartIds) AND c.isDeleted = :isDeleted AND DATE(c.createdAt) = DATE(:date)")
+    Long countByUserIdOrChartIdAndIsDeletedAndCreatedDate(@Param("userId") Long userId,
+            @Param("chartIds") Set<Long> chartIds, @Param("isDeleted") Boolean isDeleted, @Param("date") LocalDate date);
 
     @Query("SELECT c FROM Chart c WHERE (c.userId = :userId OR c.id IN :chartIds) AND c.isDeleted = false AND (c.name LIKE %:search% OR c.description LIKE %:search%)")
     Page<Chart> findAllByUserIdOrChartId(@Param("userId") Long userId, @Param("chartIds") Set<Long> chartIds,
@@ -72,20 +75,6 @@ public class ChartRepositoryImpl implements ChartRepository {
     }
 
     @Override
-    public List<Long> getChartCountByLast30Days(Long userId) {
-        List<Long> result = new LinkedList<>();
-        LocalDate today = LocalDate.now();
-
-        for (int i = 29; i >= 0; i--) {
-            java.time.LocalDate date = today.minusDays(i);
-            Long count = chartJpaRepository.countByUserIdAndCreatedDate(userId, date);
-            result.add(count);
-        }
-
-        return result;
-    }
-
-    @Override
     public Optional<Chart> updateChart(Chart chart) {
         return Optional.of(chartJpaRepository.save(chart));
     }
@@ -93,6 +82,17 @@ public class ChartRepositoryImpl implements ChartRepository {
     @Override
     public Chart save(Chart chart) {
         return chartJpaRepository.save(chart);
+    }
+
+    @Override
+    public Long getTotalChartByUserIdOrChartIdAndIsDeleted(Long userId, Set<Long> chartIds, Boolean isDeleted) {
+        return chartJpaRepository.countByUserIdOrChartIdAndIsDeleted(userId, chartIds, isDeleted);
+    }
+
+    @Override
+    public Long getChartCountByUserIdOrChartIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> chartIds,
+            Boolean isDeleted, LocalDate date) {
+        return chartJpaRepository.countByUserIdOrChartIdAndIsDeletedAndCreatedDate(userId, chartIds, isDeleted, date);
     }
 
 }

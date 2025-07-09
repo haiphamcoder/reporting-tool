@@ -21,8 +21,6 @@ public interface ReportService {
 
     ReportDto createReport(Long userId, CreateReportRequest createReportRequest);
 
-    void addChartToReport(Long userId, Long reportId, Long chartId);
-
     List<UserReportPermission> getShareReport(Long userId, Long reportId);
 
     void updateShareReport(Long userId, Long reportId, ShareReportRequest shareReportRequest);

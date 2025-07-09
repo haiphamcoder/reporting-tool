@@ -8,4 +8,6 @@ public interface SourceGrpcClient {
 
     public SourceDto updateSource(SourceDto source);
 
+    public void updateSourceStatus(Long userId, Long sourceId, Integer status);
+
 }

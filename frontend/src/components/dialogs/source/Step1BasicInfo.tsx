@@ -52,8 +52,8 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({
         >
           <MenuItem value="csv">CSV File</MenuItem>
           <MenuItem value="excel">Excel File</MenuItem>
-          <MenuItem value="mysql">MySQL Database</MenuItem>
-          <MenuItem value="gsheet">Google Sheet</MenuItem>
+          {/* <MenuItem value="mysql">MySQL Database</MenuItem>
+          <MenuItem value="gsheet">Google Sheet</MenuItem> */}
         </TextField>
       </Box>
     </Stack>

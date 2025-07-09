@@ -23,7 +23,7 @@ interface ReportPermissionJpaRepository extends JpaRepository<ReportPermission, 
 
     void deleteAllByReportIdAndUserId(Long reportId, Long userId);
 
-    void deleteAllByReportId(Long reportId);
+    void deleteAllByReportIdAndUserIdNot(Long reportId, Long userId);
 
     List<ReportPermission> findAllByReportId(Long reportId);
 }
@@ -63,7 +63,7 @@ public class ReportPermissionRepositoryImpl implements ReportPermissionRepositor
 
     @Override
     @Transactional
-    public void deleteAllReportPermissionsByReportId(Long reportId) {
-        reportPermissionJpaRepository.deleteAllByReportId(reportId);
+    public void deleteAllReportPermissionsByReportIdAndUserIdNot(Long reportId, Long userId) {
+        reportPermissionJpaRepository.deleteAllByReportIdAndUserIdNot(reportId, userId);
     }
 }

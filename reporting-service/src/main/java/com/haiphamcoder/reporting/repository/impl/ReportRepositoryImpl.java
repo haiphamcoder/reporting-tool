@@ -1,8 +1,6 @@
 package com.haiphamcoder.reporting.repository.impl;
 
 import java.time.LocalDate;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -28,10 +26,15 @@ interface ReportJpaRepository extends JpaRepository<Report, Long> {
     Page<Report> findAllByUserIdAndIsDeletedAndNameContainsOrDescriptionContains(@Param("userId") Long userId,
             @Param("isDeleted") Boolean isDeleted, @Param("search") String search, Pageable pageable);
 
+    @Query("SELECT COUNT(r) FROM Report r WHERE (r.userId = :userId OR r.id IN :reportIds) AND r.isDeleted = :isDeleted")
+    Long countByUserIdOrReportIdAndIsDeleted(@Param("userId") Long userId, @Param("reportIds") Set<Long> reportIds,
+            @Param("isDeleted") Boolean isDeleted);
+
     Long countByUserIdAndIsDeleted(Long userId, Boolean isDeleted);
 
-    @Query("SELECT COUNT(r) FROM Report r WHERE r.userId = :userId AND DATE(r.createdAt) = DATE(:date)")
-    Long countByUserIdAndCreatedDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+    @Query("SELECT COUNT(r) FROM Report r WHERE (r.userId = :userId OR r.id IN :reportIds) AND r.isDeleted = :isDeleted AND DATE(r.createdAt) = DATE(:date)")
+    Long countByUserIdOrReportIdAndIsDeletedAndCreatedDate(@Param("userId") Long userId,
+            @Param("reportIds") Set<Long> reportIds, @Param("isDeleted") Boolean isDeleted, @Param("date") LocalDate date);
 
     @Query("SELECT r FROM Report r WHERE (r.userId = :userId OR r.id IN :reportIds) AND r.isDeleted = false AND (r.name LIKE %:search% OR r.description LIKE %:search%)")
     Page<Report> findAllByUserIdOrReportId(@Param("userId") Long userId, @Param("reportIds") Set<Long> reportIds,
@@ -73,20 +76,6 @@ public class ReportRepositoryImpl implements ReportRepository {
     }
 
     @Override
-    public List<Long> getReportCountByLast30Days(Long userId) {
-        List<Long> result = new LinkedList<>();
-        LocalDate today = LocalDate.now();
-
-        for (int i = 29; i >= 0; i--) {
-            java.time.LocalDate date = today.minusDays(i);
-            Long count = reportJpaRepository.countByUserIdAndCreatedDate(userId, date);
-            result.add(count);
-        }
-
-        return result;
-    }
-
-    @Override
     public Optional<Report> updateReport(Report report) {
         return Optional.of(reportJpaRepository.save(report));
     }
@@ -99,6 +88,18 @@ public class ReportRepositoryImpl implements ReportRepository {
     @Override
     public Report save(Report report) {
         return reportJpaRepository.save(report);
+    }
+
+    @Override
+    public Long getTotalReportByUserIdOrReportIdAndIsDeleted(Long userId, Set<Long> reportIds, Boolean isDeleted) {
+        return reportJpaRepository.countByUserIdOrReportIdAndIsDeleted(userId, reportIds, isDeleted);
+    }
+
+    @Override
+    public Long getReportCountByUserIdOrReportIdAndIsDeletedAndCreatedDate(Long userId, Set<Long> reportIds,
+            Boolean isDeleted, LocalDate date) {
+        return reportJpaRepository.countByUserIdOrReportIdAndIsDeletedAndCreatedDate(userId, reportIds, isDeleted,
+                date);
     }
 
 }

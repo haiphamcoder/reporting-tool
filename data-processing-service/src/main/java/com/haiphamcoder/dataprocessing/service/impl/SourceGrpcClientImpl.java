@@ -23,7 +23,7 @@ import com.haiphamcoder.reporting.proto.SourceProto;
 import com.haiphamcoder.reporting.proto.SourceServiceGrpc;
 import com.haiphamcoder.reporting.proto.UpdateSourceRequest;
 import com.haiphamcoder.reporting.proto.UpdateSourceResponse;
-
+import com.haiphamcoder.reporting.proto.UpdateStatusSourceRequest;
 import io.grpc.ManagedChannel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -121,5 +121,12 @@ public class SourceGrpcClientImpl implements SourceGrpcClient {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void updateSourceStatus(Long userId, Long sourceId, Integer status) {
+        UpdateStatusSourceRequest request = UpdateStatusSourceRequest.newBuilder().setUserId(userId)
+                .setSourceId(sourceId).setStatus(status).build();
+        sourceServiceBlockingStub.updateStatusSource(request);
     }
 }

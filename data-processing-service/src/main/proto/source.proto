@@ -14,6 +14,9 @@ service SourceService {
   // Update source
   rpc UpdateSource(UpdateSourceRequest) returns (UpdateSourceResponse) {}
 
+  // Update status source
+  rpc UpdateStatusSource(UpdateStatusSourceRequest) returns (UpdateStatusSourceResponse) {}
+
 }
 
 // Source message definition
@@ -50,4 +53,14 @@ message UpdateSourceResponse {
   SourceProto source = 1;
 }
 
+// Request/Response messages for UpdateStatusSource
+message UpdateStatusSourceRequest {
+  int64 user_id = 1;
+  int64 source_id = 2;
+  int32 status = 3;
+}
+
+message UpdateStatusSourceResponse {
+  SourceProto source = 1;
+}
 

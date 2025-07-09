@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.UserChartPermission;
-import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.GetAllChartsResponse;
@@ -46,6 +45,7 @@ public class ChartController {
                         .owner(chart.getOwner())
                         .type(chart.getConfig().getType().getValue())
                         .config(chart.getConfig())
+                        .sqlQuery(chart.getSqlQuery())
                         .canEdit(chart.getCanEdit())
                         .canShare(chart.getCanShare())
                         .createdAt(chart.getCreatedAt())
@@ -77,13 +77,6 @@ public class ChartController {
             @PathVariable("chart-id") Long chartId) {
         ChartDto clonedChart = chartService.cloneChart(userId, chartId);
         return ResponseEntity.ok(ApiResponse.success(clonedChart, "Chart cloned successfully"));
-    }
-
-    @PostMapping("/convert-query")
-    public ResponseEntity<ApiResponse<Object>> convertQuery(@CookieValue(name = "user-id") Long userId,
-            @RequestBody QueryOption queryOption) {
-        String sql = chartService.convertQueryToSql(userId, queryOption);
-        return ResponseEntity.ok(ApiResponse.success(sql, "Query converted successfully"));
     }
 
     @GetMapping("/{chart-id}")

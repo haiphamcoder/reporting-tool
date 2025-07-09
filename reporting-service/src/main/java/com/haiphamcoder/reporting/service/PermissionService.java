@@ -6,12 +6,18 @@ public interface PermissionService {
 
     boolean hasEditSourcePermission(Long userId, Long sourceId);
 
+    boolean hasOwnerSourcePermission(Long userId, Long sourceId);
+
     boolean hasViewReportPermission(Long userId, Long reportId);
 
     boolean hasEditReportPermission(Long userId, Long reportId);
 
+    boolean hasOwnerReportPermission(Long userId, Long reportId);
+
     boolean hasViewChartPermission(Long userId, Long chartId);
 
     boolean hasEditChartPermission(Long userId, Long chartId);
+
+    boolean hasOwnerChartPermission(Long userId, Long chartId);
 
 }

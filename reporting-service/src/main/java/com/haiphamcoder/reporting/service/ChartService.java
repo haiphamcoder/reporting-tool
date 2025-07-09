@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.haiphamcoder.reporting.domain.dto.ChartDto;
 import com.haiphamcoder.reporting.domain.dto.ChartDto.UserChartPermission;
-import com.haiphamcoder.reporting.domain.model.QueryOption;
 import com.haiphamcoder.reporting.domain.model.request.CreateChartRequest;
 import com.haiphamcoder.reporting.domain.model.request.ShareChartRequest;
 import com.haiphamcoder.reporting.domain.model.response.Metadata;
@@ -21,8 +20,6 @@ public interface ChartService {
     void deleteChart(Long userId, Long chartId);
 
     ChartDto createChart(Long userId, CreateChartRequest request);
-
-    String convertQueryToSql(Long userId, QueryOption queryOption);
 
     void updateShareChart(Long userId, Long chartId, ShareChartRequest shareChartRequest);
 
